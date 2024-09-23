@@ -1,0 +1,69 @@
+use tokio::net::{TcpListener, TcpStream};
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use std::sync::Arc;
+use tokio::sync::Mutex;
+
+#[tokio::main]
+async fn main() {
+    // 绑定到指定地址和端口
+    let bind_result = TcpListener::bind("0.0.0.0:1681").await;
+    if let Err(e) = bind_result {
+        eprintln!("创建TcpListener失败: {}", e);
+        return;
+    }
+    println!("Server listening on port 1681");
+    let listener = bind_result.unwrap();
+    // loop {
+    let accept_result = listener.accept().await;
+    if let Err(e) = accept_result {
+        eprintln!("接受连接失败: {}", e);
+        return;
+    }
+    let (socket, _) = accept_result.unwrap();
+    println!("New connection: {:?}", socket.peer_addr());
+
+    // 假设已经接收到一个 TcpStream
+    let stream: TcpStream = socket; // 从某处获取
+
+    // 使用 Arc 和 Mutex 以便共享 TcpStream
+    let stream = Arc::new(Mutex::new(stream));
+
+    // 启动异步任务
+    let read_stream = Arc::clone(&stream);
+    let write_stream = Arc::clone(&stream);
+
+    tokio::spawn(async move {
+        read(read_stream).await;
+    });
+
+    tokio::spawn(async move {
+        let data_to_write = b"Hello, world!";
+        let mut stream = write_stream.lock().await;
+
+        if let Err(e) = stream.write_all(data_to_write).await {
+            eprintln!("Failed to write to stream: {}", e);
+        }
+    });
+
+    // 等待所有任务完成
+    // 可以选择使用 JoinHandle 来收集任务的结果
+}
+
+async fn read(read_stream: Arc<Mutex<TcpStream>>){
+    let mut buffer = [0; 1024];
+    let mut stream = read_stream.lock().await;
+
+    loop {
+        match stream.read(&mut buffer).await {
+            Ok(0) => break, // 连接关闭
+            Ok(n) => {
+                // 处理读取的数据
+                println!("Received: {}", String::from_utf8_lossy(&buffer[..n]));
+            }
+            Err(e) => {
+                eprintln!("Failed to read from stream: {}", e);
+                break;
+            }
+        }
+    }
+}

@@ -1,0 +1,16 @@
+[package]
+name = "DairoNPS"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+#异步任务
+tokio = { version = "1.40.0", features = ["full"] }
+
+#懒加载静态变量
+lazy_static = "1.5.0"
+
+#只实例化一次的静态变量
+once_cell = "1.19.0"
+rand = "0.9.0-alpha.2"
