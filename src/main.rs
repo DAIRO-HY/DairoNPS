@@ -1,4 +1,3 @@
-// 声明 my_module 模块
 mod pipeline {
     pub mod pipeline_tcp_accept;
 }
@@ -12,11 +11,13 @@ mod client {
     pub mod client_accept_manager;
     pub mod client_session_manager;
     pub mod client_session;
+    pub mod header_util;
 }
 mod util {
     pub mod date_util;
 }
 mod dao {
+    pub mod client_dao;
     pub(crate) mod dto {
         pub mod client_dto;
         pub mod channel_dto;
@@ -37,81 +38,42 @@ async fn main() {
     tokio::time::sleep(tokio::time::Duration::from_secs_f32(9999999999.0)).await;
 }
 
-// mod dao {
-//     pub(crate) mod dto {
-//         pub mod client_dto;
-//     }
-// }
-// use std::collections::HashMap;
 // use std::sync::Arc;
-// use lazy_static::lazy_static;
-// use tokio::sync::RwLock;
-// use crate::dao::dto::client_dto::ClientDto;
+// use tokio::time::Duration;
+// use tokio::sync::Mutex;
+// use tokio::io::AsyncWriteExt;
+// use tokio::net::TcpListener;
+// use tokio::time::sleep;
+// use crate::client::header_util;
 //
-// lazy_static! {
-//
-// /**
-//  * 客户端ID对应的Socket连接
-//  */
-//     pub static ref clientSessionMap: RwLock<HashMap<u64, Arc<ClientDto>>> = RwLock::new(HashMap::new());
+// mod client {
+//     pub mod header_util;
 // }
 //
 // #[tokio::main]
 // async fn main() {
-//     let client_dto = ClientDto {
-//         // id
-//         id: 12,
 //
-//         // 名称
-//         name: String::from("String"),
-//
-//         // 版本号
-//         version: String::from("String"),
-//
-//         // 连接认证秘钥
-//         key: String::from("String"),
-//
-//         // ip地址
-//         ip: String::from("String"),
-//
-//         // 入网流量
-//         in_data_total: 12,
-//
-//         // 出网流量
-//         out_data_total: 12,
-//
-//         // 在线状态,0:离线 1:在线
-//         online_state: 12,
-//
-//         // 启用状态
-//         enable_state: 12,
-//
-//         // 最后一次连接时间
-//         last_login_date: 12,
-//
-//         // 创建时间
-//         create_date: 12,
-//
-//         // 最后一次更新时间戳
-//         update_date: 12,
-//
-//         // 一些备注信息,错误信息等
-//         remark: String::from("String"),
-//     };
-//
-//     {
-//         let mut map = clientSessionMap.write().await;
-//         map.insert(23, Arc::new(client_dto));
+//     // 绑定到指定地址和端口
+//     let tcp_listener = TcpListener::bind("0.0.0.0:3435").await.unwrap();
+//     loop {
+//         let (tcp_stream, _) = tcp_listener.accept().await.unwrap();
+//         let arc_tcp1 =  Arc::new(Mutex::new(tcp_stream));
+//         let arc_tcp2 =  arc_tcp1.clone();
+//         tokio::spawn(async move{
+//             loop{
+//                 println!("--->正在往客户端发送数据");
+//                 let mut writter = arc_tcp2.lock().await;
+//                 writter.write("sadfsa".as_bytes()).await;
+//                 writter.flush().await;
+//                 sleep(Duration::from_secs_f32(1.0)).await
+//             }
+//         });
+//         let sd = header_util::get_header(arc_tcp1).await;
+//         if let Ok(wef) = sd{
+//             println!("-->{}",wef)
+//         }else if let Err(err) = sd{
+//             println!("-->{}",err)
+//         }
 //     }
-//
-//     let size = size().await;
-//     println!("-->{}", size);
 // }
 //
-//
-// /**
-//  * 当前客户端数量
-//  */
-// pub async fn size() -> usize {
-//     clientSessionMap.read().await.len()
-// }
