@@ -14,7 +14,7 @@ use crate::util::date_util;
  */
 pub struct ClientSession {
     pub client: ClientDto,
-    pub clientSocket: TcpStream,
+    pub clientSocket: Mutex<TcpStream>,
 
     ///读数据
     pub(crate) reader:Mutex<OwnedReadHalf>,

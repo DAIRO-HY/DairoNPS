@@ -1,5 +1,8 @@
 use std::collections::HashMap;
 use std::error::Error;
+use std::fmt::format;
+use std::io;
+use std::io::ErrorKind;
 use std::sync::Arc;
 use lazy_static::lazy_static;
 use tokio::net::TcpStream;
@@ -59,18 +62,18 @@ pub async fn validate(clientSocket: Arc<Mutex<TcpStream>>) -> Result<(), Box<dyn
 
     //得到头部数据
     let header = header_util::get_header(clientSocket.clone()).await?;
-    let heads = header.split("|").collect();
+    let heads: Vec<_> = header.split("|").collect();
 
     //得到客户端key
-    let key = heads;
+    let key = heads[0];
     let clientOpt = client_dao::selectByKey(key);
-    if clientOpt == None {
-        Err("key:${key}不存在");
+    if clientOpt.is_none() {
+        Err::<ErrorKind, io::Error>(io::Error::new(ErrorKind::Other, "key".to_owned() + &key + "不存在"));
         // clientSocket.close();
     }
     let client = clientOpt.unwrap();
     if client.enable_state == 0 {
-        Err("key:${key}的客户端已停止服务");
+        Err::<ErrorKind, io::Error>(io::Error::new(ErrorKind::Other, "key".to_owned() + &key + "的客户端已停止服务"));
     }
 
     let clientId = client.id;
@@ -81,9 +84,9 @@ pub async fn validate(clientSocket: Arc<Mutex<TcpStream>>) -> Result<(), Box<dyn
     let ip = "";
 
     //从头部信息中得到客户端版本号
-    let version = header.substring(header.lastIndexOf("|") + 1);
+    let version = heads[1];
 
-    client_dao::setClientInfo(clientId, ip, version);
+    client_dao::setClientInfo(clientId, ip.to_string(), version.to_string());
 
     //将客户端ID返回给客户端
     sendClientId(clientId);
@@ -93,31 +96,35 @@ pub async fn validate(clientSocket: Arc<Mutex<TcpStream>>) -> Result<(), Box<dyn
     //
     // //开启该客户端下所有隧道监听
     // ProxyAcceptManager.accept(client);
+
+    Ok(())
 }
 
 /**
  * 保持客户端连接
  */
-async fn holdOnClient(client: ClientDto, clientSocket: Arc<Mutex<TcpStream>>) {
-    let clientID = client.id;
+async fn holdOnClient(client: ClientDto, client_socket: Arc<Mutex<TcpStream>>) {
+    let client_id = client.id;
 
-    let  cs = clientSocket.clone();
-    let (reader,writer) = cs.lock().into_split();
+    let client_socket_clone1 = client_socket.clone();
+    let client_socket_clone2 = client_socket.clone();
+    let mut sdc = client_socket_clone1.lock().await;
+    let (reader,writer) = sdc.into_split();
 
     //先移除之前的连接
-    close(clientID);
+    close(client_id);
     let session = ClientSession {
         client,
+        clientSocket: client_socket_clone2.lock(),
         reader:Mutex::new(reader),
         writer:Mutex::new(writer),
-        clientSocket,
         lastHeartBeatTime: 0,
     };
     {
         //将会话添加到map
-        clientSessionMap.write().await.insert(clientID, Arc::new(session));
+        clientSessionMap.write().await.insert(client_id, Arc::new(session));
     }
-    let session = clientSessionMap.read().await.get(&clientID).unwrap();
+    let session = clientSessionMap.read().await.get(&client_id).unwrap();
     client_session::start(session);
 }
 

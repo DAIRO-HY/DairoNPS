@@ -70,7 +70,7 @@ pub fn selectOne(_id: u64) -> ClientDto {
  * @param key 认证秘钥
  * @return 客户端Dto
  */
-pub fn selectByKey(_key: String) -> Option<ClientDto> {
+pub fn selectByKey(_key: &str) -> Option<ClientDto> {
     let dto = ClientDto {
         // id
         id: 12,

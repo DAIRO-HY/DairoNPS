@@ -1,8 +1,10 @@
 use std::error::Error;
 use std::sync::Arc;
 use tokio::io::AsyncReadExt;
+use tokio::net::tcp::OwnedReadHalf;
 use tokio::net::TcpStream;
 use tokio::sync::Mutex;
+use crate::clientSessionMap;
 
 /**
  * NPS客户端头部标记
@@ -53,15 +55,17 @@ pub const SECURITY_CLIENT_KEY: u8 = 7;
  * 获取客户端Socket头部信息
    // TODO:读取数据时应该设置超时，避免恶意连接导致并发激增
  */
-pub async fn get_header(mut client_socket:  Arc<Mutex<TcpStream>>) -> Result<String, Box<dyn Error>> {
+pub async fn get_header(client_id: &i64) -> Result<String, Box<dyn Error>> {
+    let mut map = clientSessionMap.lock().await;
+    let (reader,_) = map.get_mut(client_id).unwrap();
 
     //第一个字节值则是后面head消息的数据长度
-    let head_len = client_socket.lock().await.read_i8().await?;
+    let head_len = reader.read_i8().await?;
 
     // 创建一个长度为 head_len 的缓冲区
     let mut head_data_buf = vec![0u8; head_len as usize];
 
     //读取数据部分
-    client_socket.lock().await.read_exact(&mut *head_data_buf).await?;
+    reader.read_exact(&mut *head_data_buf).await?;
     Ok(String::from_utf8_lossy(&head_data_buf).parse()?)
 }
