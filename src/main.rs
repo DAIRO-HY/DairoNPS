@@ -1,96 +1,131 @@
-// mod pipeline {
-//     pub mod pipeline_tcp_accept;
-// }
-// mod proxy {
-//     pub mod proxy_tcp_accept;
-// }
-// mod bridge {
-//     pub mod tcp_bridge;
-// }
-// mod client {
-//     pub mod client_accept_manager;
-//     pub mod client_session_manager;
-//     pub mod client_session;
-//     pub mod header_util;
-// }
-// mod util {
-//     pub mod date_util;
-// }
-// mod dao {
-//     pub mod client_dao;
-//     pub(crate) mod dto {
-//         pub mod client_dto;
-//         pub mod channel_dto;
-//     }
-// }
-//
-// //如果想单线程执行加上参数flavor = "current_thread"
-// #[tokio::main(flavor = "current_thread")]
-// // #[tokio::main]
-// async fn main() {
-//     tokio::spawn(async {
-//         pipeline::pipeline_tcp_accept::start().await;         // 调用 sub_module 中的函数
-//     });
-//     tokio::spawn(async {
-//         proxy::proxy_tcp_accept::start().await;         // 调用 sub_module 中的函数
-//     });
-//
-//     tokio::time::sleep(tokio::time::Duration::from_secs_f32(9999999999.0)).await;
-// }
-
-
-
 use std::collections::HashMap;
-use lazy_static::lazy_static;
-use tokio::time::Duration;
-use tokio::sync::Mutex;
-use tokio::io::AsyncWriteExt;
-use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
-use tokio::net::TcpListener;
-use tokio::time::sleep;
-use crate::client::header_util;
+use std::net::SocketAddr;
+use std::sync::Arc;
+use tokio::net::{TcpListener, TcpStream};
+use tokio::sync::{Mutex, watch};
+use tokio::io::{AsyncReadExt, AsyncWriteExt, ReadHalf, WriteHalf};
+use tokio::io::split;
 
-mod client {
-    pub mod header_util;
+type ClientMap = Arc<Mutex<HashMap<SocketAddr, Arc<ClientConnection>>>>;
+
+// 客户端连接结构体，包含读写两部分
+struct ClientConnection {
+    read_half: Mutex<ReadHalf<TcpStream>>,
+    write_half: Mutex<WriteHalf<TcpStream>>,
+    shutdown_signal: watch::Sender<bool>, // 用于通知关闭任务的信号
 }
 
-lazy_static! {
-
-/**
- * 客户端ID对应的Socket连接
- */
-    pub static ref clientSessionMap: Mutex<HashMap<i64, (OwnedReadHalf,OwnedWriteHalf)>> = Mutex::new(HashMap::new());
+impl ClientConnection {
+    // 创建一个新的ClientConnection实例
+    fn new(stream: TcpStream) -> (Self, watch::Receiver<bool>) {
+        let (read_half, write_half) = split(stream);
+        let (shutdown_signal, shutdown_receiver) = watch::channel(false);
+        (
+            ClientConnection {
+                read_half: Mutex::new(read_half),
+                write_half: Mutex::new(write_half),
+                shutdown_signal,
+            },
+            shutdown_receiver,
+        )
+    }
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let clients: ClientMap = Arc::new(Mutex::new(HashMap::new()));
+    let listener = TcpListener::bind("127.0.0.1:8080").await?;
 
-    // 绑定到指定地址和端口
-    let tcp_listener = TcpListener::bind("0.0.0.0:3435").await.unwrap();
     loop {
-        {
-            let (tcp_stream, _) = tcp_listener.accept().await.unwrap();
-            let (r, w) = tcp_stream.into_split();
-            clientSessionMap.lock().await.insert(64, (r, w));
-        }
+        let (socket, addr) = listener.accept().await?;
+        let clients = Arc::clone(&clients);
+
         tokio::spawn(async move {
-            let mut map = clientSessionMap.lock().await;
-            loop {
-                println!("--->正在往客户端发送数据");
-                let (_, writer) = map.get_mut(&64).unwrap();
-                writer.write("sadfsa".as_bytes()).await;
-                writer.flush().await;
-                sleep(Duration::from_secs_f32(1.0)).await
-            }
+            handle_client(socket, addr, clients).await;
         });
-        let header_rs = header_util::get_header(&64).await;
-        if let Ok(head) = header_rs {
-            println!("-->{}", head)
-        } else if let Err(err) = header_rs {
-            println!("-->{}", err)
+    }
+}
+
+async fn handle_client(socket: TcpStream, addr: SocketAddr, clients: ClientMap) {
+    // 创建新的连接和关闭接收器
+    let (client_conn, mut shutdown_receiver) = ClientConnection::new(socket);
+
+    // 处理同一IP的旧连接
+    {
+        let mut clients_lock = clients.lock().await;
+        if let Some(old_conn) = clients_lock.remove(&addr) {
+            println!("Closing previous connection from {}", addr);
+            // 发送关闭信号给旧连接的读取任务
+            let _ = old_conn.shutdown_signal.send(true);
+        }
+        clients_lock.insert(addr, Arc::new(client_conn));
+    }
+
+    let clients = Arc::clone(&clients);
+    let read_conn = Arc::clone(&clients.lock().await[&addr]);
+
+    // 启动读取任务和写入任务
+    let read_task = tokio::spawn(async move {
+        handle_read(read_conn, addr, &mut shutdown_receiver, clients).await;
+    });
+
+    let write_conn = Arc::clone(&clients.lock().await[&addr]);
+    let write_task = tokio::spawn(async move {
+        handle_write(write_conn, addr).await;
+    });
+
+    let _ = tokio::join!(read_task, write_task);
+}
+
+async fn handle_read(
+    client_conn: Arc<ClientConnection>,
+    addr: SocketAddr,
+    shutdown_receiver: &mut watch::Receiver<bool>,
+    clients: ClientMap
+) {
+    let mut buffer = [0u8; 1024];
+
+    loop {
+        tokio::select! {
+            // 尝试读取数据
+            result = client_conn.read_half.lock().await.read(&mut buffer) => {
+                match result {
+                    Ok(0) => {
+                        println!("Client {} disconnected", addr);
+                        let mut clients_lock = clients.lock().await;
+                        clients_lock.remove(&addr);
+                        break;
+                    }
+                    Ok(n) => {
+                        println!("Received from {}: {}", addr, String::from_utf8_lossy(&buffer[..n]));
+                    }
+                    Err(e) => {
+                        eprintln!("Error reading from {}: {:?}", addr, e);
+                        break;
+                    }
+                }
+            }
+            // 如果收到关闭信号，则退出
+            _ = shutdown_receiver.changed() => {
+                if *shutdown_receiver.borrow() {
+                    println!("Shutting down connection with {}", addr);
+                    break;
+                }
+            }
         }
     }
 }
 
+async fn handle_write(client_conn: Arc<ClientConnection>, addr: SocketAddr) {
+    loop {
+        let message = format!("Hello from server to {}\n", addr);
+        let mut write_half = client_conn.write_half.lock().await;
 
+        if let Err(e) = write_half.write_all(message.as_bytes()).await {
+            eprintln!("Error sending to {}: {:?}", addr, e);
+            break;
+        }
 
+        tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+    }
+}
