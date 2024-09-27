@@ -52,20 +52,40 @@ pub const SYNC_ACTIVE_BRIDGE_UDP_PORT: u8 = 6;
 pub const SECURITY_CLIENT_KEY: u8 = 7;
 
 /**
- * 获取客户端Socket头部信息
-   // TODO:读取数据时应该设置超时，避免恶意连接导致并发激增
+* 获取客户端Socket头部信息
+  // TODO:读取数据时应该设置超时，避免恶意连接导致并发激增
  */
-pub async fn get_header(client_id: &i64) -> Result<String, Box<dyn Error>> {
-    let mut map = clientSessionMap.lock().await;
-    let (reader,_) = map.get_mut(client_id).unwrap();
+// pub async fn get_header(client_id: &i64) -> Result<String, Box<dyn Error>> {
+//     let mut map = clientSessionMap.lock().await;
+//     let (reader,_) = map.get_mut(client_id).unwrap();
+//
+//     //第一个字节值则是后面head消息的数据长度
+//     let head_len = reader.read_i8().await?;
+//
+//     // 创建一个长度为 head_len 的缓冲区
+//     let mut head_data_buf = vec![0u8; head_len as usize];
+//
+//     //读取数据部分
+//     reader.read_exact(&mut *head_data_buf).await?;
+//     Ok(String::from_utf8_lossy(&head_data_buf).parse()?)
+// }
+
+/**
+* 获取客户端Socket头部信息
+  // TODO:读取数据时应该设置超时，避免恶意连接导致并发激增
+ */
+pub async fn get_header(mut tcp: TcpStream) -> Result<(TcpStream,String), Box<dyn Error>> {
 
     //第一个字节值则是后面head消息的数据长度
-    let head_len = reader.read_i8().await?;
+    let head_len = tcp.read_i8().await?;
 
     // 创建一个长度为 head_len 的缓冲区
     let mut head_data_buf = vec![0u8; head_len as usize];
 
     //读取数据部分
-    reader.read_exact(&mut *head_data_buf).await?;
-    Ok(String::from_utf8_lossy(&head_data_buf).parse()?)
+    tcp.read_exact(&mut *head_data_buf).await?;
+
+    let head = String::from_utf8_lossy(&head_data_buf).parse()?;
+    let result = (tcp,head);
+    Ok(result)
 }

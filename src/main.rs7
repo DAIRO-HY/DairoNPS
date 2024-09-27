@@ -1,6 +1,5 @@
-mod client;
-
 use std::collections::HashMap;
+use std::fmt::format;
 use std::sync::Arc;
 use lazy_static::lazy_static;
 use tokio::time::Duration;
@@ -12,10 +11,9 @@ use tokio::time::sleep;
 use crate::util::date_util;
 // use crate::client::header_util;
 
-
-mod client {
-    pub mod client;
-}
+// mod client {
+//     pub mod header_util;
+// }
 mod util {
     pub mod date_util;
 }
@@ -23,6 +21,7 @@ mod util {
 pub struct SessionInfo {
     read_shutdown_signal: watch::Sender<bool>, // 用于通知关闭任务的信号
     write_shutdown_signal: watch::Sender<bool>, // 用于通知关闭任务的信号
+    // shutdown_receiver: Mutex<watch::Receiver<bool>>, // 用于通知关闭任务的信号
 }
 
 lazy_static! {
@@ -35,7 +34,6 @@ lazy_static! {
 
 #[tokio::main]
 async fn main() {
-    // client_accept_manager::start()
 
     // 绑定到指定地址和端口
     let tcp_listener = TcpListener::bind("0.0.0.0:3435").await.unwrap();

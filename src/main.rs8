@@ -1,5 +1,3 @@
-mod client;
-
 use std::collections::HashMap;
 use std::sync::Arc;
 use lazy_static::lazy_static;
@@ -9,12 +7,22 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::time::sleep;
+use crate::client::client_accept_manager;
 use crate::util::date_util;
 // use crate::client::header_util;
 
-
+mod dao {
+    pub mod client_dao;
+    pub(crate) mod dto {
+        pub mod client_dto;
+        pub mod channel_dto;
+    }
+}
 mod client {
-    pub mod client;
+    pub mod client_accept_manager;
+    pub mod client_session_manager;
+    pub mod client_session;
+    pub mod header_util;
 }
 mod util {
     pub mod date_util;
@@ -35,18 +43,18 @@ lazy_static! {
 
 #[tokio::main]
 async fn main() {
-    // client_accept_manager::start()
+    client_accept_manager::start()
 
-    // 绑定到指定地址和端口
-    let tcp_listener = TcpListener::bind("0.0.0.0:3435").await.unwrap();
-    loop {
-        let (tcp_stream, _) = tcp_listener.accept().await.unwrap();
-        tokio::spawn(async {
-            handle_tcp(tcp_stream).await;
-        });
-
-        println!("-->reloop accept")
-    }
+    // // 绑定到指定地址和端口
+    // let tcp_listener = TcpListener::bind("0.0.0.0:3435").await.unwrap();
+    // loop {
+    //     let (tcp_stream, _) = tcp_listener.accept().await.unwrap();
+    //     tokio::spawn(async {
+    //         handle_tcp(tcp_stream).await;
+    //     });
+    //
+    //     println!("-->reloop accept")
+    // }
 }
 
 ///处理tcp连接

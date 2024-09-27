@@ -4,7 +4,7 @@ use lazy_static::lazy_static;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::Mutex;
-
+use crate::client::header_util;
 
 lazy_static! {
     pub static ref CLIENT_SOCKET_MAP: Arc<Mutex<HashMap<String, TcpStream>>> = Arc::new(Mutex::new(HashMap::new()));
@@ -88,14 +88,15 @@ async fn handle(mut tcp_stream: TcpStream){
 
     // 创建一个长度为 1 的缓冲区
     let mut buf = [0; 1];
-//读取第一个标记字节,通过该自己判断该连接类型
-tcp_stream.read(&mut buf).await;
+
+    //读取第一个标记字节,通过该自己判断该连接类型
+    tcp_stream.read(&mut buf).await;
 
     let flag = buf[0];
     match flag{
 
         //标记该连接为:服务器端往客户端发送指令的连接
-        1 => {
+        header_util::CLIENT_TO_SERVER_MAIN_CONNECTION => {
 
         }
 

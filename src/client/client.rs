@@ -1,28 +1,17 @@
-mod client;
-
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::time::Duration;
 use lazy_static::lazy_static;
-use tokio::time::Duration;
-use tokio::sync::{watch, Mutex};
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
+use tokio::io::AsyncReadExt;
 use tokio::net::{TcpListener, TcpStream};
+use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
+use tokio::sync::{watch, Mutex};
 use tokio::time::sleep;
+use crate::{clientSessionMap, SessionInfo};
 use crate::util::date_util;
-// use crate::client::header_util;
 
-
-mod client {
-    pub mod client;
-}
-mod util {
-    pub mod date_util;
-}
-
-pub struct SessionInfo {
-    read_shutdown_signal: watch::Sender<bool>, // 用于通知关闭任务的信号
-    write_shutdown_signal: watch::Sender<bool>, // 用于通知关闭任务的信号
+pub struct ClientSignal {
+    signal: watch::Sender<Arc<TcpStream>>, // 用于通知关闭任务的信号
 }
 
 lazy_static! {
@@ -30,12 +19,10 @@ lazy_static! {
 /**
  * 客户端ID对应的Socket连接
  */
-    pub static ref clientSessionMap: Mutex<HashMap<i64, Arc<SessionInfo>>> = Mutex::new(HashMap::new());
+    pub static ref CLIENT_SESSION_MAP: Mutex<HashMap<i64, Arc<ClientSignal>>> = Mutex::new(HashMap::new());
 }
 
-#[tokio::main]
-async fn main() {
-    // client_accept_manager::start()
+pub async fn start(){
 
     // 绑定到指定地址和端口
     let tcp_listener = TcpListener::bind("0.0.0.0:3435").await.unwrap();
@@ -49,39 +36,51 @@ async fn main() {
     }
 }
 
+
 ///处理tcp连接
 /// - tcp_stream
 async fn handle_tcp(tcp_stream: TcpStream) {
-    let (r, mut w) = tcp_stream.into_split();
-    let (read_shutdown_signal, read_shutdown_receiver) = watch::channel(false);
-    let (write_shutdown_signal, write_shutdown_receiver) = watch::channel(false);
-    let session = SessionInfo {
-        read_shutdown_signal,
-        write_shutdown_signal,
+    let tcp1 = Arc::new(tcp_stream);
+    let tcp2 = tcp1.clone();
+    let tcp3 = tcp1.clone();
+    // let (r, mut w) = tcp1.into_split();
+    let (signal, mut receiver) = watch::channel(tcp2);
+    let cs = ClientSignal {
+        signal
     };
-    let insert_session = Arc::new(session);
+    let csArc = Arc::new(cs);
     {
-        let mut map = clientSessionMap.lock().await;
-        if map.contains_key(&64) {
-            let old = map.get_mut(&64).unwrap();
-
-            println!("-->001发送关闭信号");
-            old.read_shutdown_signal.send(true);
-            old.write_shutdown_signal.send(true);
-            println!("-->002关闭信号完成");
-            map.remove(&64);
-            println!("-->003移除旧的session完成");
-        }
+        let mut map = CLIENT_SESSION_MAP.lock().await;
+        // if map.contains_key(&64) {
+        //     let old = map.get_mut(&64).unwrap();
+        //
+        //     println!("-->001发送关闭信号");
+        //     old.read_shutdown_signal.send(true);
+        //     old.write_shutdown_signal.send(true);
+        //     println!("-->002关闭信号完成");
+        //     map.remove(&64);
+        //     println!("-->003移除旧的session完成");
+        // }
         println!("-->00添加新的session");
-        map.insert(64, insert_session);
+        map.insert(64, csArc);
     }
+
+    tokio::spawn(async{
+        let rs = receiver.changed();
+        if let Ok(()) = rs{
+            if *read_shutdown_receiver.borrow() {
+                println!("接收到了关闭信号");
+            }
+        }
+    });
+
     println!("-->11启动读数据任务");
     let read_task = tokio::spawn(async move {
-        return read_handle(r, read_shutdown_receiver).await;
+        return crate::read_handle(r, read_shutdown_receiver).await;
     });
     println!("-->22启动写数据任务");
     let write_task = tokio::spawn(async move {
-        return write_handle(w, write_shutdown_receiver).await;
+        return crate::write_handle(w, write_shutdown_receiver).await;
     });
     println!("-->33等待读写任务完成");
 
@@ -91,7 +90,7 @@ async fn handle_tcp(tcp_stream: TcpStream) {
     println!("-->44读写任务完成，准备关闭");
 
     //最终关闭连接
-    source_read.unwrap().reunite(source_write.unwrap()).unwrap().shutdown().await;
+    // source_read.unwrap().reunite(source_write.unwrap()).unwrap().shutdown().await;
     println!("-->55关闭了一个连接")
 }
 

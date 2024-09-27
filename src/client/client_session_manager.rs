@@ -7,10 +7,14 @@ use std::sync::Arc;
 use lazy_static::lazy_static;
 use tokio::net::TcpStream;
 use tokio::sync::{Mutex, RwLock};
-use crate::client::{client_session, header_util};
 use crate::client::client_session::ClientSession;
+use crate::client::{client_session, header_util};
 use crate::dao::client_dao;
 use crate::dao::dto::client_dto::ClientDto;
+// use crate::client::{client_session, header_util};
+// use crate::client::client_session::ClientSession;
+// use crate::dao::client_dao;
+// use crate::dao::dto::client_dto::ClientDto;
 
 lazy_static! {
 
@@ -58,26 +62,25 @@ pub async fn size() -> usize {
 /**
  * 添加客户端连接
  */
-pub async fn validate(clientSocket: Arc<Mutex<TcpStream>>) -> Result<(), Box<dyn Error>> {
+pub async fn validate(tcp: TcpStream) -> Result<(), Box<dyn Error>> {
 
     //得到头部数据
-    let header = header_util::get_header(clientSocket.clone()).await?;
-    let heads: Vec<_> = header.split("|").collect();
+    let (tcp,head) = header_util::get_header(tcp).await?;
+    let heads: Vec<_> = head.split("|").collect();
 
     //得到客户端key
     let key = heads[0];
-    let clientOpt = client_dao::selectByKey(key);
-    if clientOpt.is_none() {
+    let client_opt = client_dao::selectByKey(key);
+    if client_opt.is_none() {
         Err::<ErrorKind, io::Error>(io::Error::new(ErrorKind::Other, "key".to_owned() + &key + "不存在"));
         // clientSocket.close();
     }
-    let client = clientOpt.unwrap();
+    let client = client_opt.unwrap();
     if client.enable_state == 0 {
         Err::<ErrorKind, io::Error>(io::Error::new(ErrorKind::Other, "key".to_owned() + &key + "的客户端已停止服务"));
     }
 
-    let clientId = client.id;
-    holdOnClient(client, clientSocket);
+    let client_id = client.id;
 
     //客户端ip
     // let ip = clientSocket.inetAddress.hostAddress;
@@ -86,10 +89,13 @@ pub async fn validate(clientSocket: Arc<Mutex<TcpStream>>) -> Result<(), Box<dyn
     //从头部信息中得到客户端版本号
     let version = heads[1];
 
-    client_dao::setClientInfo(clientId, ip.to_string(), version.to_string());
+    client_dao::setClientInfo(client_id, ip.to_string(), version.to_string());
 
     //将客户端ID返回给客户端
-    sendClientId(clientId);
+    // sendClientId(client_id);
+
+
+    holdOnClient(tcp,client);
     //
     // //将加密秘钥发送到客户端
     // sendClientSecurityKey(client.id);
@@ -103,21 +109,14 @@ pub async fn validate(clientSocket: Arc<Mutex<TcpStream>>) -> Result<(), Box<dyn
 /**
  * 保持客户端连接
  */
-async fn holdOnClient(client: ClientDto, client_socket: Arc<Mutex<TcpStream>>) {
+async fn holdOnClient(tcp: TcpStream,client: ClientDto) {
     let client_id = client.id;
-
-    let client_socket_clone1 = client_socket.clone();
-    let client_socket_clone2 = client_socket.clone();
-    let mut sdc = client_socket_clone1.lock().await;
-    let (reader,writer) = sdc.into_split();
 
     //先移除之前的连接
     close(client_id);
     let session = ClientSession {
         client,
-        clientSocket: client_socket_clone2.lock(),
-        reader:Mutex::new(reader),
-        writer:Mutex::new(writer),
+        clientSocket: Mutex::new(tcp),
         lastHeartBeatTime: 0,
     };
     {

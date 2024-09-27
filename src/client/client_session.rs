@@ -1,8 +1,7 @@
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
 use tokio::net::TcpStream;
-use tokio::sync::Mutex;
 use crate::client::header_util;
 use crate::dao::dto::client_dto::ClientDto;
 use crate::util::date_util;
@@ -14,13 +13,7 @@ use crate::util::date_util;
  */
 pub struct ClientSession {
     pub client: ClientDto,
-    pub clientSocket: Mutex<TcpStream>,
-
-    ///读数据
-    pub(crate) reader:Mutex<OwnedReadHalf>,
-
-    ///写数据
-    pub(crate) writer:Mutex<OwnedWriteHalf>,
+    pub clientSocket: TcpStream,
 
     /**
      * 最后一次收到客户端心跳时间
@@ -31,65 +24,65 @@ pub struct ClientSession {
 /**
  * 开始
  */
-pub async fn start(session: &Arc<ClientSession>) {
-    let mut proxy_socket_clone1 = session.clone();
+pub async fn start(session: &mut Arc<ClientSession>, tcp: TcpStream) {
     tokio::spawn(async move {
-        proxy_socket_clone1.await.receive().await;
+        let (r, w) = tcp.into_split();
+        let rw = Arc::new((Mutex::new(r), Mutex::new(w)));
+        session.receive().await;
     });
 }
 
+
+/**
+ * 接收从客户端发来的数据
+ */
+async fn receive(mut rw: Arc<(Mutex<OwnedReadHalf>, Mutex<OwnedWriteHalf>)>) {
+    loop {
+
+        let read = rw.clone();
+        let write = rw.clone();
+        let mut reader = read.0.lock().await;
+
+        // 创建一个长度为 1 的缓冲区
+        let mut buf = [0; 1];
+
+        //读取第一个标记字节,通过该自己判断该连接类型
+        let len_result = reader.read(&mut buf).await;
+        if let Err(e) = len_result {
+            break;
+        }
+        if len_result.unwrap() == 0 { //可能对方已经关闭
+            break;
+        }
+
+        //读取到标记
+        let flag = buf[0];
+        handle(flag, write).await
+    }
+}
+/**
+ * 处理从客户端收到的消息
+ */
+async fn handle(flag: u8, mut rw: Arc<(Mutex<OwnedReadHalf>, Mutex<OwnedWriteHalf>)>) {
+    match flag {
+
+        //客户端心跳
+        header_util::MAIN_HEART_BEAT => {
+            //println("-->接收到客户端的心跳数据${Date()}")
+
+            //记录与客户端最后一次心跳时间戳
+            // self.lastHeartBeatTime = date_util::timestamp();
+
+            let mut writer = rw.1.lock().await;
+
+            //回复客户端心跳
+            writer.write_i8(1).await;
+        }
+        _ => {}
+    }
+}
+
 impl ClientSession {
-
-    /**
-     * 接收从客户端发来的数据
-     */
-    async fn receive(&mut self) {
-        let mut reader = self.reader.lock().await;
-        loop {
-
-            // 创建一个长度为 1 的缓冲区
-            let mut buf = [0; 1];
-
-            //读取第一个标记字节,通过该自己判断该连接类型
-            let lenResult = reader.read(&mut buf).await;
-            if let Err(e) = lenResult {
-                break;
-            }
-            if lenResult.unwrap() == 0 { //可能对方已经关闭
-                break;
-            }
-
-            //读取到标记
-            let flag = buf[0];
-            self.handle(flag).await
-        }
-
-        //显示丢弃所有权
-        drop(reader);
-        self.clientSocket.shutdown().await;
-    }
-
-    /**
-     * 处理从客户端收到的消息
-     */
-    async fn handle(&mut self, flag: u8) {
-        match flag {
-
-            //客户端心跳
-            header_util::MAIN_HEART_BEAT => {
-                //println("-->接收到客户端的心跳数据${Date()}")
-
-                //记录与客户端最后一次心跳时间戳
-                self.lastHeartBeatTime = date_util::timestamp();
-
-                //回复客户端心跳
-                self.clientSocket.write_i8(1).await;
-            }
-            _ => {}
-        }
-    }
-
-
     /**
      * 往客户端发送数据
      * @param flag 头部标记
