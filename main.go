@@ -6,18 +6,25 @@ import (
 	_ "embed"
 	"fmt"
 	_ "github.com/mattn/go-sqlite3"
+	"time"
 )
+
 func main() {
 	NPSDB.Init()
-	//clientDto:=dto.ClientDto{
-	//	Name:"sd",
-	//	Key:"dsfdsf",
-	//	Remark:"6t7uyghjbmnlkkj",
+	//clientDto := dto.ClientDto{
+	//	Name:   "sd",
+	//	Key:    "dsfdsf",
+	//	Remark: "6t7uyghjbmnlkkj",
 	//}
 	//ClientDao.Add(clientDto)
+	updateDate1 := time.Now().UnixNano() / int64(time.Millisecond)
+	for i := 0; i < 1; i++ {
+		ClientDao.SelectOne(1)
+	}
+	updateDate2 := time.Now().UnixNano() / int64(time.Millisecond)
+	fmt.Printf("-->finish:%d", updateDate2-updateDate1)
 
-	clientDto := ClientDao.SelectOne(1)
-	fmt.Println(clientDto.Name)
+	//time.Sleep(99999 * time.Second)
 	return
 
 	//// 打开数据库连接，没有文件时会自动创建
@@ -70,4 +77,3 @@ func main() {
 	//	log.Fatal(err)
 	//}
 }
-

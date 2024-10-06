@@ -3,11 +3,11 @@ package dto
 type ForwardAclDto struct {
 
 	//代理服务ID
-	forwardId int
+	ForwardId int
 
 	//ip地址
-	ip string
+	Ip string
 
 	//备注
-	remark string
+	Remark string
 }

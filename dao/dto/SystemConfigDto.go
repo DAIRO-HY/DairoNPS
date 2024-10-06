@@ -4,8 +4,8 @@ package dto
 type SystemConfigDto struct {
 
 	//入网流量
-	inDataTotal int64
+	InDataTotal int64
 
 	//出网流量
-	outDataTotal int64
+	OutDataTotal int64
 }

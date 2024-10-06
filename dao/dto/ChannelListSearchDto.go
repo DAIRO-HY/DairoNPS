@@ -4,8 +4,8 @@ package dto
 type ChannelListSearchDto struct {
 
 	//客户端id
-	clientId int
+	ClientId int
 
 	//隧道类型
-	mode int
+	Mode int
 }

@@ -5,6 +5,9 @@ import (
 	"fmt"
 	_ "github.com/mattn/go-sqlite3"
 	"log"
+	"reflect"
+	"strconv"
+	"strings"
 )
 
 const DbPath = "./data/dairo-nps.sqlite"
@@ -61,13 +64,13 @@ func Insert(insert string, args ...any) (int64, error) {
 	return lastInsertId, nil
 }
 
-// 查询第一个数据并忽略错误
+// SelectSingleOneIgnoreError 查询第一个数据并忽略错误
 func SelectSingleOneIgnoreError[T any](query string, args ...any) T {
 	value, _ := SelectSingleOne[T](query, args...)
 	return value
 }
 
-// 查询第一个数据
+// SelectSingleOne 查询第一个数据
 func SelectSingleOne[T any](query string, args ...any) (T, error) {
 	db := GetDb()
 	defer db.Close()
@@ -91,8 +94,50 @@ func SelectSingleOne[T any](query string, args ...any) (T, error) {
 	return value, nil
 }
 
-// 查询第一个数据
-func SelectOne(query string, args ...any) {
+// SelectOne 查询第一个数据
+func SelectOne[T any](query string, args ...any) *T {
+	dtoList := SelectList[T](query, args...)
+	if len(dtoList) == 0 {
+		return nil
+	}
+	return dtoList[0]
+}
+
+// SelectList 查询列表
+func SelectList[T any](query string, args ...any) []*T {
+	list := SelectToListMap(query, args...)
+
+	// 创建一个空切片
+	dtoList := make([]*T, 0) // 初始化空切片
+	for _, item := range list {
+		dtoT := new(T)
+		reflectDto := reflect.ValueOf(dtoT).Elem()
+		for key := range item {
+
+			//将首字符大写
+			field := strings.ToUpper(string(key[0])) + key[1:]
+			nameField := reflectDto.FieldByName(field)
+			value := item[key]
+			kind := nameField.Kind()
+
+			//判断数据类型
+			switch kind {
+			case reflect.String:
+				nameField.SetString(value)
+			case reflect.Int64, reflect.Int, reflect.Int32, reflect.Int16, reflect.Int8:
+				int64Value, _ := strconv.ParseInt(value, 10, 64)
+				nameField.SetInt(int64Value)
+			default:
+				fmt.Println("未知类型")
+			}
+		}
+		dtoList = append(dtoList, dtoT)
+	}
+	return dtoList
+}
+
+// SelectToListMap 将查询结果以List<Map>的类型返回
+func SelectToListMap(query string, args ...any) []map[string]string {
 	db := GetDb()
 	defer db.Close()
 
@@ -108,28 +153,36 @@ func SelectOne(query string, args ...any) {
 		log.Fatal(err)
 	}
 
-	if !rows.Next() {
-	}
-
 	// 创建一个长度与列数相同的slice来存放查询结果
 	values := make([]interface{}, len(columns))
+
 	// 创建一个[]interface{}的slice, 每个元素指向values中的对应位置
 	valuePtrs := make([]interface{}, len(columns))
-	for i := range values {
-		valuePtrs[i] = &values[i]
-	}
 
-	// 将当前行的数据扫描到valuePtrs中
-	if err := rows.Scan(valuePtrs...); err != nil {
-		log.Fatal(err)
-	}
+	// 创建一个空切片
+	list := make([]map[string]string, 0) // 初始化空切片
+	for rows.Next() {
+		for i := range values {
+			valuePtrs[i] = &values[i]
+		}
 
-	// 使用map将列名和对应的值关联起来
-	rowMap := make(map[string]interface{})
-	for i, col := range columns {
-		rowMap[col] = values[i]
+		// 将当前行的数据扫描到valuePtrs中
+		if err := rows.Scan(valuePtrs...); err != nil {
+			log.Fatal(err)
+		}
+
+		// 使用map将列名和对应的值关联起来
+		rowMap := make(map[string]string)
+		for i, col := range columns {
+			value := values[i]
+			if value == nil {
+				continue
+			}
+			rowMap[col] = fmt.Sprintf("%v", value)
+		}
+		list = append(list, rowMap)
 	}
-	fmt.Println("dfsf")
+	return list
 }
 
 func GetDb() *sql.DB {

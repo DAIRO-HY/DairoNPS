@@ -3,11 +3,11 @@ package dto
 type ChannelAclDto struct {
 
 	//隧道ID
-	channelId int
+	ChannelId int
 
 	//ip地址
-	ip string
+	Ip string
 
 	//备注
-	remark string
+	Remark string
 }
