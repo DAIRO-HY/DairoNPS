@@ -13,7 +13,7 @@ import (
  * TCP隧道代理
  */
 type ProxyTCPAccept struct {
-	Client  dto.ClientDto
+	Client  *dto.ClientDto
 	Channel *dto.ChannelDto
 
 	/**
@@ -119,7 +119,7 @@ func hasAccess(tcpProxy ProxyTCPAccept, proxySocket net.Conn) bool {
 /**
  * 停止监听端口
  */
-func Close(tcpProxy ProxyTCPAccept) {
+func Close(tcpProxy *ProxyTCPAccept) {
 	for {
 		time.Sleep(100 * time.Millisecond)
 		if tcpProxy.proxySocketServer == nil {

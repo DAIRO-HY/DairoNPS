@@ -126,7 +126,7 @@ func SetRemark(id int, remark string) {
 /**
  * 获取所有激活的隧道列表
  */
-func SelectActiveByClientId(clientId int) []int {
+func SelectActiveByClientId(clientId int) []*dto.ChannelDto {
 	sql := "select channel.* from channel left join client on channel.clientId = client.id where channel.clientId = ? and client.enableState = 1 and channel.enableState = 1"
 	return DBUtil.SelectList[dto.ChannelDto](sql, clientId)
 }
@@ -134,7 +134,12 @@ func SelectActiveByClientId(clientId int) []int {
 /**
  * 获取客户端下所有的隧道id列表
  */
-func SelectIdByClientId(clientId int) []*int {
+func SelectIdByClientId(clientId int) []int {
 	sql := "select id from channel where client_id = ?"
-	return DBUtil.SelectList[int](sql, clientId)
+	list := DBUtil.SelectList[dto.ChannelDto](sql, clientId)
+	ids := make([]int, 0)
+	for _, it := range list {
+		ids = append(ids, it.Id)
+	}
+	return ids
 }

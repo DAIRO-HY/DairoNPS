@@ -68,7 +68,7 @@ func initEmptyPoolByClient(clientID int) {
  * 添加TCP连接池
  * @param clientSocket tcp连接
  */
-func add(clientSocket net.Conn) {
+func Add(clientSocket net.Conn) {
 
 	////从头部信息中得到客户端id
 	//clientId := HeaderUtil.getHeader(clientSocket)?.toInt()

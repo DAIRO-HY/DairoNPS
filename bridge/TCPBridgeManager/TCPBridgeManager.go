@@ -44,7 +44,7 @@ func GetBridgeList() []TCPBridge.TCPBridge {
  * @param proxySocket 代理服务端Socket
  * @param clientSocket 内网穿透客户端Socket
  */
-func Start(client dto.ClientDto, channel dto.ChannelDto, proxySocket net.Conn, clientSocket net.Conn) {
+func Start(client *dto.ClientDto, channel *dto.ChannelDto, proxySocket net.Conn, clientSocket net.Conn) {
 	bridge := TCPBridge.TCPBridge{
 		Channel:      channel,
 		Client:       client,

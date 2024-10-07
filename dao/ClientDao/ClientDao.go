@@ -29,7 +29,7 @@ func SelectOne(id int) *dto.ClientDto {
  * @param key 认证秘钥
  * @return 客户端Dto
  */
-func selectByKey(key string) *dto.ClientDto {
+func SelectByKey(key string) *dto.ClientDto {
 	sql := "select * from client where key = ?"
 	return DBUtil.SelectOne[dto.ClientDto](sql, key)
 }
@@ -37,7 +37,7 @@ func selectByKey(key string) *dto.ClientDto {
 /**
  * 更新一条数据
  */
-func update(dto dto.ClientDto) {
+func Update(dto dto.ClientDto) {
 	updateDate := time.Now().UnixNano() / int64(time.Millisecond)
 	sql :=
 		"update client set name = ?,key = ?,enable_state=?,remark=?,update_date=? where id = ? and update_date=?"
@@ -47,7 +47,7 @@ func update(dto dto.ClientDto) {
 /**
  * 同步入出网流量
  */
-func setDataLen(dto dto.ClientDto) {
+func SetDataLen(dto *dto.ClientDto) {
 	sql := "update client set in_data_total = ?,out_data_total=? where id = ?"
 	DBUtil.Exec(sql, dto.InDataTotal, dto.OutDataTotal, dto.Id)
 }
@@ -55,7 +55,7 @@ func setDataLen(dto dto.ClientDto) {
 /**
  * 设置客户端ip地址信息
  */
-func setClientInfo(dto dto.ClientDto) {
+func SetClientInfo(dto dto.ClientDto) {
 	sql :=
 		"update client set ip = ?,version=?,last_login_date=CURRENT_TIMESTAMP where id = ?"
 	DBUtil.Exec(sql, dto.Ip, dto.Version, dto.Id)

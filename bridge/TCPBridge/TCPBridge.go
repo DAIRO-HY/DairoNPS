@@ -18,8 +18,8 @@ import (
  * @param clientSocket 内网穿透客户端Socket
  */
 type TCPBridge struct {
-	Client       dto.ClientDto
-	Channel      dto.ChannelDto
+	Client       *dto.ClientDto
+	Channel      *dto.ChannelDto
 	ProxySocket  net.Conn
 	ClientSocket net.Conn
 

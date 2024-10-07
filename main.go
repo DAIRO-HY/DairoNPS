@@ -10,6 +10,7 @@ import (
 )
 
 func main() {
+	fmt.Println("-->START")
 	NPSDB.Init()
 	//clientDto := dto.ClientDto{
 	//	Name:   "sd",
