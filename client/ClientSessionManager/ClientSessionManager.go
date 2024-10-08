@@ -6,6 +6,7 @@ import (
 	"DairoNPS/dao/ClientDao"
 	"DairoNPS/dao/dto"
 	"DairoNPS/proxy/ProxyAcceptManager"
+	"log"
 	"net"
 	"strconv"
 	"strings"
@@ -63,41 +64,34 @@ func Validate(clientSocket net.Conn) {
 	if len(header) == 0 {
 		return
 	}
-
 	headers := strings.Split(header, "|")
 
 	//得到客户端key
 	key := headers[0]
 	client := ClientDao.SelectByKey(key)
 	if client == nil {
-		//println("key:${key}不存在")
+		log.Printf("-->客户端：%s不存在\n", key)
 		clientSocket.Close()
 		return
 	}
 	if client.EnableState == 0 {
-		//println("key:${key}的客户端已停止服务")
+		log.Printf("-->客户端：%s的客户端已被停止服务\n", key)
 		clientSocket.Close()
 		return
 	}
 	holdOnClient(client, clientSocket)
 
-	//客户端ip
-	ip := clientSocket.RemoteAddr().String()
-
-	//从头部信息中得到客户端版本号
-	version := headers[0]
-	loginClientDto := dto.ClientDto{
-		Id:      client.Id,
-		Ip:      ip,
-		Version: version,
-	}
-	ClientDao.SetClientInfo(loginClientDto)
-
-	//将客户端ID返回给客户端
-	sendClientId(client.Id)
-
-	//将加密秘钥发送到客户端
-	sendClientSecurityKey(client.Id)
+	////客户端ip
+	//ip := clientSocket.RemoteAddr().String()
+	//
+	////从头部信息中得到客户端版本号
+	//version := headers[0]
+	//loginClientDto := dto.ClientDto{
+	//	Id:      client.Id,
+	//	Ip:      ip,
+	//	Version: version,
+	//}
+	//ClientDao.SetClientInfo(loginClientDto)
 
 	//开启该客户端下所有隧道监听
 	ProxyAcceptManager.Accept(client)
@@ -107,32 +101,16 @@ func Validate(clientSocket net.Conn) {
  * 保持客户端连接
  */
 func holdOnClient(client *dto.ClientDto, clientSocket net.Conn) {
-	clientSessionMapLock.Lock()
-
 	//先移除之前的连接
 	Close(client.Id)
+	clientSessionMapLock.Lock()
 	session := ClientSession.ClientSession{
 		Client:       client,
 		ClientSocket: clientSocket,
 	}
 	clientSessionMap[client.Id] = session
-	go ClientSession.Start(session)
+	go ClientSession.Start(session, Close)
 	clientSessionMapLock.Unlock()
-}
-
-/**
- * 将客户端ID返回给客户端
- */
-func sendClientId(clientID int) {
-	send(clientID, HeaderUtil.SERVER_TO_CLIENT_ID, strconv.Itoa(clientID))
-}
-
-/**
- * 将加密秘钥发送到客户端
- */
-func sendClientSecurityKey(clientID int) {
-	//session := clientSessionMap[clientID]
-	//ClientSession.Send(session, []byte(SecurityUtil.clientKeyArray))
 }
 
 /**
@@ -171,6 +149,8 @@ func Close(clientId int) {
 	clientSessionMapLock.Lock()
 	if _, ok := clientSessionMap[clientId]; ok { //如果存在
 		clientSession := clientSessionMap[clientId]
+
+		//去关闭连接
 		ClientSession.Close(clientSession)
 		ClientDao.SetDataLen(clientSession.Client)
 		delete(clientSessionMap, clientId)

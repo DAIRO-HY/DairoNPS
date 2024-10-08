@@ -7,7 +7,7 @@ import (
 )
 
 // Add 添加一条客户端数据
-func Add(dto dto.ClientDto) {
+func Add(dto *dto.ClientDto) {
 	updateDate := time.Now().UnixNano() / int64(time.Millisecond)
 	sql := "insert into client(name,key,remark,updateDate)values(?,?,?,?)"
 	id := DBUtil.InsertIgnoreError(sql, dto.Name, dto.Key, dto.Remark, updateDate)

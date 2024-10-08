@@ -1,7 +1,7 @@
 package TCPBridge
 
 import (
-	"DairoNPS/bridge/TCPBridgeManager"
+	//"DairoNPS/bridge/TCPBridgeManager"
 	"DairoNPS/constant/CLSConfig"
 	"DairoNPS/dao/dto"
 	"bufio"
@@ -9,6 +9,8 @@ import (
 	"net"
 	"time"
 )
+
+type RemoveBridgeFunc func(bridge TCPBridge)
 
 /**
  * TCP桥接管理
@@ -65,14 +67,14 @@ type TCPBridge struct {
 /**
 * 开始传输数据
  */
-func Start(bridge TCPBridge) {
+func Start(bridge TCPBridge, removeFunc RemoveBridgeFunc) {
 	go func() {
 
 		//发送目标端口信息
 		sendHeaderToClient(bridge)
-		receiveByProxySendToClient(bridge)
+		receiveByProxySendToClient(bridge, removeFunc)
 	}()
-	go receiveByClientSendToProxy(bridge)
+	go receiveByClientSendToProxy(bridge, removeFunc)
 }
 
 /**
@@ -98,7 +100,7 @@ func sendHeaderToClient(bridge TCPBridge) {
 /**
 * 从代理服务接收数据发送到客户端
  */
-func receiveByProxySendToClient(bridge TCPBridge) {
+func receiveByProxySendToClient(bridge TCPBridge, removeFunc RemoveBridgeFunc) {
 
 	////客户端输出流
 	//val clientOStream = this.clientSocket.outputStream
@@ -148,13 +150,13 @@ func receiveByProxySendToClient(bridge TCPBridge) {
 
 	//标记代理连接入方向是否被关闭
 	bridge.proxyInIsClosed = true
-	recyle(bridge)
+	recyle(bridge, removeFunc)
 }
 
 /**
 * 从客户端接收发送到代理服务器
  */
-func receiveByClientSendToProxy(bridge TCPBridge) {
+func receiveByClientSendToProxy(bridge TCPBridge, removeFunc RemoveBridgeFunc) {
 
 	//客户端输入流
 	//val clientIStream = this.clientSocket.inputStream
@@ -203,17 +205,18 @@ func receiveByClientSendToProxy(bridge TCPBridge) {
 
 	//标记代理连接入方向是否被关闭
 	bridge.clientInIsClosed = true
-	recyle(bridge)
+	recyle(bridge, removeFunc)
 }
 
 /**
 * 资源回收
  */
-func recyle(bridge TCPBridge) {
+func recyle(bridge TCPBridge, removeFunc RemoveBridgeFunc) {
 	if bridge.proxyInIsClosed && bridge.clientInIsClosed {
 		bridge.ClientSocket.Close()
 		bridge.ProxySocket.Close()
-		TCPBridgeManager.RemoveBridgeList(bridge)
+		removeFunc(bridge)
+		//TCPBridgeManager.RemoveBridgeList(bridge)
 	}
 }
 

@@ -29,9 +29,7 @@ func Accept(client *dto.ClientDto) {
 
 	//开启NPS客户端ID下所有的隧道
 	activeList := ChannelDao.SelectActiveByClientId(client.Id)
-
 	for _, it := range activeList {
-
 		accept(client, it)
 	}
 }
@@ -55,8 +53,6 @@ func accept(client *dto.ClientDto, channel *dto.ChannelDto) {
 		Client:  client,
 		Channel: channel,
 	}
-	//(client, channel)
-
 	channelIdToProxyAccept[channel.Id] = &proxyTCPAccept
 
 	//开启监听

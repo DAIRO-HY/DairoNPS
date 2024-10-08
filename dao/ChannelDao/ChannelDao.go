@@ -10,10 +10,10 @@ import (
 /**
  * 添加一条隧道
  */
-func add(dto dto.ChannelDto) {
+func Add(dto dto.ChannelDto) {
 	updateDate := time.Now().UnixNano() / int64(time.Millisecond)
 	sql :=
-		"insert into channel(client_id,name,type,serverPort,targetPort,securityState,aclState,enableState,updateDate)values(?,?,?,?,?,?,?,?,?)"
+		"insert into channel(clientId,name,mode,serverPort,targetPort,securityState,aclState,enableState,updateDate)values(?,?,?,?,?,?,?,?,?)"
 	id := DBUtil.InsertIgnoreError(
 		sql,
 		dto.ClientId,

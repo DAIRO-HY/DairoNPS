@@ -13,9 +13,7 @@ import (
  * 当前正在通信的会话
  */
 var bridgeList = []TCPBridge.TCPBridge{}
-var (
-	bridgeListLock sync.Mutex
-)
+var bridgeListLock sync.Mutex
 
 ///**
 // * 当前桥接数量
@@ -57,7 +55,7 @@ func Start(client *dto.ClientDto, channel *dto.ChannelDto, proxySocket net.Conn,
 	bridgeListLock.Lock()
 	bridgeList = append(bridgeList, bridge)
 	bridgeListLock.Unlock()
-	TCPBridge.Start(bridge)
+	TCPBridge.Start(bridge, RemoveBridgeList)
 }
 
 /**

@@ -5,12 +5,12 @@ import "DairoNPS/dao/SystemConfigDao"
 /**
  * 服务端监听TCP端口,客户端通过此端口进行连接
  */
-var CLIENT_TO_SERVER_TCP_PORT = 1681
+var CLIENT_TO_SERVER_TCP_PORT = 1781
 
 /**
  * 服务端监听UDP端口,客户端通过此端口进行连接
  */
-var CLIENT_TO_SERVER_UDP_PORT = 1682
+var CLIENT_TO_SERVER_UDP_PORT = 1782
 
 /**
  * 因为UDP的不确定性,服务端无法检测存活状态,所以
