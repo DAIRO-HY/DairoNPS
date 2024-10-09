@@ -8,15 +8,16 @@ import (
 	"DairoNPS/dao/dto"
 	"DairoNPS/util/SecurityUtil"
 	_ "embed"
-	"fmt"
 	_ "github.com/mattn/go-sqlite3"
 )
 
 func main() {
-	fmt.Println("-->sdfsf")
 	SecurityUtil.Init()
 	NPSDB.Init()
 	//addTestData()
+
+	go startListener(19091)
+	go startCli(19090)
 	ClientAcceptManager.Start()
 }
 
