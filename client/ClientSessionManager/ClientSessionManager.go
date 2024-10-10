@@ -115,11 +115,11 @@ func holdOnClient(client *dto.ClientDto, clientSocket net.Conn) {
 
 /**
  * 向客户端申请TCP连接池请求
- * @param clientID 客户端ID
+ * @param clientId 客户端ID
  * @param count 申请数量
  */
-func sendTCPPoolRequest(clientID int, count int) {
-	send(clientID, HeaderUtil.SERVER_TCP_POOL_REQUEST, strconv.Itoa(count))
+func SendTCPPoolRequest(clientId int, count int) {
+	send(clientId, HeaderUtil.SERVER_TCP_POOL_REQUEST, strconv.Itoa(count))
 }
 
 /**
@@ -137,8 +137,8 @@ func sendTCPPoolRequest(clientID int, count int) {
  * @param flag 头部标记
  * @param message 头部消息
  */
-func send(clientID int, flag byte, message string) {
-	session := clientSessionMap[clientID]
+func send(clientId int, flag byte, message string) {
+	session := clientSessionMap[clientId]
 	ClientSession.SendHead(session, flag, message)
 }
 

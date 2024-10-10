@@ -1,9 +1,9 @@
 package TCPPoolManager
 
 import (
+	"DairoNPS/client/ClientSessionManager/ClientSessionManagerImpl"
 	"DairoNPS/constant/CLSConfig"
 	"DairoNPS/pool/TCPPool"
-	"bufio"
 	"net"
 	"sync"
 	"time"
@@ -16,9 +16,7 @@ import (
  */
 //private val clientScoketPoolMap = HashMap<Int, ClientPoolList<TCPPool>>()
 var clientScoketPoolMap = make(map[int][]TCPPool.TCPPool)
-var (
-	clientScoketPoolMapLock sync.Mutex
-)
+var clientScoketPoolMapLock sync.Mutex
 
 /**
  * 客户端连接池最后一次请求时间
@@ -101,34 +99,30 @@ func Add(clientSocket net.Conn) {
  * @param clientID 客户端ID
  */
 func get(clientID int) net.Conn {
-	initEmptyPoolByClient(clientID)
+	//initEmptyPoolByClient(clientID)
 
 	//客户端连接池
 	poolList := clientScoketPoolMap[clientID]
-
 	var resultPool TCPPool.TCPPool
 
-	//TODO: 这里应该每个客户端创建一把锁
-	clientScoketPoolMapLock.Lock()
 	if len(poolList) == 0 {
-		clientScoketPoolMapLock.Unlock()
 		return nil
 	}
 	for len(poolList) > 0 {
+
+		//TODO: 这里应该每个客户端创建一把锁
+		clientScoketPoolMapLock.Lock()
 
 		//取最后一次添加到连接池的连接
 		pool := poolList[len(poolList)-1]
 
 		//移除最后一个元素
 		poolList = poolList[:len(poolList)-1]
+		clientScoketPoolMapLock.Unlock()
 		//println("-->从连接池获取到一个连接,连接池剩余:${poolList.size}")
-		//发送紧急数据来判断客户端是否在线,客户端的oobInline设置为false会忽律紧急数据
-		writer := bufio.NewWriter(pool.Socket)
-		if writer.WriteByte(0) != nil {
-			TCPPool.Close(pool)
-			continue
-		}
-		if writer.Flush() != nil {
+		//试探性发送一个数据，检测连接是否已经失效
+		_, err := pool.Socket.Write([]byte{0})
+		if err != nil {
 			TCPPool.Close(pool)
 			continue
 		}
@@ -143,7 +137,7 @@ func get(clientID int) net.Conn {
  * 从连接池获取一个连接,并请求添加连接池
  * @param clientID 客户端ID
  */
-func GetAndAddPool(clientID int) net.Conn {
+func getAndAddPool(clientID int) net.Conn {
 
 	//记录该客户端最后一次请求连接池时间
 	clientLastRequestTimeMap[clientID] = time.Now().UnixNano() / int64(time.Millisecond)
@@ -169,10 +163,11 @@ func GetAndAddPool(clientID int) net.Conn {
  * 每取走一个连接,则请求创建2个新的连接,直到达到最大连接数
  * @param clientID 客户端ID
  */
-func poolRequest(clientID int, count int) {
-	//if len(clientScoketPoolMap[clientID]) < CLSConfig.MAX_POOL_COUNT {
-	//    ClientSessionManager.sendTCPPoolRequest(clientID, count)
-	//}
+func poolRequest(clientId int, count int) {
+	clientPool := clientScoketPoolMap[clientId]
+	if len(clientPool) < CLSConfig.MAX_POOL_COUNT {
+		ClientSessionManagerImpl.SendTCPPoolRequest(clientId, count)
+	}
 }
 
 /**

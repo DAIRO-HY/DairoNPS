@@ -1,6 +1,7 @@
 package HeaderUtil
 
 import (
+	"DairoNPS/util/TcpUtil"
 	"log"
 	"net"
 )
@@ -51,36 +52,22 @@ const SECURITY_CLIENT_KEY = 7
  * 获取客户端Socket头部信息
  */
 func GetHeader(clientSocket net.Conn) string {
-	data := make([]byte, 1)
 
 	//读取一个字节,该字节代表key长度
-	length, err := clientSocket.Read(data)
-	if err != nil || length != 1 {
-		log.Printf("-->读取头部数据长度时发生了错误,err:%q len:%d\n", err, length)
+	lenData, err := TcpUtil.ReadNByte(clientSocket, 1)
+	if err != nil {
+		log.Printf("-->读取头部数据长度时发生了错误,err:%q\n", err)
 		clientSocket.Close()
 		return ""
 	}
 
 	//得到头部部分数据长度
-	headerLen := data[0]
-
-	//记录已经读取到的数据大小
-	var readedLength byte = 0
-	headerData := make([]byte, headerLen)
-	for {
-		buffer := make([]byte, headerLen-readedLength)
-		len, err := clientSocket.Read(buffer)
-		if err != nil {
-			log.Printf("-->读取头部数据时发生了错误,err:%q len:%d\n", err, len)
-			clientSocket.Close()
-			return ""
-		}
-
-		copy(headerData[readedLength:readedLength+byte(len)], buffer[:len])
-		readedLength += byte(len)
-		if readedLength == headerLen {
-			break
-		}
+	headerLen := lenData[0]
+	headerData, err := TcpUtil.ReadNByte(clientSocket, int(headerLen))
+	if err != nil {
+		log.Printf("-->读取头部数据时发生了错误,err:%q\n", err)
+		clientSocket.Close()
+		return ""
 	}
 	return string(headerData)
 }
