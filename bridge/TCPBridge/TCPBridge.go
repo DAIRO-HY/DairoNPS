@@ -1,7 +1,6 @@
 package TCPBridge
 
 import (
-	//"DairoNPS/bridge/TCPBridgeManager"
 	"DairoNPS/constant/CLSConfig"
 	"DairoNPS/dao/dto"
 	"bufio"
@@ -10,7 +9,7 @@ import (
 	"time"
 )
 
-type RemoveBridgeFunc func(bridge TCPBridge)
+type RemoveBridgeFunc func(bridge *TCPBridge)
 
 /**
  * TCP桥接管理
@@ -67,27 +66,27 @@ type TCPBridge struct {
 /**
 * 开始传输数据
  */
-func Start(bridge TCPBridge, removeFunc RemoveBridgeFunc) {
+func (mine *TCPBridge) Start(removeFunc RemoveBridgeFunc) {
 	go func() {
 
 		//发送目标端口信息
-		sendHeaderToClient(bridge)
-		receiveByProxySendToClient(bridge, removeFunc)
+		mine.sendHeaderToClient()
+		mine.receiveByProxySendToClient(removeFunc)
 	}()
-	go receiveByClientSendToProxy(bridge, removeFunc)
+	go mine.receiveByClientSendToProxy(removeFunc)
 }
 
 /**
 * 发送目标端口信息
  */
-func sendHeaderToClient(bridge TCPBridge) {
+func (mine *TCPBridge) sendHeaderToClient() {
 
 	//将加密类型及目标端口 格式:加密状态|端口  1|80   1|127.0.0.1:80
 	//1:加密  0:不加密
-	header := fmt.Sprintf("%d|%d", bridge.Channel.SecurityState, bridge.Channel.TargetPort)
+	header := fmt.Sprintf("%d|%d", mine.Channel.SecurityState, mine.Channel.TargetPort)
 	headerData := []byte(header)
 
-	writer := bufio.NewWriter(bridge.ClientSocket)
+	writer := bufio.NewWriter(mine.ClientSocket)
 
 	//写入数据长度标识
 	writer.WriteByte(byte(len(headerData)))
@@ -100,7 +99,7 @@ func sendHeaderToClient(bridge TCPBridge) {
 /**
 * 从代理服务接收数据发送到客户端
  */
-func receiveByProxySendToClient(bridge TCPBridge, removeFunc RemoveBridgeFunc) {
+func (mine *TCPBridge) receiveByProxySendToClient(removeFunc RemoveBridgeFunc) {
 
 	////客户端输出流
 	//val clientOStream = this.clientSocket.outputStream
@@ -109,24 +108,24 @@ func receiveByProxySendToClient(bridge TCPBridge, removeFunc RemoveBridgeFunc) {
 	//val proxyIStream = this.proxySocket.inputStream
 	//val data = ByteArray(CLSConfig.READ_CACHE_SIZE)//缓存大小
 
-	clientWriter := bufio.NewWriter(bridge.ClientSocket)
+	clientWriter := bufio.NewWriter(mine.ClientSocket)
 
 	data := make([]byte, CLSConfig.READ_CACHE_SIZE)
 	for {
-		length, err := bridge.ProxySocket.Read(data)
+		length, err := mine.ProxySocket.Read(data)
 		if err != nil {
 			break
 		}
 
 		//TODO:每次都计时可能影响性能
-		bridge.lastSessionTime = time.Now().UnixNano() / int64(time.Millisecond) //标记最后一次读取到数据的时间
+		mine.lastSessionTime = time.Now().UnixNano() / int64(time.Millisecond) //标记最后一次读取到数据的时间
 
 		//入网统计
 		//bridge.inDataTotal = bridge.inDataTotal + length
 		//bridge.Channel.InDataTotal = bridge.Channel.InDataTotal + length
 		//bridge.Client.InDataTotal = bridge.Client.InDataTotal + length
 		//CLSConfig.systemConfig.InDataTotal = CLSConfig.systemConfig.InDataTotal + length
-		if bridge.Channel.SecurityState == 1 { //加密数据
+		if mine.Channel.SecurityState == 1 { //加密数据
 			//SecurityUtil.mapping(data, len)
 		}
 
@@ -143,45 +142,45 @@ func receiveByProxySendToClient(bridge TCPBridge, removeFunc RemoveBridgeFunc) {
 	}
 
 	//关闭客户端的输出流
-	bridge.ClientSocket.(*net.TCPConn).CloseWrite()
+	mine.ClientSocket.(*net.TCPConn).CloseWrite()
 
 	//关闭代理端的输入流
-	bridge.ProxySocket.(*net.TCPConn).CloseRead()
+	mine.ProxySocket.(*net.TCPConn).CloseRead()
 
 	//标记代理连接入方向是否被关闭
-	bridge.proxyInIsClosed = true
-	recyle(bridge, removeFunc)
+	mine.proxyInIsClosed = true
+	mine.recyle(removeFunc)
 }
 
 /**
 * 从客户端接收发送到代理服务器
  */
-func receiveByClientSendToProxy(bridge TCPBridge, removeFunc RemoveBridgeFunc) {
+func (mine *TCPBridge) receiveByClientSendToProxy(removeFunc RemoveBridgeFunc) {
 
 	//客户端输入流
 	//val clientIStream = this.clientSocket.inputStream
 
 	//代理Socket输出流
 	//val proxyOStream = this.proxySocket.outputStream
-	proxyWriter := bufio.NewWriter(bridge.ProxySocket)
+	proxyWriter := bufio.NewWriter(mine.ProxySocket)
 
 	data := make([]byte, CLSConfig.READ_CACHE_SIZE)
 
 	for {
-		length, err := bridge.ClientSocket.Read(data)
+		length, err := mine.ClientSocket.Read(data)
 		if err != nil {
 			break
 		}
 
 		//TODO:每次都计时可能影响性能
-		bridge.lastSessionTime = time.Now().UnixNano() / int64(time.Millisecond) //标记最后一次读取到数据的时间
+		mine.lastSessionTime = time.Now().UnixNano() / int64(time.Millisecond) //标记最后一次读取到数据的时间
 
 		//入网统计
 		//bridge.outDataTotal = bridge.outDataTotal + length
 		//bridge.Channel.OutDataTotal = bridge.Channel.OutDataTotal + length
 		//bridge.Client.OutDataTotal = bridge.Client.OutDataTotal + length
 		//CLSConfig.systemConfig.OutDataTotal = CLSConfig.systemConfig.OutDataTotal + length
-		if bridge.Channel.SecurityState == 1 { //加密数据
+		if mine.Channel.SecurityState == 1 { //加密数据
 			//SecurityUtil.mapping(data, len)
 		}
 
@@ -198,24 +197,24 @@ func receiveByClientSendToProxy(bridge TCPBridge, removeFunc RemoveBridgeFunc) {
 	}
 
 	//关闭客户端的输出流
-	bridge.ProxySocket.(*net.TCPConn).CloseWrite()
+	mine.ProxySocket.(*net.TCPConn).CloseWrite()
 
 	//关闭代理端的输入流
-	bridge.ClientSocket.(*net.TCPConn).CloseRead()
+	mine.ClientSocket.(*net.TCPConn).CloseRead()
 
 	//标记代理连接入方向是否被关闭
-	bridge.clientInIsClosed = true
-	recyle(bridge, removeFunc)
+	mine.clientInIsClosed = true
+	mine.recyle(removeFunc)
 }
 
 /**
 * 资源回收
  */
-func recyle(bridge TCPBridge, removeFunc RemoveBridgeFunc) {
-	if bridge.proxyInIsClosed && bridge.clientInIsClosed {
-		bridge.ClientSocket.Close()
-		bridge.ProxySocket.Close()
-		removeFunc(bridge)
+func (mine *TCPBridge) recyle(removeFunc RemoveBridgeFunc) {
+	if mine.proxyInIsClosed && mine.clientInIsClosed {
+		mine.ClientSocket.Close()
+		mine.ProxySocket.Close()
+		removeFunc(mine)
 		//TCPBridgeManager.RemoveBridgeList(bridge)
 	}
 }
@@ -223,7 +222,7 @@ func recyle(bridge TCPBridge, removeFunc RemoveBridgeFunc) {
 /**
 * 关闭连接
  */
-func Close(bridge TCPBridge) {
-	bridge.ClientSocket.Close()
-	bridge.ProxySocket.Close()
+func (mine *TCPBridge) Close() {
+	mine.ClientSocket.Close()
+	mine.ProxySocket.Close()
 }

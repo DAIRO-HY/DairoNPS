@@ -49,21 +49,21 @@ type ProxyTCPAccept struct {
 /**
  * 开始监听端口
  */
-func Start(tcpProxy ProxyTCPAccept) {
-	accept(tcpProxy)
+func (mine *ProxyTCPAccept) Start() {
+	mine.accept()
 }
 
 /**
  * 等待客户端连接
  */
-func accept(tcpProxy ProxyTCPAccept) {
-	channel := tcpProxy.Channel
+func (mine *ProxyTCPAccept) accept() {
+	channel := mine.Channel
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", channel.ServerPort))
 	if err != nil {
 		fmt.Sprintf("端口:%d 监听失败", channel.ServerPort)
 		return
 	}
-	tcpProxy.proxySocketServer = listener
+	mine.proxySocketServer = listener
 	for {
 
 		//代理服务端Socket
@@ -72,7 +72,7 @@ func accept(tcpProxy ProxyTCPAccept) {
 			break
 		}
 
-		if !hasAccess(tcpProxy, proxySocket) { //判断是否有访问权限
+		if !mine.hasAccess(proxySocket) { //判断是否有访问权限
 			continue
 		}
 
@@ -82,16 +82,17 @@ func accept(tcpProxy ProxyTCPAccept) {
 			proxySocket.Close()
 			continue
 		}
-		TCPBridgeManager.Start(tcpProxy.Client, channel, proxySocket, clientSocket)
+		fmt.Printf("&proxySocket:%q\n", &proxySocket)
+		TCPBridgeManager.Start(mine.Client, channel, proxySocket, clientSocket)
 	}
 	fmt.Printf("-->端口:d%监听结束", channel.ServerPort)
-	tcpProxy.isFinished = true
+	mine.isFinished = true
 }
 
 /**
  * 判断是否有访问权限
  */
-func hasAccess(tcpProxy ProxyTCPAccept, proxySocket net.Conn) bool {
+func (mine *ProxyTCPAccept) hasAccess(proxySocket net.Conn) bool {
 	//if tcpProxy.channel.AclState == 0 { //访问权限处于关闭状态
 	//    return true
 	//}
@@ -119,14 +120,14 @@ func hasAccess(tcpProxy ProxyTCPAccept, proxySocket net.Conn) bool {
 /**
  * 停止监听端口
  */
-func Close(tcpProxy *ProxyTCPAccept) {
+func (mine *ProxyTCPAccept) Close() {
 	for {
 		time.Sleep(100 * time.Millisecond)
-		if tcpProxy.proxySocketServer == nil {
+		if mine.proxySocketServer == nil {
 			continue
 		}
-		tcpProxy.proxySocketServer.Close()
-		if tcpProxy.isFinished {
+		mine.proxySocketServer.Close()
+		if mine.isFinished {
 			break
 		}
 	}

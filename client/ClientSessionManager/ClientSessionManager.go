@@ -5,6 +5,7 @@ import (
 	"DairoNPS/client/HeaderUtil"
 	"DairoNPS/dao/ClientDao"
 	"DairoNPS/dao/dto"
+	"DairoNPS/pool/TCPPoolManager"
 	"DairoNPS/proxy/ProxyAcceptManager"
 	"log"
 	"net"
@@ -13,12 +14,14 @@ import (
 	"sync"
 )
 
+type ClientSessionManager struct{}
+
 //往客户端发送指令的专用连接
 
 /**
  * 客户端ID对应的Socket连接
  */
-var clientSessionMap = make(map[int]ClientSession.ClientSession)
+var clientSessionMap = make(map[int]*ClientSession.ClientSession)
 
 /**
  * 添加互斥锁
@@ -104,12 +107,15 @@ func holdOnClient(client *dto.ClientDto, clientSocket net.Conn) {
 	//先移除之前的连接
 	Close(client.Id)
 	clientSessionMapLock.Lock()
-	session := ClientSession.ClientSession{
+	session := &ClientSession.ClientSession{
 		Client:       client,
 		ClientSocket: clientSocket,
 	}
 	clientSessionMap[client.Id] = session
-	go ClientSession.Start(session, Close)
+
+	//初始化客户端连接池
+	TCPPoolManager.InitEmptyPoolByClient(client.Id)
+	go session.Start(Close)
 	clientSessionMapLock.Unlock()
 }
 
@@ -118,7 +124,7 @@ func holdOnClient(client *dto.ClientDto, clientSocket net.Conn) {
  * @param clientId 客户端ID
  * @param count 申请数量
  */
-func SendTCPPoolRequest(clientId int, count int) {
+func (csm *ClientSessionManager) SendTCPPoolRequest(clientId int, count int) {
 	send(clientId, HeaderUtil.SERVER_TCP_POOL_REQUEST, strconv.Itoa(count))
 }
 
@@ -139,7 +145,7 @@ func SendTCPPoolRequest(clientId int, count int) {
  */
 func send(clientId int, flag byte, message string) {
 	session := clientSessionMap[clientId]
-	ClientSession.SendHead(session, flag, message)
+	session.SendHead(flag, message)
 }
 
 /**
@@ -151,7 +157,7 @@ func Close(clientId int) {
 		clientSession := clientSessionMap[clientId]
 
 		//去关闭连接
-		ClientSession.Close(clientSession)
+		clientSession.Close()
 		ClientDao.SetDataLen(clientSession.Client)
 		delete(clientSessionMap, clientId)
 	}

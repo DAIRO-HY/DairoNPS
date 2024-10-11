@@ -23,15 +23,13 @@ type TCPPool struct {
 	isUsed bool
 }
 
-var (
-	lock sync.Mutex
-)
+var lock sync.Mutex
 
 /**
  * 一段时候后关闭连接池
  * 由于连接状态的不确定性,长时间无任何操作可能导致与客户端无法通讯,所以设置每个连接池在一定时间内自动销毁
  */
-func CloseJob() {
+func (mine *TCPPool) CloseJob() {
 
 	//一段时间类,如果连接池未被使用,则关闭
 	//delay(CLSConfig.RECYLE_POOL_TIME)
@@ -47,15 +45,15 @@ func CloseJob() {
 /**
  * 获取连接
  */
-func GetSocket(pool TCPPool) net.Conn {
+func (mine *TCPPool) GetSocket() net.Conn {
 	lock.Lock()
-	if !pool.isClosed { //如果连接池没有被关闭,则使用
-		pool.isUsed = true
+	if !mine.isClosed { //如果连接池没有被关闭,则使用
+		mine.isUsed = true
 
 		//取消关闭等待
 		//pool.closeJob.cancel()
 		lock.Unlock()
-		return pool.Socket
+		return mine.Socket
 	} else {
 		lock.Unlock()
 		return nil
@@ -65,25 +63,25 @@ func GetSocket(pool TCPPool) net.Conn {
 /**
  * 关闭连接池
  */
-func Close(pool TCPPool) {
+func (mine *TCPPool) Close() {
 	lock.Lock()
-	if pool.isClosed || pool.isUsed {
+	if mine.isClosed || mine.isUsed {
 		lock.Unlock()
 		return
 	}
 
 	//关闭连接池
-	pool.Socket.Close()
+	mine.Socket.Close()
 
 	//取消关闭等待
 	//closeJob.cancel()
-	pool.isClosed = true
+	mine.isClosed = true
 	lock.Unlock()
 }
 
 /**
  * 发送心跳数据
  */
-func sendUrgentData(pool TCPPool) {
-	//pool.socket.sendUrgentData(0xFF)
+func (mine *TCPPool) sendUrgentData() {
+	//mine.socket.sendUrgentData(0xFF)
 }

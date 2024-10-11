@@ -2,16 +2,19 @@ package main
 
 import (
 	"DairoNPS/client/ClientAcceptManager"
+	"DairoNPS/client/ClientSessionManager"
 	"DairoNPS/dao/ChannelDao"
 	"DairoNPS/dao/ClientDao"
 	"DairoNPS/dao/NPSDB"
 	"DairoNPS/dao/dto"
+	"DairoNPS/pool/TCPPoolManager"
 	"DairoNPS/util/SecurityUtil"
 	_ "embed"
 	_ "github.com/mattn/go-sqlite3"
 )
 
 func main() {
+	initInterface()
 	SecurityUtil.Init()
 	NPSDB.Init()
 	//addTestData()
@@ -19,6 +22,11 @@ func main() {
 	go startListener(19091)
 	go startCli(19090)
 	ClientAcceptManager.Start()
+}
+
+// 初始化共享接口
+func initInterface() {
+	TCPPoolManager.Csmi = &ClientSessionManager.ClientSessionManager{}
 }
 
 func addTestData() {

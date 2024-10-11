@@ -3,6 +3,7 @@ package TCPBridgeManager
 import (
 	"DairoNPS/bridge/TCPBridge"
 	"DairoNPS/dao/dto"
+	"fmt"
 	"net"
 	"sync"
 )
@@ -12,7 +13,7 @@ import (
 /**
  * 当前正在通信的会话
  */
-var bridgeList = []TCPBridge.TCPBridge{}
+var bridgeList []*TCPBridge.TCPBridge
 var bridgeListLock sync.Mutex
 
 ///**
@@ -31,7 +32,7 @@ var bridgeListLock sync.Mutex
 /**
  * 获取当前桥接列表
  */
-func GetBridgeList() []TCPBridge.TCPBridge {
+func GetBridgeList() []*TCPBridge.TCPBridge {
 	return bridgeList
 }
 
@@ -43,7 +44,8 @@ func GetBridgeList() []TCPBridge.TCPBridge {
  * @param clientSocket 内网穿透客户端Socket
  */
 func Start(client *dto.ClientDto, channel *dto.ChannelDto, proxySocket net.Conn, clientSocket net.Conn) {
-	bridge := TCPBridge.TCPBridge{
+	fmt.Printf("&proxySocket:%q\n", &proxySocket)
+	bridge := &TCPBridge.TCPBridge{
 		Channel:      channel,
 		Client:       client,
 		ProxySocket:  proxySocket,
@@ -55,13 +57,13 @@ func Start(client *dto.ClientDto, channel *dto.ChannelDto, proxySocket net.Conn,
 	bridgeListLock.Lock()
 	bridgeList = append(bridgeList, bridge)
 	bridgeListLock.Unlock()
-	TCPBridge.Start(bridge, RemoveBridgeList)
+	bridge.Start(RemoveBridgeList)
 }
 
 /**
  * 移除会话
  */
-func RemoveBridgeList(bridge TCPBridge.TCPBridge) {
+func RemoveBridgeList(bridge *TCPBridge.TCPBridge) {
 	bridgeListLock.Lock()
 	for index, it := range bridgeList {
 		if it == bridge {
@@ -76,7 +78,7 @@ func RemoveBridgeList(bridge TCPBridge.TCPBridge) {
  * 关闭客户端所有正在通信的连接
  */
 func CloseByClient(clientId int) {
-	var closeList = []TCPBridge.TCPBridge{}
+	var closeList = []*TCPBridge.TCPBridge{}
 	bridgeListLock.Lock()
 
 	//帅选出要删除的客户端桥接
@@ -99,7 +101,7 @@ func CloseByClient(clientId int) {
 
 	//关闭的桥接
 	for _, closeIt := range closeList {
-		TCPBridge.Close(closeIt)
+		closeIt.Close()
 	}
 }
 
@@ -108,7 +110,7 @@ func CloseByClient(clientId int) {
  */
 func CloseByChannel(channelId int) {
 
-	var closeList = []TCPBridge.TCPBridge{}
+	var closeList = []*TCPBridge.TCPBridge{}
 	bridgeListLock.Lock()
 
 	//帅选出要删除的客户端桥接
@@ -131,7 +133,7 @@ func CloseByChannel(channelId int) {
 
 	//关闭的桥接
 	for _, closeIt := range closeList {
-		TCPBridge.Close(closeIt)
+		closeIt.Close()
 	}
 }
 

@@ -41,7 +41,7 @@ func Accept(client *dto.ClientDto) {
 func accept(client *dto.ClientDto, channel *dto.ChannelDto) {
 	channelIdToProxyAcceptLock.Lock()
 	if _, ok := channelIdToProxyAccept[channel.Id]; ok { //若该隧道已经在监听,则先停止
-		ProxyTCPAccept.Close(channelIdToProxyAccept[channel.Id])
+		channelIdToProxyAccept[channel.Id].Close()
 	}
 	//accept := when (channel.type) {
 	//    ChannelType.TCP -> ProxyTCPAccept(client, channel)
@@ -56,7 +56,7 @@ func accept(client *dto.ClientDto, channel *dto.ChannelDto) {
 	channelIdToProxyAccept[channel.Id] = &proxyTCPAccept
 
 	//开启监听
-	go ProxyTCPAccept.Start(proxyTCPAccept)
+	go proxyTCPAccept.Start()
 	channelIdToProxyAcceptLock.Unlock()
 }
 
@@ -87,7 +87,7 @@ func RemoveByChannelId(channelId int) {
 func closeByChannel(channelId int) {
 	proxyTCPAccept := channelIdToProxyAccept[channelId]
 	if proxyTCPAccept != nil {
-		ProxyTCPAccept.Close(proxyTCPAccept)
+		proxyTCPAccept.Close()
 	}
 }
 

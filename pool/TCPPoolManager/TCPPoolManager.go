@@ -1,10 +1,14 @@
 package TCPPoolManager
 
 import (
-	"DairoNPS/client/ClientSessionManager/ClientSessionManagerImpl"
+	"DairoNPS/client/ClientSessionManagerInterface"
+	"DairoNPS/client/HeaderUtil"
 	"DairoNPS/constant/CLSConfig"
 	"DairoNPS/pool/TCPPool"
+	"fmt"
+	"log"
 	"net"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -15,7 +19,7 @@ import (
  * 客户端连接池
  */
 //private val clientScoketPoolMap = HashMap<Int, ClientPoolList<TCPPool>>()
-var clientScoketPoolMap = make(map[int][]TCPPool.TCPPool)
+var clientScoketPoolMap = make(map[int]*([]TCPPool.TCPPool))
 var clientScoketPoolMapLock sync.Mutex
 
 /**
@@ -47,18 +51,17 @@ func getCount() int {
  * 为客户端创建一个空的连接池
  * @param clientID 客户端ID
  */
-func initEmptyPoolByClient(clientID int) {
+func InitEmptyPoolByClient(clientID int) {
 
 	// 使用值和 ok 变量判断 key 是否存在
-	if _, ok := clientScoketPoolMap[clientID]; ok {
+	if clientScoketPoolMap[clientID] != nil {
 		return
 	}
-	clientScoketPoolMapLock.Lock()
-	if _, ok := clientScoketPoolMap[clientID]; ok {
 
-	} else { //若连接池不存在则创建
-		clientScoketPoolMap[clientID] = []TCPPool.TCPPool{}
-	}
+	clientScoketPoolMapLock.Lock()
+
+	//创建连接池列表
+	clientScoketPoolMap[clientID] = &([]TCPPool.TCPPool{})
 	clientScoketPoolMapLock.Unlock()
 }
 
@@ -68,30 +71,33 @@ func initEmptyPoolByClient(clientID int) {
  */
 func Add(clientSocket net.Conn) {
 
-	////从头部信息中得到客户端id
-	//clientId := HeaderUtil.getHeader(clientSocket)?.toInt()
-	//if clientId == nil {
-	//
-	//   //无效的连接
-	//   clientSocket.Close()
-	//   return
-	//}
-	//initEmptyPoolByClient(clientId)
-	//poolList := clientScoketPoolMap[clientId]
-	//
-	////TODO: 这里应该每个客户端创建一把锁
-	//clientScoketPoolMapLock.Lock()
-	//   if (len(poolList) >= CLSConfig.MAX_POOL_COUNT) {//已经达到最大连接数,拒绝新连接
-	//       clientSocket.Close()
-	//       clientScoketPoolMapLock.Unlock()
-	//       return
-	//   }
-	//   pool := TCPPool.TCPPool{
-	//       ClientID : clientId,
-	//       Socket:clientSocket,
-	//   }
-	//poolList = append(poolList, pool)
-	//clientScoketPoolMapLock.Unlock()
+	//从头部信息中得到客户端id
+	clientIdStr := HeaderUtil.GetHeader(clientSocket)
+	if len(clientIdStr) == 0 { //无效的连接
+		return
+	}
+	clientIdInt64, err := strconv.ParseInt(clientIdStr, 10, 32)
+	if err != nil {
+		clientSocket.Close()
+		return
+	}
+	clientId := int(clientIdInt64)
+	poolList := clientScoketPoolMap[clientId]
+	fmt.Printf("&clientScoketPoolMap:%p  &poolList:%p\n", &clientScoketPoolMap, poolList)
+	if len(*poolList) >= CLSConfig.MAX_POOL_COUNT { //已经达到最大连接数,拒绝新连接
+		clientSocket.Close()
+		return
+	}
+
+	//TODO: 这里应该每个客户端创建一把锁
+	clientScoketPoolMapLock.Lock()
+	pool := TCPPool.TCPPool{
+		ClientID: clientId,
+		Socket:   clientSocket,
+	}
+	*poolList = append(*poolList, pool)
+	log.Printf("客户端ID：%d 当前连接数为：%d", clientId, len(*poolList))
+	clientScoketPoolMapLock.Unlock()
 }
 
 /**
@@ -99,38 +105,36 @@ func Add(clientSocket net.Conn) {
  * @param clientID 客户端ID
  */
 func get(clientID int) net.Conn {
-	//initEmptyPoolByClient(clientID)
 
 	//客户端连接池
 	poolList := clientScoketPoolMap[clientID]
-	var resultPool TCPPool.TCPPool
+	var resultTcp net.Conn
 
-	if len(poolList) == 0 {
+	if len(*poolList) == 0 {
 		return nil
 	}
-	for len(poolList) > 0 {
+	for len(*poolList) > 0 {
 
 		//TODO: 这里应该每个客户端创建一把锁
 		clientScoketPoolMapLock.Lock()
 
 		//取最后一次添加到连接池的连接
-		pool := poolList[len(poolList)-1]
+		pool := (*poolList)[len(*poolList)-1]
 
 		//移除最后一个元素
-		poolList = poolList[:len(poolList)-1]
+		*poolList = (*poolList)[:len(*poolList)-1]
 		clientScoketPoolMapLock.Unlock()
 		//println("-->从连接池获取到一个连接,连接池剩余:${poolList.size}")
 		//试探性发送一个数据，检测连接是否已经失效
 		_, err := pool.Socket.Write([]byte{0})
 		if err != nil {
-			TCPPool.Close(pool)
+			pool.Close()
 			continue
 		}
-		resultPool = pool
+		resultTcp = pool.Socket
 		break
 	}
-	clientScoketPoolMapLock.Unlock()
-	return resultPool.Socket
+	return resultTcp
 }
 
 /**
@@ -164,22 +168,25 @@ func getAndAddPool(clientID int) net.Conn {
  * @param clientID 客户端ID
  */
 func poolRequest(clientId int, count int) {
-	clientPool := clientScoketPoolMap[clientId]
+	clientPool := *clientScoketPoolMap[clientId]
 	if len(clientPool) < CLSConfig.MAX_POOL_COUNT {
-		ClientSessionManagerImpl.SendTCPPoolRequest(clientId, count)
+		//ClientSessionManager.SendTCPPoolRequest(clientId, count)
+		Csmi.SendTCPPoolRequest(clientId, count)
 	}
 }
+
+var Csmi ClientSessionManagerInterface.ClientSessionManagerInterface
 
 /**
  * 移除某个客户端所有的连接池
  * @param clientID 客户端ID
  */
 func CloseByClient(clientID int) {
-	poolList := clientScoketPoolMap[clientID]
+	poolList := *clientScoketPoolMap[clientID]
 	//TODO: 这里应该每个客户端创建一把锁
 	clientScoketPoolMapLock.Lock()
 	for _, it := range poolList {
-		TCPPool.Close(it)
+		it.Close()
 	}
 	poolList = []TCPPool.TCPPool{}
 	clientScoketPoolMapLock.Unlock()

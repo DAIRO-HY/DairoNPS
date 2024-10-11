@@ -1,0 +1,14 @@
+package main
+
+import (
+	"DairoNPS/A"
+	"DairoNPS/B"
+)
+
+var a = &A.A{}
+var b = &B.B{}
+
+func main() {
+	A.OutToB(b)
+	B.OutToA(a)
+}
