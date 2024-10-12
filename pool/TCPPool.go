@@ -1,4 +1,4 @@
-package TCPPool
+package pool
 
 import (
 	"net"
@@ -15,7 +15,7 @@ type TCPPool struct {
 	/**
 	 * 标记是否已经关闭
 	 */
-	isClosed bool
+	IsClosed bool
 
 	/**
 	 * 标记是否被使用
@@ -36,7 +36,7 @@ func (mine *TCPPool) CloseJob() {
 	//lock.withLock {
 	//    if (!isUsed) {//如果该连接池没有被使用则关闭它
 	//        socket.close()
-	//        isClosed = true
+	//        IsClosed = true
 	//        TCPPoolManager.timeOutRemove(clientID, this@TCPPool)
 	//    }
 	//}
@@ -47,7 +47,7 @@ func (mine *TCPPool) CloseJob() {
  */
 func (mine *TCPPool) GetSocket() net.Conn {
 	lock.Lock()
-	if !mine.isClosed { //如果连接池没有被关闭,则使用
+	if !mine.IsClosed { //如果连接池没有被关闭,则使用
 		mine.isUsed = true
 
 		//取消关闭等待
@@ -65,7 +65,7 @@ func (mine *TCPPool) GetSocket() net.Conn {
  */
 func (mine *TCPPool) Close() {
 	lock.Lock()
-	if mine.isClosed || mine.isUsed {
+	if mine.IsClosed || mine.isUsed {
 		lock.Unlock()
 		return
 	}
@@ -75,7 +75,7 @@ func (mine *TCPPool) Close() {
 
 	//取消关闭等待
 	//closeJob.cancel()
-	mine.isClosed = true
+	mine.IsClosed = true
 	lock.Unlock()
 }
 

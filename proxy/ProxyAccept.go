@@ -1,18 +1,17 @@
-package ProxyTCPAccept
+package proxy
 
 import (
-	"DairoNPS/bridge/TCPBridgeManager"
+	"DairoNPS/bridge"
 	"DairoNPS/dao/dto"
-	"DairoNPS/pool/TCPPoolManager"
+	"DairoNPS/pool"
 	"fmt"
 	"net"
-	"time"
 )
 
 /**
  * TCP隧道代理
  */
-type ProxyTCPAccept struct {
+type ProxyAccept struct {
 	Client  *dto.ClientDto
 	Channel *dto.ChannelDto
 
@@ -31,12 +30,12 @@ type ProxyTCPAccept struct {
 	/**
 	 * 标记监听已经结束
 	 */
-	isFinished bool
+	IsFinished bool
 
 	/**
 	 * 代理SockerServer
 	 */
-	proxySocketServer net.Listener
+	ProxySocketServer net.Listener
 }
 
 /**
@@ -49,26 +48,28 @@ type ProxyTCPAccept struct {
 /**
  * 开始监听端口
  */
-func (mine *ProxyTCPAccept) Start() {
+func (mine *ProxyAccept) Start() {
 	mine.accept()
 }
 
 /**
  * 等待客户端连接
  */
-func (mine *ProxyTCPAccept) accept() {
+func (mine *ProxyAccept) accept() {
 	channel := mine.Channel
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", channel.ServerPort))
 	if err != nil {
-		fmt.Sprintf("端口:%d 监听失败", channel.ServerPort)
+		fmt.Printf("端口:%d 监听失败\n", channel.ServerPort)
 		return
 	}
-	mine.proxySocketServer = listener
+	mine.ProxySocketServer = listener
 	for {
 
 		//代理服务端Socket
 		proxySocket, err := listener.Accept()
+		fmt.Printf("端口:%d 监听到一个连接\n", channel.ServerPort)
 		if err != nil {
+			fmt.Printf("-->端口:%d 监听结束\n", channel.ServerPort)
 			break
 		}
 
@@ -77,22 +78,20 @@ func (mine *ProxyTCPAccept) accept() {
 		}
 
 		//NPS客户端Socket
-		clientSocket := TCPPoolManager.GetAndAddPool(channel.ClientId)
+		clientSocket := pool.GetAndAddPool(channel.ClientId)
 		if clientSocket == nil { //没有可用的Socket
 			proxySocket.Close()
 			continue
 		}
-		fmt.Printf("&proxySocket:%q\n", &proxySocket)
-		TCPBridgeManager.Start(mine.Client, channel, proxySocket, clientSocket)
+		bridge.MakeBridge(mine.Client, channel, proxySocket, clientSocket)
 	}
-	fmt.Printf("-->端口:d%监听结束", channel.ServerPort)
-	mine.isFinished = true
+	mine.IsFinished = true
 }
 
 /**
  * 判断是否有访问权限
  */
-func (mine *ProxyTCPAccept) hasAccess(proxySocket net.Conn) bool {
+func (mine *ProxyAccept) hasAccess(proxySocket net.Conn) bool {
 	//if tcpProxy.channel.AclState == 0 { //访问权限处于关闭状态
 	//    return true
 	//}
@@ -115,21 +114,4 @@ func (mine *ProxyTCPAccept) hasAccess(proxySocket net.Conn) bool {
 	//proxySocket.close()
 	//return false
 	return true
-}
-
-/**
- * 停止监听端口
- */
-func (mine *ProxyTCPAccept) Close() {
-	for {
-		time.Sleep(100 * time.Millisecond)
-		if mine.proxySocketServer == nil {
-			continue
-		}
-		mine.proxySocketServer.Close()
-		if mine.isFinished {
-			break
-		}
-	}
-	//ProxyAcceptManager.removeByChannelId(this.channel.id)
 }

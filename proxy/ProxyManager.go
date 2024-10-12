@@ -1,10 +1,10 @@
-package ProxyAcceptManager
+package proxy
 
 import (
 	"DairoNPS/dao/ChannelDao"
 	"DairoNPS/dao/dto"
-	"DairoNPS/proxy/ProxyTCPAccept"
 	"sync"
+	"time"
 )
 
 //代理服务端口监听管理
@@ -13,7 +13,7 @@ import (
  * 隧道id对应的服务端口监听
  */
 //val channelIdToProxyAccept = ConcurrentHashMap<Int, ProxyAccept>()
-var channelIdToProxyAccept = make(map[int]*ProxyTCPAccept.ProxyTCPAccept)
+var channelIdToProxyAccept = make(map[int]*ProxyAccept)
 
 /**
  * mChannelIdToProxyAccept操作互斥锁
@@ -40,44 +40,25 @@ func Accept(client *dto.ClientDto) {
  */
 func accept(client *dto.ClientDto, channel *dto.ChannelDto) {
 	channelIdToProxyAcceptLock.Lock()
-	if _, ok := channelIdToProxyAccept[channel.Id]; ok { //若该隧道已经在监听,则先停止
-		channelIdToProxyAccept[channel.Id].Close()
+	oldProxyTCPAccept := channelIdToProxyAccept[channel.Id]
+	if oldProxyTCPAccept != nil { //若该隧道已经在监听,则先停止
+		shutdown(oldProxyTCPAccept)
 	}
 	//accept := when (channel.type) {
-	//    ChannelType.TCP -> ProxyTCPAccept(client, channel)
+	//    ChannelType.TCP -> ProxyAccept(client, channel)
 	//    ChannelType.UDP -> ProxyUDPAccept(client, channel)
 	//    else -> return@synchronized
 	//}
 
-	proxyTCPAccept := ProxyTCPAccept.ProxyTCPAccept{
+	proxyAccept := &ProxyAccept{
 		Client:  client,
 		Channel: channel,
 	}
-	channelIdToProxyAccept[channel.Id] = &proxyTCPAccept
+	channelIdToProxyAccept[channel.Id] = proxyAccept
+	channelIdToProxyAcceptLock.Unlock()
 
 	//开启监听
-	go proxyTCPAccept.Start()
-	channelIdToProxyAcceptLock.Unlock()
-}
-
-/**
- * 移除隧道监听列表
- */
-func RemoveByChannelId(channelId int) {
-	channelIdToProxyAcceptLock.Lock()
-
-	if _, ok := channelIdToProxyAccept[channelId]; ok { //若该隧道已经在监听,则先停止
-	} else {
-		channelIdToProxyAcceptLock.Unlock()
-		return
-	}
-
-	proxyTCPAccept := channelIdToProxyAccept[channelId]
-	delete(channelIdToProxyAccept, channelId)
-
-	//关闭隧道的时候保存流量
-	ChannelDao.SetDataLen(proxyTCPAccept.Channel)
-	channelIdToProxyAcceptLock.Unlock()
+	go proxyAccept.Start()
 }
 
 /**
@@ -85,10 +66,12 @@ func RemoveByChannelId(channelId int) {
  * @param channelId 隧道id
  */
 func closeByChannel(channelId int) {
+	channelIdToProxyAcceptLock.Lock()
 	proxyTCPAccept := channelIdToProxyAccept[channelId]
 	if proxyTCPAccept != nil {
-		proxyTCPAccept.Close()
+		shutdown(proxyTCPAccept)
 	}
+	channelIdToProxyAcceptLock.Unlock()
 }
 
 /**
@@ -100,5 +83,38 @@ func CloseByClient(clientId int) {
 	channelIdList := ChannelDao.SelectIdByClientId(clientId)
 	for _, it := range channelIdList {
 		closeByChannel(it)
+	}
+}
+
+/**
+ * 停止监听端口
+ */
+func shutdown(proxyTCPAccept *ProxyAccept) {
+	for {
+
+		//@TODO:这里需要优化,不应该以休眠的方式关闭
+		time.Sleep(100 * time.Millisecond)
+		if proxyTCPAccept.ProxySocketServer == nil {
+			continue
+		}
+		proxyTCPAccept.ProxySocketServer.Close()
+		if proxyTCPAccept.IsFinished {
+			break
+		}
+	}
+	removeByChannelId(proxyTCPAccept.Channel.Id)
+}
+
+/**
+ * 移除隧道监听列表
+ */
+func removeByChannelId(channelId int) {
+	proxyTCPAccept := channelIdToProxyAccept[channelId]
+	if proxyTCPAccept != nil {
+		proxyTCPAccept := channelIdToProxyAccept[channelId]
+		delete(channelIdToProxyAccept, channelId)
+
+		//关闭隧道的时候保存流量
+		ChannelDao.SetDataLen(proxyTCPAccept.Channel)
 	}
 }

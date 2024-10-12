@@ -20,7 +20,7 @@ const DB_PATH = DBUtil.DbPath
 func Init() {
 	_, err := os.Stat(DB_PATH)
 	// 如果错误是os.ErrNotExist，表示文件不存在
-	if os.IsNotExist(err) {//文件不存在
+	if os.IsNotExist(err) { //文件不存在
 
 		// 创建多层目录
 		err := os.MkdirAll(filepath.Dir(DB_PATH), 0700)
@@ -37,23 +37,23 @@ func Init() {
 
 /**
 * 更新表结构
-*/
+ */
 func upgrade() {
 	version := DBUtil.SelectSingleOneIgnoreError[int]("PRAGMA USER_VERSION")
-	if version == 0{
+	if version == 0 {
 		create()
 
 		//第一次创建数据库时往系统配置表插入一条数据
-		DBUtil.ExecIgnoreError("insert into system_config(in_data_total, out_data_total) values (0, 0);")
+		DBUtil.ExecIgnoreError("insert into system_config(inDataTotal, outDataTotal) values (0, 0);")
 	}
 
 	//设置数据库版本号
 	DBUtil.ExecIgnoreError("PRAGMA USER_VERSION = " + strconv.Itoa(VERSION))
 }
 
-func create(){
-	sqlFiles := []string{"forward.sql","forward_acl.sql","client.sql","channel.sql","channel_acl.sql","system_config.sql","data_log.sql"}
-	for _,fn := range sqlFiles{
+func create() {
+	sqlFiles := []string{"forward.sql", "forward_acl.sql", "client.sql", "channel.sql", "channel_acl.sql", "system_config.sql", "data_log.sql"}
+	for _, fn := range sqlFiles {
 		createSql, _ := resources.StaticFiles.ReadFile("sql.create/" + fn)
 		DBUtil.ExecIgnoreError(string(createSql))
 	}

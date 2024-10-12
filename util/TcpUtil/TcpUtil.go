@@ -25,7 +25,7 @@ func WriteAll(tcp net.Conn, data []byte) error {
 	return nil
 }
 
-// 读取指定长度数据
+// ReadNByte 读取指定长度数据
 func ReadNByte(tcp net.Conn, n int) ([]byte, error) {
 
 	//记录已经读取到的数据大小

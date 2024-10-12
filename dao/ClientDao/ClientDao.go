@@ -40,7 +40,7 @@ func SelectByKey(key string) *dto.ClientDto {
 func Update(dto dto.ClientDto) {
 	updateDate := time.Now().UnixNano() / int64(time.Millisecond)
 	sql :=
-		"update client set name = ?,key = ?,enable_state=?,remark=?,update_date=? where id = ? and update_date=?"
+		"update client set name = ?,key = ?,enableState=?,remark=?,updateDate=? where id = ? and updateDate=?"
 	DBUtil.Exec(sql, dto.Name, dto.Key, dto.EnableState, dto.Remark, updateDate, dto.Id, dto.UpdateDate)
 }
 
@@ -48,7 +48,7 @@ func Update(dto dto.ClientDto) {
  * 同步入出网流量
  */
 func SetDataLen(dto *dto.ClientDto) {
-	sql := "update client set in_data_total = ?,out_data_total=? where id = ?"
+	sql := "update client set inDataTotal = ?,outDataTotal=? where id = ?"
 	DBUtil.Exec(sql, dto.InDataTotal, dto.OutDataTotal, dto.Id)
 }
 
@@ -57,7 +57,7 @@ func SetDataLen(dto *dto.ClientDto) {
  */
 func SetClientInfo(dto dto.ClientDto) {
 	sql :=
-		"update client set ip = ?,version=?,last_login_date=CURRENT_TIMESTAMP where id = ?"
+		"update client set ip = ?,version=?,lastLoginDate=CURRENT_TIMESTAMP where id = ?"
 	DBUtil.Exec(sql, dto.Ip, dto.Version, dto.Id)
 }
 

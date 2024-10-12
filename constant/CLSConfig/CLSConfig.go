@@ -1,7 +1,5 @@
 package CLSConfig
 
-import "DairoNPS/dao/SystemConfigDao"
-
 /**
  * 服务端监听TCP端口,客户端通过此端口进行连接
  */
@@ -43,7 +41,7 @@ const READ_UDP_CACHE_SIZE = 1500
 /**
  * 读取数据缓存大小
  */
-const READ_CACHE_SIZE = 4 * 1024 * 1024
+const READ_CACHE_SIZE = 32 * 1024
 
 /**
  * 连接池最大数量
@@ -64,7 +62,7 @@ const ADD_POOL_COUNT = 3
 /**
  * 系统配置
  */
-var systemConfig = SystemConfigDao.SelectOne()
+//var systemConfig = SystemConfigDao.SelectOne()
 
 /**
  * 关闭UDP连接池标记

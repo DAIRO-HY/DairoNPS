@@ -53,7 +53,7 @@ func SelectAll() []*dto.ChannelDto {
  */
 func Update(dto dto.ChannelDto) {
 	sql :=
-		"update channel set name = ?,type = ?,server_port=?,target_port=?,enable_state=?,security_state=?,acl_state=?,remark=?,update_date=${System.currentTimeMillis()} where id = ? and update_date=?"
+		"update channel set name = ?,type = ?,serverPort=?,targetPort=?,enableState=?,securityState=?,aclState=?,remark=?,updateDate=${System.currentTimeMillis()} where id = ? and updateDate=?"
 	DBUtil.Exec(
 		sql,
 		dto.Name,
@@ -73,7 +73,7 @@ func Update(dto dto.ChannelDto) {
  * 同步入出网流量
  */
 func SetDataLen(dto *dto.ChannelDto) {
-	sql := "update channel set in_data_total = ?,out_data_total=? where id = ?"
+	sql := "update channel set inDataTotal = ?,outDataTotal=? where id = ?"
 	DBUtil.Exec(sql, dto.InDataTotal, dto.OutDataTotal, dto.Id)
 }
 
@@ -92,7 +92,7 @@ func Delete(id int) {
  * @param clientId 客户端ID
  */
 func DeleteByClient(clientId int) {
-	sql := "delete from channel where client_id = ?"
+	sql := "delete from channel where clientId = ?"
 	DBUtil.Exec(sql, clientId)
 }
 
@@ -135,7 +135,7 @@ func SelectActiveByClientId(clientId int) []*dto.ChannelDto {
  * 获取客户端下所有的隧道id列表
  */
 func SelectIdByClientId(clientId int) []int {
-	sql := "select id from channel where client_id = ?"
+	sql := "select id from channel where clientId = ?"
 	list := DBUtil.SelectList[dto.ChannelDto](sql, clientId)
 	ids := make([]int, 0)
 	for _, it := range list {

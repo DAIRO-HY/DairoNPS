@@ -1,10 +1,10 @@
-package ClientSession
+package client
 
 import (
 	"DairoNPS/client/HeaderUtil"
 	"DairoNPS/dao/dto"
 	"DairoNPS/util/SecurityUtil"
-	"bufio"
+	"DairoNPS/util/TcpUtil"
 	"errors"
 	"log"
 	"net"
@@ -19,8 +19,8 @@ import (
  * @param clientSocket 与客户端的连接
  */
 type ClientSession struct {
-	Client       *dto.ClientDto
-	ClientSocket net.Conn
+	Client *dto.ClientDto
+	tcp    net.Conn
 
 	/**
 	 * 最后一次收到客户端心跳时间
@@ -36,17 +36,25 @@ var sendLock sync.Mutex
 /**
  * 开始
  */
-func (mine *ClientSession) Start(recycle func(clientId int)) {
+func (mine *ClientSession) Start() {
+	finallyFunc := func() {
+		time.Sleep(1 * time.Second)
+		mine.Close()
+		removeSession(mine)
+	}
+
+	//设置长连接
+	mine.tcp.SetReadDeadline(time.Time{})
 	if mine.sendClientId() != nil {
-		recycle(mine.Client.Id)
+		finallyFunc()
 		return
 	}
 	if mine.sendClientSecurityKey() != nil {
-		recycle(mine.Client.Id)
+		finallyFunc()
 		return
 	}
 	mine.receive()
-	recycle(mine.Client.Id)
+	finallyFunc()
 }
 
 // 将客户端id返回给客户端
@@ -57,7 +65,7 @@ func (mine *ClientSession) sendClientId() error {
 
 // 将加密秘钥发送到客户端
 func (mine *ClientSession) sendClientSecurityKey() error {
-	return mine.Send(SecurityUtil.ClientKeyArray, 128)
+	return mine.Send(SecurityUtil.ClientKeyArray)
 }
 
 /**
@@ -65,10 +73,9 @@ func (mine *ClientSession) sendClientSecurityKey() error {
  */
 func (mine *ClientSession) receive() {
 	for {
-		flagData := make([]byte, 1)
-		length, err := mine.ClientSocket.Read(flagData)
-		if length == 0 || err != nil {
-			log.Printf("-->接收客户端数据标识出错。len:%d  err:%q\n", length, err)
+		flagData, err := TcpUtil.ReadNByte(mine.tcp, 1)
+		if err != nil {
+			log.Printf("-->接收客户端数据标识出错。 err:%q\n", err)
 			break
 		}
 		flag := flagData[0]
@@ -89,7 +96,7 @@ func (mine *ClientSession) handle(flag byte) error {
 
 		//记录与客户端最后一次心跳时间戳
 		mine.lastHeartBeatTime = time.Now().UnixNano() / int64(time.Millisecond)
-		return mine.Send([]byte{HeaderUtil.MAIN_HEART_BEAT}, 1)
+		return mine.Send([]byte{HeaderUtil.MAIN_HEART_BEAT})
 	default:
 		return errors.New("未知的Flag")
 	}
@@ -108,27 +115,17 @@ func (mine *ClientSession) SendHead(flag byte, message string) error {
 
 	//第1个字节代表类型，第2个字节代表数据长度
 	buffer := []byte{flag, byte(len(data))}
-	buffer = append(buffer, data[:]...)
-	return mine.Send(buffer, len(buffer))
+	buffer = append(buffer, data...)
+	return mine.Send(buffer)
 }
 
 /**
  * 往客户端发送数据
  * @param data 要发送的数据
- * @param len 数据长度
  */
-func (mine *ClientSession) Send(data []byte, len int) error {
+func (mine *ClientSession) Send(data []byte) error {
 	sendLock.Lock()
-
-	//TODO:这里应该要设置写入超时
-	//session.ClientSocket.SetWriteDeadline()
-	writer := bufio.NewWriter(mine.ClientSocket)
-	_, err := writer.Write(data[:len])
-	if err != nil {
-		sendLock.Unlock()
-		return err
-	}
-	err = writer.Flush()
+	err := TcpUtil.WriteAll(mine.tcp, data)
 	sendLock.Unlock()
 	return err
 }
@@ -137,35 +134,5 @@ func (mine *ClientSession) Send(data []byte, len int) error {
  * 关闭与内网穿透客户端的会话连接
  */
 func (mine *ClientSession) Close() {
-	//
-	////关闭所有TCP连接池
-	//TCPPoolManager.CloseByClient(session.Client.Id)
-	//
-	////关闭所有UDP连接池
-	//try {
-	//    UDPPoolManager.closeByClient(this.client.id!!)
-	//} catch (e: Exception) {
-	//    e.printStackTrace()
-	//}
-	//
-	//try {
-	//    //关闭正在通信的UDP连接
-	//    UDPBridgeManager.closeByClient(this.client.id!!)
-	//} catch (e: Exception) {
-	//    e.printStackTrace()
-	//}
-	//
-	////关闭代理监听
-	//ProxyAcceptManager.CloseByClient(session.Client.Id)
-	//
-	////关闭客户端所有正在通信的连接
-	//TCPBridgeManager.CloseByClient(session.Client.Id)
-
-	//关闭连接
-	mine.ClientSocket.Close()
+	mine.tcp.Close()
 }
-
-// 回收数据
-//func recycle(session ClientSession) {
-//	//Close(session)
-//}
