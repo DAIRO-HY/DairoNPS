@@ -52,7 +52,7 @@ func upgrade() {
 }
 
 func create() {
-	sqlFiles := []string{"forward.sql", "forward_acl.sql", "client.sql", "channel.sql", "channel_acl.sql", "system_config.sql", "data_log.sql"}
+	sqlFiles := []string{"forward.sql", "forward_acl.sql", "client.sql", "channel.sql", "channel_acl.sql", "system_config.sql", "channel_data_statistics.sql"}
 	for _, fn := range sqlFiles {
 		createSql, _ := resources.StaticFiles.ReadFile("sql.create/" + fn)
 		DBUtil.ExecIgnoreError(string(createSql))

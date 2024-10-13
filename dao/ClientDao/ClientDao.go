@@ -37,7 +37,7 @@ func SelectByKey(key string) *dto.ClientDto {
 /**
  * 更新一条数据
  */
-func Update(dto dto.ClientDto) {
+func Update(dto *dto.ClientDto) {
 	updateDate := time.Now().UnixNano() / int64(time.Millisecond)
 	sql :=
 		"update client set name = ?,key = ?,enableState=?,remark=?,updateDate=? where id = ? and updateDate=?"

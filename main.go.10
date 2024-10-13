@@ -1,43 +1,28 @@
 package main
 
 import (
-	"DairoNPS/client"
+	"DairoNPS/client/ClientSessionManager"
 	"DairoNPS/dao/ChannelDao"
 	"DairoNPS/dao/ClientDao"
-	"DairoNPS/dao/NPSDB"
 	"DairoNPS/dao/dto"
-	"DairoNPS/pool"
-	"DairoNPS/util/SecurityUtil"
-	"DairoNPS/util/StatisticsUtil"
-	"DairoNPS/web"
-
-	//初始化Controller
-	_ "DairoNPS/web/controller/channel"
-	_ "DairoNPS/web/controller/client"
+	"DairoNPS/pool/TCPPoolManager"
+	_ "embed"
+	"fmt"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 func main() {
-	initInterface()
-
-	//加密秘钥生成
-	SecurityUtil.Init()
-	NPSDB.Init()
+	fmt.Println("-------->START")
+	//initInterface()
+	//SecurityUtil.Init()
+	//NPSDB.Init()
 	//addTestData()
-	StatisticsUtil.Init()
-
-	//隧道流量统计
-	go StatisticsUtil.Statistics()
-
-	//启动web管理
-	go web.Start()
-
-	//启动客户端监听
-	client.Accept()
+	//ClientAcceptManager.Start()
 }
 
 // 初始化共享接口
 func initInterface() {
-	pool.Csmi = &client.ClientSessionManager{}
+	TCPPoolManager.Csmi = &ClientSessionManager.ClientSessionManager{}
 }
 
 func addTestData() {

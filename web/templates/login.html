@@ -1,0 +1,62 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:include="admin/include/css :: header('管理员登录')"/>
+</head>
+<body class="bg-login">
+<form>
+    <div class="text-center d-table" style="width: 100vw;height: 100vh;">
+        <div class="d-table-cell align-middle">
+            <div class="d-inline-block border rounded bg-white p-3" style="width: 300px;">
+                <span class="fs-4">管理员登录</span>
+                <input id="name" class="form-control mt-3" type="text" placeholder="用户名" autocomplete="off" required>
+                <input id="pwd" class="form-control mt-3" type="password" placeholder="密码" autocomplete="off" required>
+                <button type="submit" class="btn btn-primary w-100 mt-4">登录</button>
+                <div class="text-end mt-2"><a class="text-muted small" href="javascript:void(0);"
+                                              onclick="onForgetClick();">忘记密码</a></div>
+            </div>
+        </div>
+    </div>
+</form>
+<th:block th:include="admin/include/js :: js"/>
+<script>
+
+    $(()=>{
+        $("form").submit(() => {
+            onLoginClick()
+            return false
+        })
+    })
+
+    /**
+     * 登录按钮点击事件
+     */
+    function onLoginClick() {
+        const name = $("#name").val()
+        const pwd = $("#pwd").val()
+        $.ajax({
+            url: "/admin/login",
+            type: "POST",
+            data: {
+                name: name,
+                pwd: pwd
+            }
+        }).fail($ajaxFail).done(() => {
+            window.location.href = "/admin/index"
+        })
+    }
+
+    /**
+     * 忘记密码点击事件
+     */
+    function onForgetClick() {
+        $.ajax({
+            url: "/admin/login/forget",
+            type: "POST"
+        }).fail($ajaxFail).done((data) => {
+            alert("管理员账户名及密码保存在以下文件中,请直接修改文件里的账户名密码,然后重启服务.\n" + data)
+        })
+    }
+</script>
+</body>
+</html>

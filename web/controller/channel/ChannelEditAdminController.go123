@@ -1,0 +1,128 @@
+package channel
+
+import (
+	"DairoNPS/web"
+	"net/http"
+)
+
+// 路由设置
+func init() {
+	http.HandleFunc("/channel_list/channel_edit/info", web.ApiHandler(List))
+}
+
+//
+//
+/////**
+// * 隧道编辑
+// */
+//@Controller
+//@RequestMapping("/admin/channel_list/channel_edit")
+//class ChannelEditAdminController : AjaxBase() {
+//
+//    @GetMapping
+//    fun init(request: HttpServletRequest, clientId: Int, id: Int?): String {
+//        val client = ClientDao.selectOne(clientId)!!
+//        val form = ChannelEditForm()
+//        form.clientName = client.name
+//        form.clientId = clientId
+//        if (id != null) {
+//            val dto = ChannelDao.selectOne(id) ?: throw BusinessException("该客户端不存在")
+//            form.id = dto.id
+//            form.name = dto.name
+//            form.type = dto.type
+//            form.remark = dto.remark
+//            form.serverPort = dto.serverPort
+//            form.targetPort = dto.targetPort
+//            form.createDate = dto.createDate.format("yyyy-MM-dd HH:mm:ss")
+//            form.enableState = if (dto.enableState == 0) "关闭" else "开启"
+//            form.inDataTotal = dto.inDataTotal.toUnitText()
+//            form.outDataTotal = dto.outDataTotal.toUnitText()
+//            form.securityState = dto.securityState
+//            form.aclState = dto.aclState
+//
+//            val aclDtoList = ChannelAclDao.selectByChannelId(id)
+//            val aclIp = aclDtoList.map{it.remark + ":" + it.ip}.toTypedArray()
+//            request.setAttribute("aclIp", ObjectMapper().writeValueAsString(aclIp))
+//        }
+//        request.setAttribute("form", form)
+//        return "admin/channel_edit"
+//    }
+//
+//    /**
+//     * 提交表单API
+//     */
+//    @PostMapping
+//    @ResponseBody
+//    fun edit(form: ChannelEditForm) {
+//        try {
+//            this.validate(form)
+//            val dto = if (form.id != null) {//更新时
+//                ChannelDao.selectOne(form.id!!) ?: throw BusinessException("该客户端不存在")
+//            } else {
+//                ChannelDto()
+//            }
+//            dto.name = form.name
+//            dto.serverPort = form.serverPort
+//            dto.type = form.type
+//            dto.clientId = form.clientId
+//            dto.enableState = 1
+//            dto.targetPort = form.targetPort
+//            dto.securityState = form.securityState
+//            dto.aclState = form.aclState
+//            dto.remark = form.remark
+//            if (form.id != null) {//更新时
+//                ChannelDao.update(dto)
+//            } else {
+//                ChannelDao.add(dto)
+//            }
+//
+//            //判断是否IP地址的正则表达式
+//            val ipRegex = """^(([01]?\d{1,2}|2[0-4]\d|25[0-5])\.){3}([01]?\d{1,2}|2[0-4]\d|25[0-5])$""".toRegex()
+//            val aclDtoList = form.aclIp.map {
+//                val aclDto = ChannelAclDto()
+//                if (it.contains(":")) {
+//                    it.split(":").also {
+//                        aclDto.remark = it[0]
+//                        aclDto.ip = it[1]
+//                    }
+//                } else {
+//                    aclDto.ip = it
+//                }
+//                aclDto
+//            }.filter {
+//                if (it.ip!!.isEmpty()) {
+//                    return@filter false
+//                }
+//                ipRegex.matches(it.ip!!)
+//            }.distinctBy { it.ip }
+//
+//            //添加黑白名单
+//            ChannelAclDao.add(dto.id!!, aclDtoList)
+//
+//            GlobalScope.launch(Dispatchers.IO) {
+//
+//                //关闭隧道之后再打开
+//                CLServer.closeByChannel(dto.id!!)
+//                CLServer.start(dto.id!!)
+//            }
+//        } catch (e: Exception) {
+//            e.message ?: throw e
+//            if (e.message!!.contains("UNIQUE constraint failed: channel.server_port")) {
+//                throw BusinessException("服务端口已被占用")
+//            }
+//            throw e
+//        }
+//    }
+//
+//    /**
+//     * 表单验证
+//     */
+//    private fun validate(form: ChannelEditForm) {
+//        if (form.name.isNullOrBlank()) {
+//            throw BusinessException("请填写名称")
+//        }
+//        if (form.name!!.length > 32) {
+//            throw BusinessException("名称长度不能超过32位")
+//        }
+//    }
+//}

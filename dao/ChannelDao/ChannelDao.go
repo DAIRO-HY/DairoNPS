@@ -4,6 +4,7 @@ package ChannelDao
 import (
 	"DairoNPS/dao/dto"
 	"DairoNPS/util/DBUtil"
+	"fmt"
 	"time"
 )
 
@@ -72,9 +73,9 @@ func Update(dto dto.ChannelDto) {
 /**
  * 同步入出网流量
  */
-func SetDataLen(dto *dto.ChannelDto) {
+func SetDataSize(id int, inData int64, outData int64) {
 	sql := "update channel set inDataTotal = ?,outDataTotal=? where id = ?"
-	DBUtil.Exec(sql, dto.InDataTotal, dto.OutDataTotal, dto.Id)
+	DBUtil.Exec(sql, inData, outData, id)
 }
 
 /**
@@ -108,20 +109,20 @@ func SetRemark(id int, remark string) {
 /**
  * 获取所有隧道列表
  */
-//func Search(dto dto.ChannelListSearchDto) []*dto.ChannelSearchDto {
-//    sql := "select channel.*,client.name as clientName" +
-//                " from channel left join client on channel.client_id = client.id where 1=1 "
-//
-//    if (dto.ClientId != nil) {
-//        sql.append(" and channel.client_id = ").append(dto.clientId)
-//    }
-//
-//    if (dto.type != null) {
-//        sql.append(" and channel.type = ").append(dto.type)
-//    }
-//    sql.append(" order by id desc")
-//    return DBUtil.selectList(ChannelSearchDto::class.java, sql.toString())
-//}
+func Search(searchDto dto.ChannelListSearchDto) []*dto.ChannelSearchDto {
+	sql := "select channel.*,client.name as clientName" +
+		" from channel left join client on channel.client_id = client.id where 1=1 "
+
+	if searchDto.ClientId != 0 {
+		sql += fmt.Sprintf(" and channel.client_id = %d", searchDto.ClientId)
+	}
+
+	if searchDto.Mode != 0 {
+		sql += fmt.Sprintf(" and channel.type = %d", searchDto.Mode)
+	}
+	sql += " order by id desc"
+	return DBUtil.SelectList[dto.ChannelSearchDto](sql)
+}
 
 /**
  * 获取所有激活的隧道列表

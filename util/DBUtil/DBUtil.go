@@ -16,7 +16,7 @@ const DbPath = "./data/dairo-nps.sqlite"
 func ExecIgnoreError(query string, args ...any) int64 {
 	count, err := Exec(query, args...)
 	if err != nil {
-		log.Fatalf("%q: %s\n", err, query)
+		log.Printf("%q: %s\n", err, query)
 		return -1
 	}
 	return count
@@ -28,7 +28,6 @@ func Exec(query string, args ...any) (int64, error) {
 	defer db.Close()
 	rs, err := db.Exec(query, args...)
 	if err != nil {
-		fmt.Println(err)
 		return -1, err
 	}
 	count, err := rs.RowsAffected()
@@ -42,7 +41,7 @@ func Exec(query string, args ...any) (int64, error) {
 func InsertIgnoreError(query string, args ...any) int64 {
 	count, err := Insert(query, args...)
 	if err != nil {
-		log.Fatalf("%q: %s\n", err, query)
+		log.Printf("%q: %s\n", err, query)
 		return -1
 	}
 	return count
@@ -54,7 +53,6 @@ func Insert(insert string, args ...any) (int64, error) {
 	defer db.Close()
 	rs, err := db.Exec(insert, args...)
 	if err != nil {
-		fmt.Println(err)
 		return -1, err
 	}
 	lastInsertId, err := rs.LastInsertId()
@@ -143,14 +141,16 @@ func SelectToListMap(query string, args ...any) []map[string]string {
 
 	rows, err := db.Query(query, args...)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("%q: %s\n", err, query)
+		return nil
 	}
 	defer rows.Close()
 
 	// 获取列的名称
 	columns, err := rows.Columns()
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("%q: %s\n", err, query)
+		return nil
 	}
 
 	// 创建一个长度与列数相同的slice来存放查询结果
@@ -168,7 +168,8 @@ func SelectToListMap(query string, args ...any) []map[string]string {
 
 		// 将当前行的数据扫描到valuePtrs中
 		if err := rows.Scan(valuePtrs...); err != nil {
-			log.Fatal(err)
+			log.Printf("%q: %s\n", err, query)
+			return nil
 		}
 
 		// 使用map将列名和对应的值关联起来
@@ -188,7 +189,8 @@ func SelectToListMap(query string, args ...any) []map[string]string {
 func GetDb() *sql.DB {
 	db, err := sql.Open("sqlite3", DbPath)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("%q: %s\n", err)
+		return nil
 	}
 	return db
 }

@@ -1,0 +1,124 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    {{template "head" .}}
+    <title>隧道列表</title>
+</head>
+<body>
+{{template "top-bar" .}}
+<div class="m-3 p-2 bg-white rounded">
+    <form onchange="onSearchSubmit()" action="/channel_list/list" method="get">
+        <div class="row row-cols-sm-2 row-cols-md-3 row-cols-lg-4">
+            <div class="col">
+                <div class="row">
+                    <label class="col-sm-4 col-form-label text-end">客户端</label>
+                    <div class="col-sm-8">
+                        <select class="form-select" name="clientId">
+                            <option value="">全部</option>
+                            <option th:each="item:${clients}" th:value="${item.id}" th:text="${item.name}"
+                                    th:selected="${item.id == search.clientId}"></option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="row">
+                    <label class="col-sm-4 col-form-label text-end">隧道模式</label>
+                    <div class="col-sm-8">
+                        <select class="form-select" name="type">
+                            <option value="">全部</option>
+                            <option value="1" th:selected="${search.type == 1}">TCP</option>
+                            <option value="2" th:selected="${search.type == 2}">UDP</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<div class="m-0">
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-0">
+        <div class="col px-0 pb-3 px-3" th:each="item : ${list}">
+            <div class="bg-white rounded p-2 position-relative">
+                <div style="position: absolute;top:0;right:8px;font-size: 40px;color: #0000001c;">
+
+                    <!--是否加密-->
+                    <i th:if="${item.securityState == 1}" class="bi bi-lock-fill"></i>
+                    <i th:if="${item.securityState == 0}" class="bi bi-unlock-fill"></i>
+                </div>
+                <div class="text-center fs-5"><span th:text="${item.name}"></span></div>
+                <div>客户端:<span th:text="${item.clientName}"></span></div>
+                <div>模式:<span th:text="${item.type}"></span></div>
+                <div>端口:<span th:text="${item.serverPort}"></span> -> <span th:text="${item.targetPort}"></span></div>
+                <div>入出流量:<span th:text="${item.inDataTotal}"></span>/<span th:text="${item.outDataTotal}"></span></div>
+                <div class="text-end">
+                    <button class="btn btn-sm btn-outline-danger" th:onclick="'onSetStateClick(' + ${item.id} +')'">
+                        <i th:if="${item.enableState == 1}" class="bi bi-pause-fill"></i>
+                        <i th:if="${item.enableState == 0}" class="bi bi-play-fill"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" th:onclick="'onDeleteClick(' + ${item.id} +')'">
+                        <i class="bi bi-trash3"></i></button>
+                    <a class="btn btn-sm btn-outline-primary"
+                       th:href="'/admin/channel_list/channel_edit?clientId=' + ${item.clientId} + '&id=' + ${item.id}"><i
+                            class="bi bi-pencil-square"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<th:block th:include="admin/include/js :: js"/>
+<script>
+    $(() => {
+
+        //客户端ID
+        const clientId = getParam("clientId")
+        if (clientId.length > 0) {
+            addNavBtn("添加", () => {
+                window.location.href = "/admin/channel_list/channel_edit?clientId=" + clientId
+            });
+        }
+        init()
+    });
+
+    function init(){
+        $("form").ajaxByForm().success(data=>{
+            console.log(data)
+        }).post()
+    }
+
+    function onSearchSubmit() {
+        $("form").submit()
+    }
+
+    /**
+     * 删除点击事件
+     * @param id
+     */
+    function onDeleteClick(id) {
+        const result = confirm("确定删除?")
+        if (result) {
+            $.ajax({
+                url: "/admin/channel_list/delete?id=" + id,
+                type: "POST"
+            }).fail($ajaxFail).done(() => {
+                history.go(0)
+            })
+        }
+    }
+
+    /**
+     * 修改可用状态
+     * @param id
+     */
+    function onSetStateClick(id) {
+        $.ajax({
+            url: "/admin/channel_list/set_state?id=" + id,
+            type: "POST"
+        }).fail($ajaxFail).done(() => {
+            history.go(0)
+        })
+    }
+</script>
+</body>
+</html>

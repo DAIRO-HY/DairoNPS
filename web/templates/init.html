@@ -1,0 +1,45 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:include="admin/include/css :: header('初始化管理员账户')"/>
+</head>
+<body class="bg-login">
+<div class="text-center d-table" style="width: 100vw;height: 100vh;">
+    <div class="d-table-cell align-middle">
+        <div class="d-inline-block border rounded bg-white p-3" style="width: 300px;">
+            <span class="fs-4">创建管理员</span>
+            <input id="name" class="form-control mt-3" type="text" placeholder="用户名" autocomplete="off">
+            <input id="pwd" class="form-control mt-3" type="password" placeholder="密码" autocomplete="off">
+            <input id="repwd" class="form-control mt-3" type="password" placeholder="确认密码" autocomplete="off">
+            <button class="btn btn-primary w-100 mt-4" onclick="onInitClick()">创建</button>
+        </div>
+    </div>
+</div>
+<th:block th:include="admin/include/js :: js"/>
+<script>
+
+    /**
+     * 初始化按钮点击事件
+     */
+    function onInitClick() {
+        const name = $("#name").val()
+        const pwd = $("#pwd").val()
+        const repwd = $("#repwd").val()
+        if (pwd !== repwd) {
+            alert("两次输入密码不一致")
+            return
+        }
+        $.ajax({
+            url: "/admin/init",
+            type: "POST",
+            data: {
+                name: name,
+                pwd: pwd
+            }
+        }).fail($ajaxFail).done(() => {
+            window.location.href = "/admin/login"
+        })
+    }
+</script>
+</body>
+</html>

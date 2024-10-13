@@ -1,0 +1,193 @@
+package web
+
+import (
+	"encoding/json"
+	"html/template"
+	"log"
+	"net/http"
+	"path/filepath"
+	"reflect"
+	"strconv"
+	"strings"
+)
+
+//func renderTemplate(w http.ResponseWriter, tmpl123 string) {
+//	//tmpl := template.New("base")
+//	//tmpl, _ = tmpl.Parse(`{{define "T1"}}Hello, {{.Name}} from T1!{{end}}`)
+//	//tmpl, _ = tmpl.Parse(`{{define "T2"}}Hi, {{.Name}} from T2!{{end}}`)
+//	//tmpl, _ = tmpl.ParseFiles(`web/templates/index.html`)
+//
+//	tmpl, _ := template.ParseFiles(
+//		//tmplPath,
+//		"web/templates/index.html",
+//		//"web/templates/include/content.html",
+//		//"web/templates/include/css.html",
+//		"web/templates/include/js.html",
+//		//"web/templates/include/top-bar.html",
+//	)
+//
+//	//data := struct {
+//	//	Name string
+//	//}{
+//	//	Name: "Go Developer",
+//	//}
+//	tmpl.Execute(w, nil) // 选择 "T2" 模板来执行
+//}
+
+func renderTemplate(w http.ResponseWriter, tmpl string) {
+	tmplPath := filepath.Join("web/templates", tmpl)
+	t, err := template.ParseFiles(
+		tmplPath,
+		//"web/templates/include/content.html",
+		"web/templates/include/head.html",
+		"web/templates/include/top-bar.html",
+	)
+	if err != nil {
+		http.Error(w, "Error loading template", http.StatusInternalServerError)
+		return
+	}
+
+	// 设置 Content-Type 头部信息
+	w.Header().Set("Content-Type", "text/html;charset=UTF-8")
+	t.Execute(w, nil)
+}
+
+// 路由处理
+func htmlHandler(writer http.ResponseWriter, request *http.Request) {
+	paths := strings.Split(request.URL.Path, "/")
+	htmlFile := paths[len(paths)-1]
+	if len(htmlFile) == 0 {
+		htmlFile = "index"
+	}
+	renderTemplate(writer, htmlFile+".html")
+}
+
+// api请求路由
+//func apiHandler(writer http.ResponseWriter, request *http.Request, controllder func(request *http.Request)) {
+//	controllder(request)
+//}
+
+// api请求路由
+func ApiHandler(controller any) func(writer http.ResponseWriter, request *http.Request) {
+	return func(writer http.ResponseWriter, request *http.Request) {
+
+		// 获取函数的反射值
+		fn := reflect.ValueOf(controller)
+
+		// 获取函数的类型
+		fnType := fn.Type()
+
+		// 获取参数个数
+		numArgs := fnType.NumIn()
+
+		//controller需要的参数
+		params := make([]reflect.Value, numArgs)
+
+		// 遍历每个参数
+		for i := 0; i < numArgs; i++ {
+			argType := fnType.In(i)
+			typeStr := argType.String()
+			var value any
+			if typeStr == "*http.Request" {
+				value = request
+			} else if typeStr == "http.ResponseWriter" {
+				value = writer
+			} else if strings.HasSuffix(typeStr, "Form") { //这是一个Form表单
+				value = getForm(request, argType)
+			}
+			params[i] = reflect.ValueOf(value)
+		}
+		returnValues := fn.Call(params)
+		if len(returnValues) == 0 {
+			return
+		}
+		body := returnValues[0].Interface()
+		if body == nil {
+			return
+		}
+
+		// 设置 Content-Type 头部信息
+		writer.Header().Set("Content-Type", "text/plain;charset=UTF-8")
+
+		switch returnBody := body.(type) {
+		case string:
+			writer.Write([]byte(returnBody))
+		case int8:
+		case int16:
+		case int32:
+		case int64:
+			writer.Write([]byte(strconv.Itoa(int(returnBody))))
+		case error:
+			// 设置 HTTP 状态码
+			writer.WriteHeader(http.StatusInternalServerError) // 设置状态码
+			jsonData, _ := json.Marshal(body)
+			writer.Write(jsonData)
+		default:
+			jsonData, _ := json.Marshal(body)
+			writer.Write(jsonData)
+		}
+	}
+}
+
+// 获取表单实例
+func getForm(request *http.Request, argType reflect.Type) any {
+	//如果该参数是一个Form表单
+
+	// 创建结构体实例
+	form := reflect.New(argType).Elem()
+	query := request.URL.Query()
+
+	//解析post表单
+	request.ParseForm()
+	postParams := request.PostForm
+
+	//将参数转换成Map
+	paramMap := make(map[string][]string)
+	for key, v := range query {
+		paramMap[strings.ToLower(key)] = v
+	}
+	for key, v := range postParams {
+		paramMap[strings.ToLower(key)] = v
+	}
+
+	// 遍历结构体字段
+	for j := 0; j < argType.NumField(); j++ {
+		field := argType.Field(j)
+		fieldName := field.Name
+
+		//得到参数值
+		value := paramMap[strings.ToLower(fieldName)]
+		if value == nil {
+			continue
+		}
+
+		// 设置字段值（这里我们设置为示例值）
+		switch field.Type.Kind() {
+		case reflect.Int:
+
+			// 设置整数字段
+			intValue, _ := strconv.ParseInt(value[0], 10, 64)
+			form.Field(j).SetInt(intValue)
+		case reflect.String:
+			form.Field(j).SetString(value[0]) // 设置字符串字段
+		}
+	}
+	return form.Interface()
+}
+
+func Start() {
+
+	// 处理静态文件
+	fs := http.FileServer(http.Dir("web/static"))
+	http.Handle("/static/", http.StripPrefix("/static/", fs))
+
+	// 设置路由
+	http.HandleFunc("/", htmlHandler)
+
+	//客户端列表
+	//http.HandleFunc("/client_list/init", apiHandler(client_list.Init))
+
+	// 启动服务器
+	log.Println("Server starting at :8080")
+	log.Fatal(http.ListenAndServe(":8080", nil))
+}

@@ -6,6 +6,12 @@ type ChannelDataSizeLog struct {
 	//入方向
 	InData int64
 
+	//上次统计
+	PreInData int64
+
 	//出方向
 	OutData int64
+
+	//上次统计
+	PreOutData int64
 }

@@ -1,0 +1,73 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:include="admin/include/css :: header('数据转发列表')"/>
+</head>
+<body>
+<th:block th:include="admin/include/top-bar :: top-bar('数据转发列表')"/>
+<div class="mx-0 mt-3">
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-0">
+        <div class="col px-0 pb-3 px-3" th:each="item : ${list}">
+            <div class="bg-white rounded p-2 position-relative">
+                <div class="text-center fs-5"><span th:text="${item.name}"></span></div>
+                <div>端口:<span th:text="${item.port}"></span> -> <span th:text="${item.targetPort}"></span></div>
+                <div>入出流量:<span th:text="${item.inDataTotal}"></span>/<span th:text="${item.outDataTotal}"></span></div>
+                <div class="text-end">
+                    <button class="btn btn-sm btn-outline-danger" th:onclick="'onSetStateClick(' + ${item.id} +')'">
+                        <i th:if="${item.enableState == 1}" class="bi bi-pause-fill"></i>
+                        <i th:if="${item.enableState == 0}" class="bi bi-play-fill"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" th:onclick="'onDeleteClick(' + ${item.id} +')'">
+                        <i class="bi bi-trash3"></i></button>
+                    <a class="btn btn-sm btn-outline-primary"
+                       th:href="'/admin/forward_list/forward_edit?id=' + ${item.id}"><i
+                            class="bi bi-pencil-square"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<th:block th:include="admin/include/js :: js"/>
+<script>
+    $(() => {
+        addNavBtn("添加", () => {
+            window.location.href = "/admin/forward_list/forward_edit"
+        });
+    });
+
+    function onSearchSubmit() {
+        $("form").submit()
+    }
+
+    /**
+     * 删除点击事件
+     * @param id
+     */
+    function onDeleteClick(id) {
+        const result = confirm("确定删除?")
+        if (result) {
+            $.ajax({
+                url: "/admin/forward_list/delete?id=" + id,
+                type: "POST"
+            }).fail($ajaxFail).done(() => {
+                history.go(0)
+            })
+        }
+    }
+
+    /**
+     * 修改可用状态
+     * @param id
+     */
+    function onSetStateClick(id) {
+        $.ajax({
+            url: "/admin/forward_list/set_state?id=" + id,
+            type: "POST"
+        }).fail($ajaxFail).done(() => {
+            history.go(0)
+        })
+    }
+</script>
+</body>
+</html>

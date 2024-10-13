@@ -1,0 +1,115 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <link href="/plugins/bootstrap-5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <script src="/plugins/jquery-3.6.3.min.js"></script>
+    <script src="/plugins/bootstrap-5.3.2/js/bootstrap.bundle.min.js"></script>
+</head>
+<body>
+<div class="p-2 d-flex">
+    <input id="start" class="form-control" type="datetime-local" th:value="${start}" style="width: 170px;" onchange="getData()">
+    <div class="p-2">～</div>
+    <input id="end" class="form-control" type="datetime-local" th:value="${end}" style="width: 170px;" onblur="getData()">
+    <a class="btn btn-outline-primary ms-2" th:href="${hours1Start}">1小时</a>
+    <a class="btn btn-outline-primary ms-2" th:href="${day1Start}">1天</a>
+    <a class="btn btn-outline-primary ms-2" th:href="${day7Start}">7天</a>
+    <a class="btn btn-outline-primary ms-2" th:href="${month1Start}">1个月</a>
+    <a class="btn btn-outline-primary ms-2" th:href="${month3Start}">3个月</a>
+    <a class="btn btn-outline-primary ms-2" th:href="${month6Start}">6个月</a>
+    <a class="btn btn-outline-primary ms-2" th:href="${year1Start}">1年</a>
+</div>
+<div id="chartDIV" style="overflow: hidden;">
+</div>
+<script src="/plugins/jquery-3.6.3.min.js"></script>
+<script src="/admin/js/common.js"></script>
+<script src="/plugins/chart.js"></script>
+<script>
+    $(() => {
+        getData()
+    });
+
+    /**
+     * 曲线图初始化
+     */
+    function initChart(labels, inDataList, outDataList, unit) {
+        $("#chartDIV").html('<canvas id="myChart" style="width: 100vw;height: 80vh;"></canvas>')
+        const data = {
+            labels: labels,
+            datasets: [
+                {
+                    label: '入网网速',
+                    data: inDataList,
+                    borderColor: "#22ff00",
+                    fill: false,
+                    // cubicInterpolationMode: 'monotone',
+                    tension: 0.4
+                }, {
+                    label: '出网网速',
+                    data: outDataList,
+                    borderColor: "#ff0000",
+                    fill: false,
+                    tension: 0.4
+                }
+            ]
+        };
+
+        const config = {
+            type: 'line',
+            data: data,
+            options: {
+                animation: false,//禁用动画
+                // animation: {//禁用动画
+                //     duration: 0
+                // },
+                responsive: true,
+                maintainAspectRatio: false,//默认值true,要设置图标高度,必须设置为false
+                plugins: {
+                    // title: {
+                    //     display: true,
+                    //     text: '网速'
+                    // },
+                },
+                interaction: {
+                    intersect: false,
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        title: {
+                            display: true
+                        }
+                    },
+                    y: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: unit
+                        },
+                        suggestedMin: 0,
+                        //suggestedMax: 200
+                    }
+                }
+            },
+        };
+        const ctx = document.getElementById('myChart')
+        new Chart(ctx, config);
+    }
+
+    /**
+     * 获取数据
+     */
+    function getData() {
+        const start = $("#start").val().replace(/[^\d]/g, '')
+        const end = $("#end").val().replace(/[^\d]/g, '')
+        $.ajax({
+            url: `/admin/data_log?targetId=[[${param.targetId}]]&type=[[${param.type}]]&start=${start}&end=${end}`,
+            method: "POST",
+            dataType: "JSON"
+        }).done(data => {
+            initChart(data.lables, data.inDataList, data.outDataList, data.unit)
+        })
+    }
+</script>
+</body>
+</html>

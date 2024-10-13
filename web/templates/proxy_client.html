@@ -1,0 +1,123 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:include="admin/include/css :: header('代理客户端')"/>
+</head>
+<body>
+<th:block th:include="admin/include/top-bar :: top-bar('代理客户端')"/>
+<div class="m-3 p-2 bg-white rounded">
+    <form onchange="onSearchSubmit()" action="/admin/proxy_client" method="get">
+        <div class="row row-cols-sm-2 row-cols-md-3 row-cols-lg-4">
+            <div class="col">
+                <div class="row">
+                    <label class="col-sm-4 col-form-label text-end">客户端</label>
+                    <div class="col-sm-8">
+                        <select class="form-select" name="clientId">
+                            <option value="">全部</option>
+                            <option th:each="item:${clients}" th:value="${item.id}" th:text="${item.name}"
+                                    th:selected="${item.id == search.clientId}"></option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="row">
+                    <label class="col-sm-4 col-form-label text-end">隧道</label>
+                    <div class="col-sm-8">
+                        <select class="form-select" name="channelId">
+                            <option value="">全部</option>
+                            <option th:each="item:${channels}" th:value="${item.id}" th:text="${item.name}"
+                                    th:selected="${item.id == search.channelId}"></option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="row">
+                    <label class="col-sm-4 col-form-label text-end">隧道模式</label>
+                    <div class="col-sm-8">
+                        <select class="form-select" name="type">
+                            <option value="">全部</option>
+                            <option value="1" th:selected="${search.type == 1}">TCP</option>
+                            <option value="2" th:selected="${search.type == 2}">UDP</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<div class="m-3 p-2 bg-white rounded">
+    <table class="table table-hover">
+        <thead>
+        <tr>
+            <th>客户端</th>
+            <th>隧道名</th>
+            <th>隧道模式</th>
+            <th>IP</th>
+            <th>连接时间</th>
+            <th>入网流量</th>
+            <th>出网流量</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="item : ${proxyClientList}">
+            <td th:text="${item.clientName}"></td>
+            <td th:text="${item.channelName}"></td>
+            <td th:text="${item.type}"></td>
+            <td th:text="${item.ip}"></td>
+            <td th:text="${item.onlineTime}"></td>
+            <td th:text="${item.inDataTotal}"></td>
+            <td th:text="${item.outDataTotal}"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+<th:block th:include="admin/include/js :: js"/>
+<script>
+    $(() => {
+
+        //客户端ID
+        const clientId = "[[${search.clientId}]]"
+        if (clientId.length > 0) {
+            addNavBtn("添加", () => {
+                window.location.href = "/admin/channel_list/channel_edit?clientId=" + clientId
+            });
+        }
+    });
+
+    function onSearchSubmit() {
+        $("form").submit()
+    }
+
+    /**
+     * 删除点击事件
+     * @param id
+     */
+    function onDeleteClick(id) {
+        const result = confirm("确定删除?")
+        if (result) {
+            $.ajax({
+                url: "/admin/channel_list/delete?id=" + id,
+                type: "POST"
+            }).fail($ajaxFail).done(() => {
+                history.go(0)
+            })
+        }
+    }
+
+    /**
+     * 修改可用状态
+     * @param id
+     */
+    function onSetStateClick(id) {
+        $.ajax({
+            url: "/admin/channel_list/set_state?id=" + id,
+            type: "POST"
+        }).fail($ajaxFail).done(() => {
+            history.go(0)
+        })
+    }
+</script>
+</body>
+</html>

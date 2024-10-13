@@ -111,10 +111,6 @@ func shutdown(proxyTCPAccept *ProxyAccept) {
 func removeByChannelId(channelId int) {
 	proxyTCPAccept := channelIdToProxyAccept[channelId]
 	if proxyTCPAccept != nil {
-		proxyTCPAccept := channelIdToProxyAccept[channelId]
 		delete(channelIdToProxyAccept, channelId)
-
-		//关闭隧道的时候保存流量
-		ChannelDao.SetDataLen(proxyTCPAccept.Channel)
 	}
 }
