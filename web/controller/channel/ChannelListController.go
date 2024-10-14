@@ -4,6 +4,7 @@ import (
 	"DairoNPS/bridge"
 	"DairoNPS/dao/ChannelDao"
 	"DairoNPS/dao/ClientDao"
+	"DairoNPS/extension/Bool"
 	"DairoNPS/extension/Number"
 	"DairoNPS/proxy"
 	"DairoNPS/web"
@@ -51,7 +52,7 @@ func List(inForm ListInForm) any {
 			ClientId:   it.ClientId,
 			ClientName: client.Name,
 			Name:       it.Name,
-			Mode:       it.Mode,
+			Mode:       Bool.Is(it.Mode == 1, "TCP", "UDP"),
 			ServerPort: it.ServerPort,
 			TargetPort: it.TargetPort,
 			//EnableStateText:it.EnableStateText,
@@ -80,21 +81,28 @@ func Delete(form DeleteForm) {
 	ChannelDao.Delete(form.Id)
 }
 
-///**
-// * 修改可用状态
-// */
-//@PostMapping("/set_state")
-//@ResponseBody
-//fun setState(id: Int) {
-//val channel = ChannelDao.selectOne(id)!!
-//channel.enableState = if (channel.enableState == 0) 1 else 0
-//ChannelDao.update(channel)
-//GlobalScope.launch(Dispatchers.IO) {
-//if (channel.enableState == 0) {
-//CLServer.closeByChannel(id)
-//} else {
-//CLServer.start(id)
-//}
-//}
-//}
-//}
+// 删除的表单
+type SetStateForm struct {
+	Id int
+}
+
+// 修改可用状态
+func setState(form SetStateForm) {
+	channel := ChannelDao.SelectOne(form.Id)
+	if channel.EnableState == 0 {
+		ChannelDao.SetEnableState(form.Id, 1)
+
+		client := ClientDao.SelectOne(channel.ClientId)
+
+		//重新开启监听该客户端
+		proxy.AcceptClient(client)
+	} else {
+		ChannelDao.SetEnableState(form.Id, 0)
+
+		//关闭代理监听
+		proxy.CloseByChannel(channel.Id)
+
+		//关闭隧道所有正在通信的连接
+		bridge.CloseByChannel(channel.Id)
+	}
+}

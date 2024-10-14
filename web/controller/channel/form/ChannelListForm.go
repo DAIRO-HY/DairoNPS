@@ -16,7 +16,7 @@ type ChannelListForm struct {
 	Name string
 
 	// 隧道模式, 1:TCP  2:UDP
-	Mode int
+	Mode string
 
 	// 服务端口
 	ServerPort int

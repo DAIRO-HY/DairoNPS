@@ -123,7 +123,7 @@ func saveStatistics() {
 	}
 
 	//统计客户端入出网流量
-	for _, client := range clientMap {
-		ClientDao.SetDataSize(client.Id, client.InDataTotal, client.OutDataTotal)
+	for clientId, client := range clientMap {
+		ClientDao.SetDataSize(clientId, client.InDataTotal, client.OutDataTotal)
 	}
 }

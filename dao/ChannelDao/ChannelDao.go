@@ -153,3 +153,9 @@ func SelectIdByClientId(clientId int) []int {
 	}
 	return ids
 }
+
+// 设置可用状态
+func SetEnableState(id int, state int) {
+	sql := "update channel set enableState = ? where id = ?"
+	DBUtil.ExecIgnoreError(sql, state, id)
+}
