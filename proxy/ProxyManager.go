@@ -4,8 +4,9 @@ import (
 	"DairoNPS/dao/ChannelDao"
 	"DairoNPS/dao/dto"
 	"DairoNPS/util/StatisticsUtil"
+	"fmt"
+	"net"
 	"sync"
-	"time"
 )
 
 //代理服务端口监听管理
@@ -47,10 +48,17 @@ func acceptChannel(client *dto.ClientDto, channel *dto.ChannelDto) {
 	//    ChannelType.UDP -> ProxyUDPAccept(client, channel)
 	//    else -> return@synchronized
 	//}
-
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", channel.ServerPort))
+	if err != nil {
+		fmt.Printf("端口:%d 监听失败。err:%p\n", channel.ServerPort, err)
+		channelIdToProxyAcceptLock.Unlock()
+		return
+	}
+	fmt.Printf("端口:%d 监听开始\n", channel.ServerPort)
 	proxyAccept := &ProxyAccept{
 		Client:  client,
 		Channel: channel,
+		listen:  listener,
 	}
 	channelIdToProxyAccept[channel.Id] = proxyAccept
 	channelIdToProxyAcceptLock.Unlock()
@@ -88,18 +96,7 @@ func CloseByClient(clientId int) {
  * 停止监听端口
  */
 func shutdown(proxyTCPAccept *ProxyAccept) {
-	for {
-
-		//@TODO:这里需要优化,不应该以休眠的方式关闭
-		time.Sleep(100 * time.Millisecond)
-		if proxyTCPAccept.ProxySocketServer == nil {
-			continue
-		}
-		proxyTCPAccept.ProxySocketServer.Close()
-		if proxyTCPAccept.IsFinished {
-			break
-		}
-	}
+	proxyTCPAccept.listen.Close()
 	removeByChannelId(proxyTCPAccept.Channel.Id)
 }
 

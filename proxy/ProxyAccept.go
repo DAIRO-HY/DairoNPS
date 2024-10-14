@@ -27,15 +27,11 @@ type ProxyAccept struct {
 	 */
 	lastOutDataTotal int64
 
-	/**
-	 * 标记监听已经结束
-	 */
-	IsFinished bool
+	//标记监听已经结束
+	isFinished bool
 
-	/**
-	 * 代理SockerServer
-	 */
-	ProxySocketServer net.Listener
+	//代理端口监听服务
+	listen net.Listener
 }
 
 /**
@@ -49,21 +45,13 @@ type ProxyAccept struct {
  * 等待客户端连接
  */
 func (mine *ProxyAccept) accept() {
-	channel := mine.Channel
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", channel.ServerPort))
-	if err != nil {
-		fmt.Printf("端口:%d 监听失败\n", channel.ServerPort)
-		return
-	}
-	fmt.Printf("端口:%d 监听开始\n", channel.ServerPort)
-	mine.ProxySocketServer = listener
 	for {
 
 		//代理服务端Socket
-		proxySocket, err := listener.Accept()
-		fmt.Printf("端口:%d 监听到一个连接\n", channel.ServerPort)
+		proxySocket, err := mine.listen.Accept()
+		fmt.Printf("端口:%d 监听到一个连接\n", mine.Channel.ServerPort)
 		if err != nil {
-			fmt.Printf("-->端口:%d 监听结束\n", channel.ServerPort)
+			fmt.Printf("-->端口:%d 监听结束\n", mine.Channel.ServerPort)
 			break
 		}
 
@@ -72,14 +60,14 @@ func (mine *ProxyAccept) accept() {
 		}
 
 		//NPS客户端Socket
-		clientSocket := pool.GetAndAddPool(channel.ClientId)
+		clientSocket := pool.GetAndAddPool(mine.Channel.ClientId)
 		if clientSocket == nil { //没有可用的Socket
 			proxySocket.Close()
 			continue
 		}
-		bridge.MakeBridge(mine.Client, channel, proxySocket, clientSocket)
+		bridge.MakeBridge(mine.Client, mine.Channel, proxySocket, clientSocket)
 	}
-	mine.IsFinished = true
+	mine.isFinished = true
 }
 
 /**
