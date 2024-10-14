@@ -1,7 +1,6 @@
 package channel
 
 import (
-	"DairoNPS/bridge"
 	"DairoNPS/dao/ChannelDao"
 	"DairoNPS/dao/ClientDao"
 	"DairoNPS/extension/Bool"
@@ -58,8 +57,8 @@ func List(inForm ListInForm) any {
 			TargetPort: it.TargetPort,
 			//EnableStateText:it.EnableStateText,
 			EnableState:   it.EnableState,
-			InDataTotal:   Number.ToDataSize(it.InDataTotal),
-			OutDataTotal:  Number.ToDataSize(it.OutDataTotal),
+			InData:        Number.ToDataSize(it.InData),
+			OutData:       Number.ToDataSize(it.OutData),
 			SecurityState: it.SecurityState,
 		}
 	}
@@ -76,9 +75,6 @@ func Delete(form DeleteForm) {
 
 	//关闭代理监听
 	proxy.CloseByChannel(form.Id)
-
-	//关闭隧道所有正在通信的连接
-	bridge.CloseByChannel(form.Id)
 	ChannelDao.Delete(form.Id)
 }
 
@@ -102,8 +98,5 @@ func setState(form SetStateForm) {
 
 		//关闭代理监听
 		proxy.CloseByChannel(channel.Id)
-
-		//关闭隧道所有正在通信的连接
-		bridge.CloseByChannel(channel.Id)
 	}
 }

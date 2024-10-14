@@ -1,14 +1,15 @@
 package client
 
 import (
-	"DairoNPS/bridge"
 	"DairoNPS/client/HeaderUtil"
+	"DairoNPS/constant/CLSConfig"
 	"DairoNPS/dao/dto"
 	"DairoNPS/pool"
 	"DairoNPS/proxy"
 	"net"
 	"strconv"
 	"sync"
+	"time"
 )
 
 type ClientSessionManager struct{}
@@ -156,7 +157,33 @@ func closeProxyAndPoolAndBridge(clientId int) {
 	//} catch (e: Exception) {
 	//   e.printStackTrace()
 	//}
+}
 
-	//关闭客户端所有正在通信的连接
-	bridge.CloseByClient(clientId)
+// 关闭一个客户端
+func Close(clientId int) {
+
+	//先移除之前的连接
+	clientSessionMapLock.Lock()
+	oldSession := clientSessionMap[clientId]
+	if oldSession != nil { //如果存在
+		oldSession.Close()
+	}
+	clientSessionMapLock.Unlock()
+}
+
+// 客户端是否在线监测
+func IsOnline(clientId int) bool {
+	clientSessionMapLock.Lock()
+	session := clientSessionMap[clientId]
+	clientSessionMapLock.Unlock()
+	if session == nil {
+		return false
+	}
+	now := time.Now().UnixNano() / int64(time.Millisecond)
+
+	//在指定时间内没有收到客户端心跳,则视为离线
+	if now-session.lastHeartBeatTime > CLSConfig.HEART_TIME*2 {
+		return false
+	}
+	return true
 }

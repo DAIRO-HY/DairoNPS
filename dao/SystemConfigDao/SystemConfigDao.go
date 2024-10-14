@@ -11,7 +11,7 @@ import (
  * 获取系统配置
  */
 func SelectOne() *dto.SystemConfigDto {
-	sql := "select inDataTotal,outDataTotal from system_config"
+	sql := "select inData,outData from system_config"
 	return DBUtil.SelectOne[dto.SystemConfigDto](sql)
 }
 
@@ -19,6 +19,6 @@ func SelectOne() *dto.SystemConfigDto {
  * 同步入出网流量
  */
 func SetDataLen(dto dto.SystemConfigDto) {
-	sql := "update system_config set inDataTotal = ?,outDataTotal=?"
-	DBUtil.Exec(sql, dto.InDataTotal, dto.OutDataTotal)
+	sql := "update system_config set inData = ?,outData=?"
+	DBUtil.Exec(sql, dto.InData, dto.OutData)
 }

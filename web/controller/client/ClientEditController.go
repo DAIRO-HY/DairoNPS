@@ -1,8 +1,12 @@
 package client
 
 import (
+	"DairoNPS/client"
 	"DairoNPS/dao/ClientDao"
 	"DairoNPS/dao/dto"
+	"DairoNPS/extension/Bool"
+	"DairoNPS/extension/Date"
+	"DairoNPS/extension/Number"
 	"DairoNPS/web"
 	"DairoNPS/web/controller"
 	"DairoNPS/web/controller/client/form"
@@ -17,20 +21,20 @@ func init() {
 
 func Info(inForm form.ClientEditForm) form.ClientEditForm {
 	if inForm.Id != 0 {
-		client := ClientDao.SelectOne(inForm.Id)
+		clientDto := ClientDao.SelectOne(inForm.Id)
 		return form.ClientEditForm{
-			Id:      client.Id,
-			Name:    client.Name,
-			Key:     client.Key,
-			Remark:  client.Remark,
-			Ip:      client.Ip,
-			Version: client.Version,
-			//CreateDate :     dto.CreateDate.format("yyyy-MM-dd HH:mm:ss"),
-			EnableState:  client.EnableState,
-			InDataTotal:  client.InDataTotal,
-			OutDataTotal: client.OutDataTotal,
-			OnlineState:  client.OnlineState,
-			//LastLoginDate :  dto.LastLoginDate.format("yyyy-MM-dd HH:mm:ss"),
+			Id:            clientDto.Id,
+			Name:          clientDto.Name,
+			Key:           clientDto.Key,
+			Remark:        clientDto.Remark,
+			Ip:            clientDto.Ip,
+			Version:       clientDto.Version,
+			Date:          Date.FormatByTimespan(clientDto.Date),
+			EnableState:   Bool.Is(clientDto.EnableState == 0, "关闭", "开启"),
+			InData:        Number.ToDataSize(clientDto.InData),
+			OutData:       Number.ToDataSize(clientDto.OutData),
+			OnlineState:   Bool.Is(client.IsOnline(clientDto.Id), "在线", "离线"),
+			LastLoginDate: Date.FormatByTimespan(clientDto.LastLoginDate),
 		}
 	}
 	return form.ClientEditForm{}
@@ -42,32 +46,30 @@ func Edit(form form.ClientEditForm) any {
 	if err != nil {
 		return err
 	}
-	var client *dto.ClientDto
+	var clientDto *dto.ClientDto
 	if form.Id != 0 {
-		client = ClientDao.SelectOne(form.Id)
+		clientDto = ClientDao.SelectOne(form.Id)
 	} else {
-		client = &dto.ClientDto{}
+		clientDto = &dto.ClientDto{}
 	}
 
 	//名称
-	client.Name = form.Name
+	clientDto.Name = form.Name
 
 	//版本号
-	client.Version = form.Version
+	clientDto.Version = form.Version
 
 	//连接认证秘钥
-	client.Key = form.Key
-
-	//启用状态
-	client.EnableState = form.EnableState
+	clientDto.Key = form.Key
 
 	//一些备注信息,错误信息等
-	client.Remark = form.Remark
+	clientDto.Remark = form.Remark
 	if form.Id == 0 {
-		ClientDao.Add(client)
+		ClientDao.Add(clientDto)
 	} else {
-		ClientDao.Update(client)
+		ClientDao.Update(clientDto)
 	}
+	client.Close(form.Id)
 	return nil
 }
 

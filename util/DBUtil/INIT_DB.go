@@ -38,7 +38,7 @@ func upgrade() {
 		create()
 
 		//第一次创建数据库时往系统配置表插入一条数据
-		ExecIgnoreError("insert into system_config(inDataTotal, outDataTotal) values (0, 0);")
+		ExecIgnoreError("insert into system_config(inData, outData) values (0, 0);")
 	}
 
 	//设置数据库版本号

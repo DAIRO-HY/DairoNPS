@@ -19,13 +19,13 @@ type ClientListForm struct {
 	Ip string
 
 	// 入网流量
-	InDataTotal int64
+	InData string
 
 	// 出网流量
-	OutDataTotal int64
+	OutData string
 
-	// 在线状态,0:离线 1:在线
-	OnlineState bool
+	// 在线状态
+	IsOnline bool
 
 	// 启用状态
 	EnableState int

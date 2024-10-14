@@ -75,8 +75,8 @@ func Update(dto *dto.ChannelDto) {
  * 同步入出网流量
  */
 func SetDataSize(id int, inData int64, outData int64) {
-	sql := "update channel set inDataTotal = ?,outDataTotal=? where id = ?"
-	DBUtil.Exec(sql, inData, outData, id)
+	sql := "update channel set inData = ?,outData=? where id = ?"
+	DBUtil.ExecIgnoreError(sql, inData, outData, id)
 }
 
 /**
@@ -86,7 +86,7 @@ func SetDataSize(id int, inData int64, outData int64) {
  */
 func Delete(id int) {
 	sql := "delete from channel where id = ?"
-	DBUtil.Exec(sql, id)
+	DBUtil.ExecIgnoreError(sql, id)
 }
 
 /**
@@ -95,16 +95,15 @@ func Delete(id int) {
  */
 func DeleteByClient(clientId int) {
 	sql := "delete from channel where clientId = ?"
-	DBUtil.Exec(sql, clientId)
+	DBUtil.ExecIgnoreError(sql, clientId)
 }
 
 /**
  * 设置备注信息
  */
 func SetRemark(id int, remark string) {
-	sql :=
-		"update channel set remark = ? where id = ?"
-	DBUtil.Exec(sql, remark, id)
+	sql := "update channel set remark = ? where id = ?"
+	DBUtil.ExecIgnoreError(sql, remark, id)
 }
 
 /**

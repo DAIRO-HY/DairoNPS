@@ -25,10 +25,10 @@ type ChannelEditForm struct {
 	TargetPort string
 
 	// 入网流量
-	InDataTotal string
+	InData string
 
 	// 出网流量
-	OutDataTotal string
+	OutData string
 
 	// 启用状态 1:开启  0:停止
 	EnableState string

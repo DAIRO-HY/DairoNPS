@@ -51,10 +51,10 @@ func LoadChannelDataLog() {
 		//加入到隧道流量统计
 		ChannelDataSizeMap[channel.Id] = &ChannelDataSizeLog{
 			ClientId:   channel.ClientId,
-			InData:     channel.InDataTotal,
-			PreInData:  channel.InDataTotal,
-			OutData:    channel.OutDataTotal,
-			PreOutData: channel.OutDataTotal,
+			InData:     channel.InData,
+			PreInData:  channel.InData,
+			OutData:    channel.OutData,
+			PreOutData: channel.OutData,
 		}
 	}
 
@@ -113,17 +113,17 @@ func saveStatistics() {
 		clientDto := clientMap[dataSize.ClientId]
 		if clientDto == nil {
 			clientMap[dataSize.ClientId] = &dto.ClientDto{
-				InDataTotal:  currentInData,
-				OutDataTotal: currentOutData,
+				InData:  currentInData,
+				OutData: currentOutData,
 			}
 		} else {
-			clientDto.InDataTotal += currentInData
-			clientDto.OutDataTotal += currentOutData
+			clientDto.InData += currentInData
+			clientDto.OutData += currentOutData
 		}
 	}
 
 	//统计客户端入出网流量
 	for clientId, client := range clientMap {
-		ClientDao.SetDataSize(clientId, client.InDataTotal, client.OutDataTotal)
+		ClientDao.SetDataSize(clientId, client.InData, client.OutData)
 	}
 }

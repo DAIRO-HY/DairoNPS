@@ -44,13 +44,13 @@ type TCPBridge struct {
 	/**
 	 * 本次连接入网总计
 	 */
-	inDataTotal int64
+	inData int64
 
 	/**
 	 * 本次连接出网总计
 	 */
 
-	outDataTotal int64
+	outData int64
 
 	/**
 	 * 代理连接入方向是否被关闭

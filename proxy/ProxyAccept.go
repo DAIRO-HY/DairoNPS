@@ -19,13 +19,13 @@ type ProxyAccept struct {
 	 * 最后一次统计到入网流量
 	 * 流量统计时用到
 	 */
-	lastInDataTotal int64
+	lastInData int64
 
 	/**
 	 * 最后一次统计到出网流量
 	 * 流量统计时用到
 	 */
-	lastOutDataTotal int64
+	lastOutData int64
 
 	//标记监听已经结束
 	isFinished bool

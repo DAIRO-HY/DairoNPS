@@ -19,10 +19,10 @@ type ClientDto struct {
 	Ip string
 
 	//入网流量
-	InDataTotal int64
+	InData int64
 
 	//出网流量
-	OutDataTotal int64
+	OutData int64
 
 	//在线状态,0:离线 1:在线
 	OnlineState int
@@ -34,10 +34,7 @@ type ClientDto struct {
 	LastLoginDate int64
 
 	//创建时间
-	CreateDate int64
-
-	//最后一次更新时间戳
-	UpdateDate int64
+	Date int64
 
 	//一些备注信息,错误信息等
 	Remark string

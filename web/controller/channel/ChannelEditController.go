@@ -1,7 +1,6 @@
 package channel
 
 import (
-	"DairoNPS/bridge"
 	"DairoNPS/dao/ChannelDao"
 	"DairoNPS/dao/ClientDao"
 	"DairoNPS/dao/dto"
@@ -47,8 +46,8 @@ func Info(inForm EditInForm) any {
 			TargetPort:    channelDto.TargetPort,
 			Date:          Date.FormatByTimespan(channelDto.Date),
 			EnableState:   Bool.Is(channelDto.EnableState == 0, "关闭", "开启"),
-			InDataTotal:   Number.ToDataSize(channelDto.InDataTotal),
-			OutDataTotal:  Number.ToDataSize(channelDto.OutDataTotal),
+			InData:        Number.ToDataSize(channelDto.InData),
+			OutData:       Number.ToDataSize(channelDto.OutData),
 			SecurityState: channelDto.SecurityState,
 		}
 
@@ -123,9 +122,6 @@ func Edit(form form.ChannelEditForm) any {
 
 	//关闭代理监听
 	proxy.CloseByChannel(channel.Id)
-
-	//关闭隧道所有正在通信的连接
-	bridge.CloseByChannel(channel.Id)
 	client := ClientDao.SelectOne(channel.ClientId)
 
 	//重新开启监听该客户端

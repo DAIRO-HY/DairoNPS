@@ -22,9 +22,7 @@ type ClientSession struct {
 	Client *dto.ClientDto
 	tcp    net.Conn
 
-	/**
-	 * 最后一次收到客户端心跳时间
-	 */
+	//最后一次收到客户端心跳时间
 	lastHeartBeatTime int64
 }
 

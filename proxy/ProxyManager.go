@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"DairoNPS/bridge"
 	"DairoNPS/dao/ChannelDao"
 	"DairoNPS/dao/dto"
 	"DairoNPS/util/StatisticsUtil"
@@ -78,11 +79,12 @@ func CloseByChannel(channelId int) {
 		shutdown(proxyTCPAccept)
 	}
 	channelIdToProxyAcceptLock.Unlock()
+
+	//关闭隧道所有正在通信的连接
+	bridge.CloseByChannel(channelId)
 }
 
-/**
- * 关闭某个客户端下所有的隧道
- */
+// 关闭某个客户端下所有的隧道
 func CloseByClient(clientId int) {
 
 	//关闭客户端所有隧道
@@ -90,6 +92,9 @@ func CloseByClient(clientId int) {
 	for _, it := range channelIdList {
 		CloseByChannel(it)
 	}
+
+	//关闭客户端所有正在通信的连接
+	bridge.CloseByClient(clientId)
 }
 
 /**

@@ -21,10 +21,10 @@ type ChannelDto struct {
 	TargetPort string
 
 	//入网流量
-	InDataTotal int64
+	InData int64
 
 	//出网流量
-	OutDataTotal int64
+	OutData int64
 
 	//启用状态 1:开启  0:停止
 	EnableState int

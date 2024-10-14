@@ -3,14 +3,12 @@ package ClientDao
 import (
 	"DairoNPS/dao/dto"
 	"DairoNPS/util/DBUtil"
-	"time"
 )
 
 // Add 添加一条客户端数据
 func Add(dto *dto.ClientDto) {
-	updateDate := time.Now().UnixNano() / int64(time.Millisecond)
-	sql := "insert into client(name,key,remark,updateDate)values(?,?,?,?)"
-	id := DBUtil.InsertIgnoreError(sql, dto.Name, dto.Key, dto.Remark, updateDate)
+	sql := "insert into client(name,key,remark)values(?,?,?)"
+	id := DBUtil.InsertIgnoreError(sql, dto.Name, dto.Key, dto.Remark)
 	dto.Id = int(id)
 }
 
@@ -38,16 +36,15 @@ func SelectByKey(key string) *dto.ClientDto {
  * 更新一条数据
  */
 func Update(dto *dto.ClientDto) {
-	updateDate := time.Now().UnixNano() / int64(time.Millisecond)
 	sql :=
-		"update client set name = ?,key = ?,enableState=?,remark=?,updateDate=? where id = ? and updateDate=?"
-	DBUtil.Exec(sql, dto.Name, dto.Key, dto.EnableState, dto.Remark, updateDate, dto.Id, dto.UpdateDate)
+		"update client set name = ?,key = ?,remark=? where id = ?"
+	DBUtil.ExecIgnoreError(sql, dto.Name, dto.Key, dto.Remark, dto.Id)
 }
 
 // 统计入出网流量
 func SetDataSize(id int, inAdd int64, outAdd int64) {
-	sql := "update client set inDataTotal = inDataTotal + ?,outDataTotal = outDataTotal + ? where id = ?"
-	DBUtil.Exec(sql, inAdd, outAdd, id)
+	sql := "update client set inData = inData + ?,outData = outData + ? where id = ?"
+	DBUtil.ExecIgnoreError(sql, inAdd, outAdd, id)
 }
 
 /**
@@ -56,16 +53,16 @@ func SetDataSize(id int, inAdd int64, outAdd int64) {
 func SetClientInfo(dto dto.ClientDto) {
 	sql :=
 		"update client set ip = ?,version=?,lastLoginDate=CURRENT_TIMESTAMP where id = ?"
-	DBUtil.Exec(sql, dto.Ip, dto.Version, dto.Id)
+	DBUtil.ExecIgnoreError(sql, dto.Ip, dto.Version, dto.Id)
 }
 
 /**
  * 通过客户端id删除一条数据
  * @param id 客户端id
  */
-func delete(id int) {
+func Delete(id int) {
 	sql := "delete from client where id = ?"
-	DBUtil.Exec(sql, id)
+	DBUtil.ExecIgnoreError(sql, id)
 }
 
 /**
@@ -74,7 +71,13 @@ func delete(id int) {
 func setRemark(id int, remark string) {
 	sql :=
 		"update client set remark = ? where id = ?"
-	DBUtil.Exec(sql, remark, id)
+	DBUtil.ExecIgnoreError(sql, remark, id)
+}
+
+// 设置可用状态
+func SetEnableState(id int, state int) {
+	sql := "update client set enableState = ? where id = ?"
+	DBUtil.ExecIgnoreError(sql, state, id)
 }
 
 /**

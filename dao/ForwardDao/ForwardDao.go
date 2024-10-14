@@ -80,7 +80,7 @@ func Update(dto dto.ForwardDto) {
  * 同步入出网流量
  */
 func SetDataLen(dto dto.ForwardDto) {
-	sql := "update forward set inDataTotal = ?,outDataTotal=? where id = ?"
+	sql := "update forward set inData = ?,outDataTotal=? where id = ?"
 	DBUtil.Exec(sql, dto.InDataTotal, dto.OutDataTotal, dto.Id)
 }
 
