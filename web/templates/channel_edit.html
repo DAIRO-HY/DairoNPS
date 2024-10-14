@@ -187,24 +187,24 @@
      */
     // const ipAcls = JSON.parse([[${aclIp}]])
 
-    /**
-     * IP地址列表部分的HTML
-     */
-    const aclIpHtml = $("#aclIpDiv").html()
-    $("#aclIpDiv").empty()
+    // /**
+    //  * IP地址列表部分的HTML
+    //  */
+    // const aclIpHtml = $("#aclIpDiv").html()
+    // $("#aclIpDiv").empty()
 
     $(function () {
 
         //初始化数据
         init()
 
-        //将现有的ip加入到列表
-        ipAcls.forEach(item => addIp(item))
-
-        $("[name='aclState']").on("click", () => {
-            aclShowState()
-        })
-        aclShowState()
+        // //将现有的ip加入到列表
+        // ipAcls.forEach(item => addIp(item))
+        //
+        // $("[name='aclState']").on("click", () => {
+        //     aclShowState()
+        // })
+        // aclShowState()
     })
 
     /**
@@ -226,7 +226,7 @@
      * 表单提交点击事件
      */
     function onSubmitClick() {
-        $("form").ajaxByForm().success(()=>{
+        $("form").ajaxByForm().success(() => {
             window.location = document.referrer
         }).post()
     }
@@ -234,22 +234,42 @@
     /**
      * 添加IP地址点击事件
      */
-    function onAddAclIPClick() {
-        const ip = $("#aclIp").val()
-        addIp(ip)
-    }
+    // function onAddAclIPClick() {
+    //     const ip = $("#aclIp").val()
+    //     addIp(ip)
+    // }
 
-    function aclShowState() {
-        if ($("[name='aclState']:checked").val() === "0") {
-            $("#aclIpRow").hide()
-        } else {
-            $("#aclIpRow").show()
-        }
-    }
+    // function aclShowState() {
+    //     if ($("[name='aclState']:checked").val() === "0") {
+    //         $("#aclIpRow").hide()
+    //     } else {
+    //         $("#aclIpRow").show()
+    //     }
+    // }
+    //
+    // function addIp(ip) {
+    //     $("#aclIpDiv").append(aclIpHtml.replace(/\{IP\}/g, ip))
+    // }
 
-    function addIp(ip) {
-        $("#aclIpDiv").append(aclIpHtml.replace(/\{IP\}/g, ip))
-    }
+
+    let ws = new WebSocket("ws://localhost:8080/ws");
+
+    ws.onopen = function () {
+        console.log("Connected to server");
+        ws.send("Hello, server!");
+    };
+
+    ws.onmessage = function (event) {
+        console.log("Received from server: " + event.data);
+    };
+
+    ws.onclose = function () {
+        console.log("Connection closed");
+    };
+
+    ws.onerror = function (error) {
+        console.log("WebSocket error: " + error);
+    };
 </script>
 </body>
 </html>

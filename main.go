@@ -7,6 +7,7 @@ import (
 
 	//初始化Controller
 	_ "DairoNPS/web/controller/channel"
+	_ "DairoNPS/web/controller/chart"
 	_ "DairoNPS/web/controller/client"
 )
 
