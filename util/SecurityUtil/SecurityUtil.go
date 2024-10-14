@@ -14,7 +14,7 @@ var ServerKeyArray = make([]byte, 128)
  */
 var ClientKeyArray = make([]byte, 128)
 
-func Init() {
+func init() {
 	for i := range ServerKeyArray {
 		ServerKeyArray[i] = byte(i)
 	}
@@ -43,7 +43,7 @@ func Init() {
  * @param data 要加密的数据
  * @param len 要加密的数据长度
  */
-func mapping(data []byte, len int) {
+func Mapping(data []byte, len int) {
 	for i := 0; i < len; i++ {
 		value := data[i]
 		if value < 0 {

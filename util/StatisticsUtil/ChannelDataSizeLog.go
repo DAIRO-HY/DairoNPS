@@ -3,6 +3,9 @@ package StatisticsUtil
 // 隧道出入王流量
 type ChannelDataSizeLog struct {
 
+	//当前隧道所属客户端ID
+	ClientId int
+
 	//入方向
 	InData int64
 

@@ -25,10 +25,10 @@ type ChannelListForm struct {
 	TargetPort string
 
 	// 入网流量
-	InDataTotal int64
+	InDataTotal string
 
 	// 出网流量
-	OutDataTotal int64
+	OutDataTotal string
 
 	// 启用状态 1:开启  0:停止
 	EnableStateText string

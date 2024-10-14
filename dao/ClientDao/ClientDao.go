@@ -44,12 +44,10 @@ func Update(dto *dto.ClientDto) {
 	DBUtil.Exec(sql, dto.Name, dto.Key, dto.EnableState, dto.Remark, updateDate, dto.Id, dto.UpdateDate)
 }
 
-/**
- * 同步入出网流量
- */
-func SetDataLen(dto *dto.ClientDto) {
-	sql := "update client set inDataTotal = ?,outDataTotal=? where id = ?"
-	DBUtil.Exec(sql, dto.InDataTotal, dto.OutDataTotal, dto.Id)
+// 统计入出网流量
+func SetDataSize(id int, inAdd int64, outAdd int64) {
+	sql := "update client set inDataTotal = inDataTotal + ?,outDataTotal = outDataTotal + ? where id = ?"
+	DBUtil.Exec(sql, inAdd, outAdd, id)
 }
 
 /**

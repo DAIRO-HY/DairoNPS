@@ -3,6 +3,7 @@ package proxy
 import (
 	"DairoNPS/dao/ChannelDao"
 	"DairoNPS/dao/dto"
+	"DairoNPS/util/StatisticsUtil"
 	"sync"
 	"time"
 )
@@ -21,24 +22,21 @@ var channelIdToProxyAccept = make(map[int]*ProxyAccept)
 //private val channelIdToProxyAcceptLock = Mutex()
 var channelIdToProxyAcceptLock sync.Mutex
 
-/**
- * 开启端口监听
- * @param client 客户端
- */
-func Accept(client *dto.ClientDto) {
+// 开始客户端的所有监听
+func AcceptClient(client *dto.ClientDto) {
+
+	//加载统计数据
+	StatisticsUtil.LoadChannelDataLog()
 
 	//开启NPS客户端ID下所有的隧道
 	activeList := ChannelDao.SelectActiveByClientId(client.Id)
 	for _, it := range activeList {
-		accept(client, it)
+		acceptChannel(client, it)
 	}
 }
 
-/**
- * 开启端口监听
- * @param channel 隧道信息
- */
-func accept(client *dto.ClientDto, channel *dto.ChannelDto) {
+// 开始监听某个隧道
+func acceptChannel(client *dto.ClientDto, channel *dto.ChannelDto) {
 	channelIdToProxyAcceptLock.Lock()
 	oldProxyTCPAccept := channelIdToProxyAccept[channel.Id]
 	if oldProxyTCPAccept != nil { //若该隧道已经在监听,则先停止
@@ -58,14 +56,14 @@ func accept(client *dto.ClientDto, channel *dto.ChannelDto) {
 	channelIdToProxyAcceptLock.Unlock()
 
 	//开启监听
-	go proxyAccept.Start()
+	go proxyAccept.accept()
 }
 
 /**
  * 关闭监听
  * @param channelId 隧道id
  */
-func closeByChannel(channelId int) {
+func CloseByChannel(channelId int) {
 	channelIdToProxyAcceptLock.Lock()
 	proxyTCPAccept := channelIdToProxyAccept[channelId]
 	if proxyTCPAccept != nil {
@@ -82,7 +80,7 @@ func CloseByClient(clientId int) {
 	//关闭客户端所有隧道
 	channelIdList := ChannelDao.SelectIdByClientId(clientId)
 	for _, it := range channelIdList {
-		closeByChannel(it)
+		CloseByChannel(it)
 	}
 }
 

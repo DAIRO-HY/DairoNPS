@@ -45,7 +45,7 @@
      */
     $.fn.ajaxByForm = function (url) {
 
-
+        //@TODO:这里应该做一些基本的表单验证,避免不合规的参数传到后台
         this.find("span[error-valid]").remove()
         this.find(".is-invalid").removeClass("is-invalid")
         if (url === undefined) {

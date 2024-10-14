@@ -12,7 +12,7 @@ import (
  */
 func Add(dto *dto.ChannelDto) {
 	sql :=
-		"insert into channel(clientId,name,mode,serverPort,targetPort,securityState,aclState,enableState)values(?,?,?,?,?,?,?,?)"
+		"insert into channel(clientId,name,mode,serverPort,targetPort,securityState,aclState,remark)values(?,?,?,?,?,?,?,?)"
 	id := DBUtil.InsertIgnoreError(
 		sql,
 		dto.ClientId,
@@ -22,7 +22,7 @@ func Add(dto *dto.ChannelDto) {
 		dto.TargetPort,
 		dto.SecurityState,
 		dto.AclState,
-		dto.EnableState,
+		dto.Remark,
 	)
 	dto.Id = int(id)
 }
@@ -35,6 +35,12 @@ func Add(dto *dto.ChannelDto) {
 func SelectOne(id int) *dto.ChannelDto {
 	sql := "select * from channel where id = ?"
 	return DBUtil.SelectOne[dto.ChannelDto](sql, id)
+}
+
+// 通过端口查询一条数据
+func SelectByPort(port int) *dto.ChannelDto {
+	sql := "select * from channel where serverPort = ?"
+	return DBUtil.SelectOne[dto.ChannelDto](sql, port)
 }
 
 /**
@@ -51,14 +57,13 @@ func SelectAll() []*dto.ChannelDto {
  */
 func Update(dto *dto.ChannelDto) {
 	sql :=
-		"update channel set name = ?,mode = ?,serverPort=?,targetPort=?,enableState=?,securityState=?,aclState=?,remark=? where id = ?"
+		"update channel set name = ?,mode = ?,serverPort=?,targetPort=?,securityState=?,aclState=?,remark=? where id = ?"
 	DBUtil.ExecIgnoreError(
 		sql,
 		dto.Name,
 		dto.Mode,
 		dto.ServerPort,
 		dto.TargetPort,
-		dto.EnableState,
 		dto.SecurityState,
 		dto.AclState,
 		dto.Remark,

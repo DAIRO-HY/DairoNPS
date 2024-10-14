@@ -1,11 +1,8 @@
-package NPSDB
+package DBUtil
 
 import (
 	"DairoNPS/resources"
-	"DairoNPS/util/DBUtil"
-	//"database/sql"
 	"fmt"
-	//_ "github.com/mattn/go-sqlite3"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -14,10 +11,7 @@ import (
 // VERSION 数据库版本号
 const VERSION = 1
 
-// DB_PATH 文件路径
-const DB_PATH = DBUtil.DbPath
-
-func Init() {
+func init() {
 	_, err := os.Stat(DB_PATH)
 	// 如果错误是os.ErrNotExist，表示文件不存在
 	if os.IsNotExist(err) { //文件不存在
@@ -39,22 +33,22 @@ func Init() {
 * 更新表结构
  */
 func upgrade() {
-	version := DBUtil.SelectSingleOneIgnoreError[int]("PRAGMA USER_VERSION")
+	version := SelectSingleOneIgnoreError[int]("PRAGMA USER_VERSION")
 	if version == 0 {
 		create()
 
 		//第一次创建数据库时往系统配置表插入一条数据
-		DBUtil.ExecIgnoreError("insert into system_config(inDataTotal, outDataTotal) values (0, 0);")
+		ExecIgnoreError("insert into system_config(inDataTotal, outDataTotal) values (0, 0);")
 	}
 
 	//设置数据库版本号
-	DBUtil.ExecIgnoreError("PRAGMA USER_VERSION = " + strconv.Itoa(VERSION))
+	ExecIgnoreError("PRAGMA USER_VERSION = " + strconv.Itoa(VERSION))
 }
 
 func create() {
 	sqlFiles := []string{"forward.sql", "forward_acl.sql", "client.sql", "channel.sql", "channel_acl.sql", "system_config.sql", "channel_data_statistics.sql"}
 	for _, fn := range sqlFiles {
 		createSql, _ := resources.StaticFiles.ReadFile("sql.create/" + fn)
-		DBUtil.ExecIgnoreError(string(createSql))
+		ExecIgnoreError(string(createSql))
 	}
 }

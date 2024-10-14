@@ -1,7 +1,11 @@
 package channel
 
 import (
+	"DairoNPS/bridge"
 	"DairoNPS/dao/ChannelDao"
+	"DairoNPS/dao/ClientDao"
+	"DairoNPS/extension/Number"
+	"DairoNPS/proxy"
 	"DairoNPS/web"
 	"DairoNPS/web/controller/channel/form"
 	"net/http"
@@ -10,6 +14,7 @@ import (
 // 路由设置
 func init() {
 	http.HandleFunc("/channel_list/list", web.ApiHandler(List))
+	http.HandleFunc("/channel_list/delete", web.ApiHandler(Delete))
 }
 
 type ListInForm struct {
@@ -35,43 +40,46 @@ func List(inForm ListInForm) any {
 	//	Mode:     search.Mode,
 	//}
 
+	client := ClientDao.SelectOne(inForm.ClientId)
 	channelDtoList := ChannelDao.SelectByClientId(inForm.ClientId)
 
 	//返回的form表单列表
 	outFormList := make([]form.ChannelListForm, len(channelDtoList))
 	for i, it := range channelDtoList {
 		outFormList[i] = form.ChannelListForm{
-			Id:       it.Id,
-			ClientId: it.ClientId,
-			//ClientName: it.ClientName,
+			Id:         it.Id,
+			ClientId:   it.ClientId,
+			ClientName: client.Name,
 			Name:       it.Name,
 			Mode:       it.Mode,
 			ServerPort: it.ServerPort,
 			TargetPort: it.TargetPort,
 			//EnableStateText:it.EnableStateText,
 			EnableState:   it.EnableState,
-			InDataTotal:   it.InDataTotal,
-			OutDataTotal:  it.OutDataTotal,
+			InDataTotal:   Number.ToDataSize(it.InDataTotal),
+			OutDataTotal:  Number.ToDataSize(it.OutDataTotal),
 			SecurityState: it.SecurityState,
 		}
 	}
 	return outFormList
 }
 
-///**
-// * 通过id删除一个隧道
-// */
-//@PostMapping("/delete")
-//@ResponseBody
-//fun delete(id: Int) {
-//GlobalScope.launch(Dispatchers.IO) {
-//
-////关闭隧道之后再打开
-//CLServer.closeByChannel(id)
-//ChannelDao.delete(id)
-//}
-//}
-//
+// 删除的表单
+type DeleteForm struct {
+	Id int
+}
+
+// 通过id删除一个隧道
+func Delete(form DeleteForm) {
+
+	//关闭代理监听
+	proxy.CloseByChannel(form.Id)
+
+	//关闭隧道所有正在通信的连接
+	bridge.CloseByChannel(form.Id)
+	ChannelDao.Delete(form.Id)
+}
+
 ///**
 // * 修改可用状态
 // */

@@ -10,7 +10,8 @@ import (
 	"strings"
 )
 
-const DbPath = "./data/dairo-nps.sqlite"
+// DB_PATH 文件路径
+const DB_PATH = "./data/dairo-nps.sqlite"
 
 // 执行sql语句,忽略错误
 func ExecIgnoreError(query string, args ...any) int64 {
@@ -187,7 +188,7 @@ func SelectToListMap(query string, args ...any) []map[string]string {
 }
 
 func GetDb() *sql.DB {
-	db, err := sql.Open("sqlite3", DbPath)
+	db, err := sql.Open("sqlite3", DB_PATH)
 	if err != nil {
 		log.Printf("%q: %s\n", err)
 		return nil

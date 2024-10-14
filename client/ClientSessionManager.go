@@ -3,7 +3,6 @@ package client
 import (
 	"DairoNPS/bridge"
 	"DairoNPS/client/HeaderUtil"
-	"DairoNPS/dao/ClientDao"
 	"DairoNPS/dao/dto"
 	"DairoNPS/pool"
 	"DairoNPS/proxy"
@@ -80,7 +79,7 @@ func holdOnClient(client *dto.ClientDto, tcp net.Conn) {
 	pool.InitEmptyPoolByClient(client.Id)
 
 	//开启该客户端下所有隧道监听
-	proxy.Accept(client)
+	proxy.AcceptClient(client)
 	session.Start()
 }
 
@@ -125,10 +124,9 @@ func removeSession(closeSession *ClientSession) {
 	session := clientSessionMap[clientId]
 	if session != nil { //客户端ID回话如果存在
 		if session == closeSession { //当前没有加入新的回话
-			ClientDao.SetDataLen(session.Client)
 			delete(clientSessionMap, clientId)
 		} else { //由于关闭延迟,有新的回话加入,但是在之前已经关掉了所有的代理监听,所以这里需要再次开启代理监听
-			proxy.Accept(session.Client)
+			proxy.AcceptClient(session.Client)
 		}
 	}
 	clientSessionMapLock.Unlock()

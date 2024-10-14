@@ -58,11 +58,11 @@
     /**
      * 初始化数据
      */
-    function init(){
+    function init() {
 
         //客户端ID
         const clientId = getParam("clientId")
-        $.ajaxByData("/channel_list/list?clientId=" + clientId).success(data=>{
+        $.ajaxByData("/channel_list/list?clientId=" + clientId).success(data => {
             fillData(data)
             console.log(data)
         }).post()
@@ -71,29 +71,27 @@
     /**
      * 填充数据
      */
-    function fillData(data){
+    function fillData(data) {
         const $list = $("#list")
-        data.forEach(item=>{
+        data.forEach(item => {
             $list.append(`
                 <div class="col px-0 pb-3 px-3">
                     <div class="bg-white rounded p-2 position-relative">
                         <div style="position: absolute;top:0;right:8px;font-size: 40px;color: #0000001c;">
 
                             <!--是否加密-->
-                            <i th:if="${item.securityState == 1}" class="bi bi-lock-fill"></i>
-                            <i th:if="${item.securityState == 0}" class="bi bi-unlock-fill"></i>
+                            <i class="bi ${item.SecurityState === 1 ? "bi-lock-fill" : "bi-unlock-fill"}"></i>
                         </div>
                         <div class="text-center fs-5"><span>${item.Name}</span></div>
-                        <div>客户端:<span th:text="${item.clientName}"></span></div>
+                        <div>客户端:<span>${item.ClientName}</span></div>
                         <div>模式:<span>${item.Mode}</span></div>
                         <div>端口:<span>${item.ServerPort}</span> -> <span>${item.TargetPort}</span></div>
                         <div>入出流量:<span>${item.InDataTotal}</span>/<span>${item.OutDataTotal}</span></div>
                         <div class="text-end">
                             <button class="btn btn-sm btn-outline-danger" onclick="onSetStateClick(${item.Id})">
-                                <i th:if="${item.enableState == 1}" class="bi bi-pause-fill"></i>
-                                <i th:if="${item.enableState == 0}" class="bi bi-play-fill"></i>
+                                <i class="bi ${item.EnableState == 1 ? "bi-pause-fill" : "bi-play-fill"}"></i>
                             </button>
-                            <button class="btn btn-sm btn-outline-danger" th:onclick="'onDeleteClick(' + ${item.id} +')'">
+                            <button class="btn btn-sm btn-outline-danger" onclick="onDeleteClick(${item.Id})">
                                 <i class="bi bi-trash3"></i></button>
                             <a class="btn btn-sm btn-outline-primary"
                                href="/channel_list/channel_edit?clientId=${item.ClientId}&id=${item.Id}"><i
@@ -115,15 +113,12 @@
      * @param id
      */
     function onDeleteClick(id) {
-        const result = confirm("确定删除?")
-        if (result) {
-            $.ajax({
-                url: "/channel_list/delete?id=" + id,
-                type: "POST"
-            }).fail($ajaxFail).done(() => {
-                history.go(0)
-            })
+        if (!confirm("确定删除?")) {
+            return
         }
+        $.ajaxByData("/channel_list/delete?id=" + id).success(() => {
+            history.go(0)
+        }).post()
     }
 
     /**

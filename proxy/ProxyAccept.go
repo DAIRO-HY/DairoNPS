@@ -46,13 +46,6 @@ type ProxyAccept struct {
 //}.toSet()
 
 /**
- * 开始监听端口
- */
-func (mine *ProxyAccept) Start() {
-	mine.accept()
-}
-
-/**
  * 等待客户端连接
  */
 func (mine *ProxyAccept) accept() {
@@ -62,6 +55,7 @@ func (mine *ProxyAccept) accept() {
 		fmt.Printf("端口:%d 监听失败\n", channel.ServerPort)
 		return
 	}
+	fmt.Printf("端口:%d 监听开始\n", channel.ServerPort)
 	mine.ProxySocketServer = listener
 	for {
 
