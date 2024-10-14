@@ -8,9 +8,7 @@ import (
 
 //TCP桥接会话管理
 
-/**
- * 当前正在通信的桥接
- */
+// 当前正在通信的桥接
 var BridgeList []*TCPBridge
 var BridgeListLock sync.Mutex
 
@@ -75,30 +73,15 @@ func removeBridgeList(bridge *TCPBridge) {
  * 关闭客户端所有正在通信的连接
  */
 func CloseByClient(clientId int) {
-	var closeList = []*TCPBridge{}
-	BridgeListLock.Lock()
+
+	//这里只是值拷贝
+	copyList := BridgeList
 
 	//帅选出要删除的客户端桥接
-	for _, it := range BridgeList {
+	for _, it := range copyList {
 		if it.Client.Id == clientId {
-			closeList = append(closeList, it)
+			it.shutdown()
 		}
-	}
-
-	//移除即将关闭的桥接
-	for _, closeIt := range closeList {
-		for index, it := range BridgeList {
-			if it == closeIt {
-				BridgeList = append(BridgeList[:index], BridgeList[index+1:]...)
-				break
-			}
-		}
-	}
-	BridgeListLock.Unlock()
-
-	//关闭的桥接
-	for _, closeIt := range closeList {
-		closeIt.shutdown()
 	}
 }
 
@@ -107,30 +90,14 @@ func CloseByClient(clientId int) {
  */
 func CloseByChannel(channelId int) {
 
-	var closeList = []*TCPBridge{}
-	BridgeListLock.Lock()
+	//这里只是值拷贝
+	copyList := BridgeList
 
 	//帅选出要删除的客户端桥接
-	for _, it := range BridgeList {
+	for _, it := range copyList {
 		if it.Channel.Id == channelId {
-			closeList = append(closeList, it)
+			it.shutdown()
 		}
-	}
-
-	//移除即将关闭的桥接
-	for _, closeIt := range closeList {
-		for index, it := range BridgeList {
-			if it == closeIt {
-				BridgeList = append(BridgeList[:index], BridgeList[index+1:]...)
-				break
-			}
-		}
-	}
-	BridgeListLock.Unlock()
-
-	//关闭的桥接
-	for _, closeIt := range closeList {
-		closeIt.shutdown()
 	}
 }
 

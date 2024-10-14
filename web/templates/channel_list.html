@@ -89,7 +89,7 @@
                         <div>入出流量:<span>${item.InDataTotal}</span>/<span>${item.OutDataTotal}</span></div>
                         <div class="text-end">
                             <button class="btn btn-sm btn-outline-danger" onclick="onSetStateClick(${item.Id})">
-                                <i class="bi ${item.EnableState == 1 ? "bi-pause-fill" : "bi-play-fill"}"></i>
+                                <i class="bi ${item.EnableState === 1 ? "bi-pause-fill" : "bi-play-fill"}"></i>
                             </button>
                             <button class="btn btn-sm btn-outline-danger" onclick="onDeleteClick(${item.Id})">
                                 <i class="bi bi-trash3"></i></button>
@@ -126,12 +126,9 @@
      * @param id
      */
     function onSetStateClick(id) {
-        $.ajax({
-            url: "/admin/channel_list/set_state?id=" + id,
-            type: "POST"
-        }).fail($ajaxFail).done(() => {
+        $.ajaxByData("/channel_list/set_state?id=" + id).success(() => {
             history.go(0)
-        })
+        }).post()
     }
 </script>
 </body>

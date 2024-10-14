@@ -16,6 +16,7 @@ import (
 func init() {
 	http.HandleFunc("/channel_list/list", web.ApiHandler(List))
 	http.HandleFunc("/channel_list/delete", web.ApiHandler(Delete))
+	http.HandleFunc("/channel_list/set_state", web.ApiHandler(setState))
 }
 
 type ListInForm struct {
