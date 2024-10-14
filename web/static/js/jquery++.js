@@ -14,7 +14,11 @@
             } else {
                 value = value.toString()
             }
-            $obj.val(value)
+            if (obj.type === "radio") {//这是一个单选框
+                obj.checked = obj.value === value
+            }else{
+                $obj.val(value)
+            }
         })
     }
 

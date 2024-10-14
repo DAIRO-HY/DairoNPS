@@ -2,8 +2,6 @@ package channel
 
 import (
 	"DairoNPS/dao/ChannelDao"
-	"DairoNPS/dao/ClientDao"
-	"DairoNPS/dao/dto"
 	"DairoNPS/web"
 	"DairoNPS/web/controller/channel/form"
 	"net/http"
@@ -14,32 +12,38 @@ func init() {
 	http.HandleFunc("/channel_list/list", web.ApiHandler(List))
 }
 
+type ListInForm struct {
+	ClientId int
+}
+
 // 隧道列表
-func List(search form.ChannelListSearchForm) any {
+func List(inForm ListInForm) any {
 
-	//客户端下拉框数据
-	clients := ClientDao.SelectAll()
-	var clientDropdownList []form.ClientDropdownForm
-	for _, it := range clients {
-		clientDropdownForm := form.ClientDropdownForm{
-			Id:   it.Id,   //id
-			Name: it.Name, //客户端名
-		}
-		clientDropdownList = append(clientDropdownList, clientDropdownForm)
-	}
+	////客户端下拉框数据
+	//clients := ClientDao.SelectAll()
+	//var clientDropdownList []form.ClientDropdownForm
+	//for _, it := range clients {
+	//	clientDropdownForm := form.ClientDropdownForm{
+	//		Id:   it.Id,   //id
+	//		Name: it.Name, //客户端名
+	//	}
+	//	clientDropdownList = append(clientDropdownList, clientDropdownForm)
+	//}
+	//
+	//searchDto := dto.ChannelListSearchDto{
+	//	ClientId: search.ClientId,
+	//	Mode:     search.Mode,
+	//}
 
-	searchDto := dto.ChannelListSearchDto{
-		ClientId: search.ClientId,
-		Mode:     search.Mode,
-	}
+	channelDtoList := ChannelDao.SelectByClientId(inForm.ClientId)
 
-	channelDtoList := ChannelDao.Search(searchDto)
-	channelFormList := make([]form.ChannelListForm, len(channelDtoList))
+	//返回的form表单列表
+	outFormList := make([]form.ChannelListForm, len(channelDtoList))
 	for i, it := range channelDtoList {
-		channelFormList[i] = form.ChannelListForm{
-			Id:         it.Id,
-			ClientId:   it.ClientId,
-			ClientName: it.ClientName,
+		outFormList[i] = form.ChannelListForm{
+			Id:       it.Id,
+			ClientId: it.ClientId,
+			//ClientName: it.ClientName,
 			Name:       it.Name,
 			Mode:       it.Mode,
 			ServerPort: it.ServerPort,
@@ -51,11 +55,7 @@ func List(search form.ChannelListSearchForm) any {
 			SecurityState: it.SecurityState,
 		}
 	}
-	result := make(map[string]any)
-
-	result["clientDropdownList"] = clientDropdownList
-	result["list"] = channelFormList
-	return result
+	return outFormList
 }
 
 ///**

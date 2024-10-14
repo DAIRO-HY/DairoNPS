@@ -48,7 +48,7 @@ func addTestData() {
 	}
 	ClientDao.Add(&clientDto)
 
-	channel := dto.ChannelDto{
+	channel := &dto.ChannelDto{
 		//客户端id
 		ClientId: clientDto.Id,
 

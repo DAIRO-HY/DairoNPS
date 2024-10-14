@@ -36,10 +36,7 @@ type ChannelDto struct {
 	AclState int
 
 	//创建时间
-	CreateDate int64
-
-	//最后一次更新时间
-	UpdateDate int64
+	Date int64
 
 	//一些备注信息,错误信息等
 	Remark string

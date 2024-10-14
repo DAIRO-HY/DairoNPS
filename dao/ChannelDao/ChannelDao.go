@@ -5,16 +5,14 @@ import (
 	"DairoNPS/dao/dto"
 	"DairoNPS/util/DBUtil"
 	"fmt"
-	"time"
 )
 
 /**
  * 添加一条隧道
  */
-func Add(dto dto.ChannelDto) {
-	updateDate := time.Now().UnixNano() / int64(time.Millisecond)
+func Add(dto *dto.ChannelDto) {
 	sql :=
-		"insert into channel(clientId,name,mode,serverPort,targetPort,securityState,aclState,enableState,updateDate)values(?,?,?,?,?,?,?,?,?)"
+		"insert into channel(clientId,name,mode,serverPort,targetPort,securityState,aclState,enableState)values(?,?,?,?,?,?,?,?)"
 	id := DBUtil.InsertIgnoreError(
 		sql,
 		dto.ClientId,
@@ -25,7 +23,6 @@ func Add(dto dto.ChannelDto) {
 		dto.SecurityState,
 		dto.AclState,
 		dto.EnableState,
-		updateDate,
 	)
 	dto.Id = int(id)
 }
@@ -52,10 +49,10 @@ func SelectAll() []*dto.ChannelDto {
 /**
  * 更新一条数据
  */
-func Update(dto dto.ChannelDto) {
+func Update(dto *dto.ChannelDto) {
 	sql :=
-		"update channel set name = ?,type = ?,serverPort=?,targetPort=?,enableState=?,securityState=?,aclState=?,remark=?,updateDate=${System.currentTimeMillis()} where id = ? and updateDate=?"
-	DBUtil.Exec(
+		"update channel set name = ?,mode = ?,serverPort=?,targetPort=?,enableState=?,securityState=?,aclState=?,remark=? where id = ?"
+	DBUtil.ExecIgnoreError(
 		sql,
 		dto.Name,
 		dto.Mode,
@@ -66,7 +63,6 @@ func Update(dto dto.ChannelDto) {
 		dto.AclState,
 		dto.Remark,
 		dto.Id,
-		dto.UpdateDate,
 	)
 }
 
@@ -129,6 +125,14 @@ func Search(searchDto dto.ChannelListSearchDto) []*dto.ChannelSearchDto {
  */
 func SelectActiveByClientId(clientId int) []*dto.ChannelDto {
 	sql := "select channel.* from channel left join client on channel.clientId = client.id where channel.clientId = ? and client.enableState = 1 and channel.enableState = 1"
+	return DBUtil.SelectList[dto.ChannelDto](sql, clientId)
+}
+
+/**
+ * 获取客户端下所有的隧道id列表
+ */
+func SelectByClientId(clientId int) []*dto.ChannelDto {
+	sql := "select * from channel where clientId = ?"
 	return DBUtil.SelectList[dto.ChannelDto](sql, clientId)
 }
 

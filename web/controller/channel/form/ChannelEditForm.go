@@ -25,10 +25,10 @@ type ChannelEditForm struct {
 	TargetPort string
 
 	// 入网流量
-	InDataTotal string
+	InDataTotal int64
 
 	// 出网流量
-	OutDataTotal string
+	OutDataTotal int64
 
 	// 启用状态 1:开启  0:停止
 	EnableState string
@@ -40,7 +40,7 @@ type ChannelEditForm struct {
 	AclState int
 
 	// 创建时间
-	CreateDate string
+	Date string
 
 	// 一些备注信息,错误信息等
 	Remark string
