@@ -24,7 +24,7 @@ var clientSessionMap = make(map[int]*ClientSession)
 /**
  * 添加互斥锁
  */
-var clientSessionMapLock sync.Mutex
+var clientSessionLock sync.Mutex
 
 /**
  * 获取与客户端的会话
@@ -60,9 +60,9 @@ var clientSessionMapLock sync.Mutex
  */
 func holdOnClient(client *dto.ClientDto, tcp net.Conn) {
 	//先移除之前的连接
-	clientSessionMapLock.Lock()
+	clientSessionLock.Lock()
 	oldSession := clientSessionMap[client.Id]
-	clientSessionMapLock.Unlock()
+	clientSessionLock.Unlock()
 	if oldSession != nil { //如果存在
 		oldSession.Close()
 	}
@@ -72,9 +72,9 @@ func holdOnClient(client *dto.ClientDto, tcp net.Conn) {
 		Client: client,
 		tcp:    tcp,
 	}
-	clientSessionMapLock.Lock()
+	clientSessionLock.Lock()
 	clientSessionMap[client.Id] = session
-	clientSessionMapLock.Unlock()
+	clientSessionLock.Unlock()
 
 	//初始化客户端连接池
 	pool.InitEmptyPoolByClient(client.Id)
@@ -109,7 +109,12 @@ func (csm *ClientSessionManager) SendTCPPoolRequest(clientId int, count int) {
  * @param message 头部消息
  */
 func send(clientId int, flag byte, message string) {
+	clientSessionLock.Lock()
 	session := clientSessionMap[clientId]
+	clientSessionLock.Unlock()
+	if session == nil {
+		return
+	}
 	err := session.SendHead(flag, message)
 	if err != nil {
 		session.Close()
@@ -121,16 +126,16 @@ func send(clientId int, flag byte, message string) {
 func removeSession(closeSession *ClientSession) {
 	closeProxyAndPoolAndBridge(closeSession.Client.Id)
 	clientId := closeSession.Client.Id
-	clientSessionMapLock.Lock()
+	clientSessionLock.Lock()
 	session := clientSessionMap[clientId]
 	if session != nil { //客户端ID回话如果存在
 		if session == closeSession { //当前没有加入新的回话
 			delete(clientSessionMap, clientId)
-		} else { //由于关闭延迟,有新的回话加入,但是在之前已经关掉了所有的代理监听,所以这里需要再次开启代理监听
-			proxy.AcceptClient(session.Client)
+		} else { //由于关闭延迟,有新的回话加入,但是在之前已经关掉了所有的代理监听,所以这里需要再次开启代理监听,概率很小，但不能排除
+			go proxy.AcceptClient(session.Client)
 		}
 	}
-	clientSessionMapLock.Unlock()
+	clientSessionLock.Unlock()
 }
 
 /**
@@ -163,19 +168,19 @@ func closeProxyAndPoolAndBridge(clientId int) {
 func Close(clientId int) {
 
 	//先移除之前的连接
-	clientSessionMapLock.Lock()
+	clientSessionLock.Lock()
 	oldSession := clientSessionMap[clientId]
+	clientSessionLock.Unlock()
 	if oldSession != nil { //如果存在
 		oldSession.Close()
 	}
-	clientSessionMapLock.Unlock()
 }
 
 // 客户端是否在线监测
 func IsOnline(clientId int) bool {
-	clientSessionMapLock.Lock()
+	clientSessionLock.Lock()
 	session := clientSessionMap[clientId]
-	clientSessionMapLock.Unlock()
+	clientSessionLock.Unlock()
 	if session == nil {
 		return false
 	}

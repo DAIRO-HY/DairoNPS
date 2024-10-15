@@ -1,6 +1,7 @@
 package channel
 
 import (
+	"DairoNPS/client"
 	"DairoNPS/dao/ChannelDao"
 	"DairoNPS/dao/ClientDao"
 	"DairoNPS/dao/dto"
@@ -122,10 +123,10 @@ func Edit(form form.ChannelEditForm) any {
 
 	//关闭代理监听
 	proxy.CloseByChannel(channel.Id)
-	client := ClientDao.SelectOne(channel.ClientId)
-
-	//重新开启监听该客户端
-	proxy.AcceptClient(client)
+	clientDto := ClientDao.SelectOne(channel.ClientId)
+	if client.IsOnline(clientDto.Id) {
+		proxy.AcceptClient(clientDto) //重新开启监听该客户端
+	}
 	return nil
 }
 

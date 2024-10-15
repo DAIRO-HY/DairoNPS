@@ -16,15 +16,8 @@ import (
 /**
  * 客户端连接池
  */
-//private val clientScoketPoolMap = HashMap<Int, ClientPoolList<TCPPool>>()
-var clientScoketPoolMap = make(map[int]*[]*TCPPool)
-var clientScoketPoolMapLock sync.Mutex
-
-/**
- * 客户端连接池最后一次请求时间
- */
-//private val clientLastRequestTimeMap = ConcurrentHashMap<Int, Long>()
-var clientLastRequestTimeMap = make(map[int]int64)
+var poolMap = make(map[int]*[]*TCPPool)
+var poolLock sync.Mutex
 
 //init {
 //    GlobalScope.launch {
@@ -37,8 +30,8 @@ var clientLastRequestTimeMap = make(map[int]int64)
  */
 func getCount() int {
 	var total = 0
-	//this.clientScoketPoolMapLock.withLock {
-	//    this.clientScoketPoolMap.forEach { (_, v) ->
+	//this.poolMapLock.withLock {
+	//    this.poolMap.forEach { (_, v) ->
 	//        total += v.count()
 	//    }
 	//}
@@ -50,17 +43,15 @@ func getCount() int {
  * @param clientID 客户端ID
  */
 func InitEmptyPoolByClient(clientID int) {
-
-	// 使用值和 ok 变量判断 key 是否存在
-	if clientScoketPoolMap[clientID] != nil {
+	poolLock.Lock()
+	if poolMap[clientID] != nil {
+		poolLock.Unlock()
 		return
 	}
 
-	clientScoketPoolMapLock.Lock()
-
 	//创建连接池列表
-	clientScoketPoolMap[clientID] = &([]*TCPPool{})
-	clientScoketPoolMapLock.Unlock()
+	poolMap[clientID] = &([]*TCPPool{})
+	poolLock.Unlock()
 }
 
 /**
@@ -81,7 +72,9 @@ func Add(clientSocket net.Conn) {
 		return
 	}
 	clientId := int(clientIdInt64)
-	poolList := clientScoketPoolMap[clientId]
+	poolLock.Lock()
+	poolList := poolMap[clientId]
+	poolLock.Unlock()
 	if len(*poolList) >= CLSConfig.MAX_POOL_COUNT { //已经达到最大连接数,拒绝新连接
 		clientSocket.Close()
 		return
@@ -91,14 +84,14 @@ func Add(clientSocket net.Conn) {
 	clientSocket.SetReadDeadline(time.Time{})
 
 	//TODO: 这里应该每个客户端创建一把锁
-	clientScoketPoolMapLock.Lock()
+	poolLock.Lock()
 	pool := &TCPPool{
 		ClientID: clientId,
 		Socket:   clientSocket,
 	}
 	*poolList = append(*poolList, pool)
 	log.Printf("客户端ID：%d 当前连接数为：%d", clientId, len(*poolList))
-	clientScoketPoolMapLock.Unlock()
+	poolLock.Unlock()
 }
 
 /**
@@ -107,25 +100,24 @@ func Add(clientSocket net.Conn) {
  */
 func get(clientID int) net.Conn {
 
-	//客户端连接池
-	poolList := clientScoketPoolMap[clientID]
-	var resultTcp net.Conn
+	//TODO: 这里应该每个客户端创建一把锁
+	poolLock.Lock()
 
-	if len(*poolList) == 0 {
+	//客户端连接池
+	poolList := poolMap[clientID]
+	if poolList == nil || len(*poolList) == 0 {
+		poolLock.Unlock()
 		return nil
 	}
+	var resultTcp net.Conn = nil
 	for len(*poolList) > 0 {
-
-		//TODO: 这里应该每个客户端创建一把锁
-		clientScoketPoolMapLock.Lock()
 
 		//取最后一次添加到连接池的连接
 		pool := (*poolList)[len(*poolList)-1]
 
 		//移除最后一个元素
 		*poolList = (*poolList)[:len(*poolList)-1]
-		clientScoketPoolMapLock.Unlock()
-		//println("-->从连接池获取到一个连接,连接池剩余:${poolList.size}")
+
 		//试探性发送一个数据，检测连接是否已经失效
 		//TODO:客户端还未支持
 		//_, err := pool.Socket.Write([]byte{0})
@@ -136,6 +128,7 @@ func get(clientID int) net.Conn {
 		resultTcp = pool.Socket
 		break
 	}
+	poolLock.Unlock()
 	return resultTcp
 }
 
@@ -144,13 +137,10 @@ func get(clientID int) net.Conn {
  * @param clientID 客户端ID
  */
 func GetAndAddPool(clientID int) net.Conn {
-
-	//记录该客户端最后一次请求连接池时间
-	clientLastRequestTimeMap[clientID] = time.Now().UnixNano() / int64(time.Millisecond)
-	var socket net.Conn
+	var tcp net.Conn
 	for i := 0; i < 5; i++ {
-		socket = get(clientID)
-		if socket != nil {
+		tcp = get(clientID)
+		if tcp != nil {
 			break
 		}
 
@@ -161,7 +151,7 @@ func GetAndAddPool(clientID int) net.Conn {
 
 	//每消耗一个连接,申请创建两个连接,直到达到最大连接池数量
 	go poolRequest(clientID, 2)
-	return socket
+	return tcp
 }
 
 /**
@@ -170,8 +160,13 @@ func GetAndAddPool(clientID int) net.Conn {
  * @param clientID 客户端ID
  */
 func poolRequest(clientId int, count int) {
-	clientPool := *clientScoketPoolMap[clientId]
-	if len(clientPool) < CLSConfig.MAX_POOL_COUNT {
+	poolLock.Lock()
+	poolList := poolMap[clientId]
+	poolLock.Unlock()
+	if poolList == nil {
+		return
+	}
+	if len(*poolList) < CLSConfig.MAX_POOL_COUNT {
 		//ClientSessionManager.SendTCPPoolRequest(clientId, count)
 		Csmi.SendTCPPoolRequest(clientId, count)
 	}
@@ -184,20 +179,22 @@ var Csmi ClientSessionManagerInterface.ClientSessionManagerInterface
  * @param clientID 客户端ID
  */
 func CloseByClient(clientID int) {
-	clientScoketPoolMapLock.Lock()
-	poolList := clientScoketPoolMap[clientID]
+	poolLock.Lock()
+	poolList := poolMap[clientID]
+	poolLock.Unlock()
 	for _, it := range *poolList {
 		it.Close()
 	}
+	poolLock.Lock()
 	*poolList = []*TCPPool{}
-	clientScoketPoolMapLock.Unlock()
+	poolLock.Unlock()
 }
 
 /**
  * 从连接池列表中移除
  */
 func timeOutRemove(clientID int, pool TCPPool) {
-	//val poolList = this.clientScoketPoolMap[clientID] as ClientPoolList
+	//val poolList = this.poolMap[clientID] as ClientPoolList
 	//poolList.synchronized {
 	//    poolList.remove(pool)
 	//}

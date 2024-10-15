@@ -200,7 +200,7 @@ func (mine *TCPBridge) recycle() {
 	if mine.proxyInIsClosed && mine.clientInIsClosed {
 		mine.ClientSocket.Close()
 		mine.ProxySocket.Close()
-		removeBridgeList(mine)
+		remove(mine)
 	}
 }
 

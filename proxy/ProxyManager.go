@@ -10,37 +10,29 @@ import (
 	"sync"
 )
 
-//代理服务端口监听管理
+// 隧道id对应的服务端口监听
+var proxyAcceptMap = make(map[int]*ProxyAccept)
 
-/**
- * 隧道id对应的服务端口监听
- */
-//val channelIdToProxyAccept = ConcurrentHashMap<Int, ProxyAccept>()
-var channelIdToProxyAccept = make(map[int]*ProxyAccept)
-
-/**
- * mChannelIdToProxyAccept操作互斥锁
- */
-//private val channelIdToProxyAcceptLock = Mutex()
-var channelIdToProxyAcceptLock sync.Mutex
+// proxyAcceptMap操作互斥锁
+var proxyAcceptLock sync.Mutex
 
 // 开始客户端的所有监听
-func AcceptClient(client *dto.ClientDto) {
+func AcceptClient(clientDto *dto.ClientDto) {
 
 	//加载统计数据
 	StatisticsUtil.LoadChannelDataLog()
 
 	//开启NPS客户端ID下所有的隧道
-	activeList := ChannelDao.SelectActiveByClientId(client.Id)
+	activeList := ChannelDao.SelectActiveByClientId(clientDto.Id)
 	for _, it := range activeList {
-		acceptChannel(client, it)
+		acceptChannel(clientDto, it)
 	}
 }
 
 // 开始监听某个隧道
 func acceptChannel(client *dto.ClientDto, channel *dto.ChannelDto) {
-	channelIdToProxyAcceptLock.Lock()
-	oldProxyTCPAccept := channelIdToProxyAccept[channel.Id]
+	proxyAcceptLock.Lock()
+	oldProxyTCPAccept := proxyAcceptMap[channel.Id]
 	if oldProxyTCPAccept != nil { //若该隧道已经在监听,则先停止
 		shutdown(oldProxyTCPAccept)
 	}
@@ -52,7 +44,7 @@ func acceptChannel(client *dto.ClientDto, channel *dto.ChannelDto) {
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", channel.ServerPort))
 	if err != nil {
 		fmt.Printf("端口:%d 监听失败。err:%p\n", channel.ServerPort, err)
-		channelIdToProxyAcceptLock.Unlock()
+		proxyAcceptLock.Unlock()
 		return
 	}
 	fmt.Printf("端口:%d 监听开始\n", channel.ServerPort)
@@ -61,8 +53,8 @@ func acceptChannel(client *dto.ClientDto, channel *dto.ChannelDto) {
 		Channel: channel,
 		listen:  listener,
 	}
-	channelIdToProxyAccept[channel.Id] = proxyAccept
-	channelIdToProxyAcceptLock.Unlock()
+	proxyAcceptMap[channel.Id] = proxyAccept
+	proxyAcceptLock.Unlock()
 
 	//开启监听
 	go proxyAccept.accept()
@@ -73,12 +65,12 @@ func acceptChannel(client *dto.ClientDto, channel *dto.ChannelDto) {
  * @param channelId 隧道id
  */
 func CloseByChannel(channelId int) {
-	channelIdToProxyAcceptLock.Lock()
-	proxyTCPAccept := channelIdToProxyAccept[channelId]
+	proxyAcceptLock.Lock()
+	proxyTCPAccept := proxyAcceptMap[channelId]
 	if proxyTCPAccept != nil {
 		shutdown(proxyTCPAccept)
 	}
-	channelIdToProxyAcceptLock.Unlock()
+	proxyAcceptLock.Unlock()
 
 	//关闭隧道所有正在通信的连接
 	bridge.CloseByChannel(channelId)
@@ -97,20 +89,13 @@ func CloseByClient(clientId int) {
 	bridge.CloseByClient(clientId)
 }
 
-/**
- * 停止监听端口
- */
+// 停止监听端口
 func shutdown(proxyTCPAccept *ProxyAccept) {
 	proxyTCPAccept.listen.Close()
-	removeByChannelId(proxyTCPAccept.Channel.Id)
-}
-
-/**
- * 移除隧道监听列表
- */
-func removeByChannelId(channelId int) {
-	proxyTCPAccept := channelIdToProxyAccept[channelId]
-	if proxyTCPAccept != nil {
-		delete(channelIdToProxyAccept, channelId)
+	proxyAcceptLock.Lock()
+	channelId := proxyTCPAccept.Channel.Id
+	if proxyAcceptMap[channelId] != nil {
+		delete(proxyAcceptMap, channelId)
 	}
+	proxyAcceptLock.Unlock()
 }

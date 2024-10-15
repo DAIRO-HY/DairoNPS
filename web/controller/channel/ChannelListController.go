@@ -1,6 +1,7 @@
 package channel
 
 import (
+	"DairoNPS/client"
 	"DairoNPS/dao/ChannelDao"
 	"DairoNPS/dao/ClientDao"
 	"DairoNPS/extension/Bool"
@@ -88,11 +89,10 @@ func setState(form SetStateForm) {
 	channel := ChannelDao.SelectOne(form.Id)
 	if channel.EnableState == 0 {
 		ChannelDao.SetEnableState(form.Id, 1)
-
-		client := ClientDao.SelectOne(channel.ClientId)
-
-		//重新开启监听该客户端
-		proxy.AcceptClient(client)
+		clientDto := ClientDao.SelectOne(channel.ClientId)
+		if client.IsOnline(clientDto.Id) {
+			proxy.AcceptClient(clientDto) //重新开启监听该客户端
+		}
 	} else {
 		ChannelDao.SetEnableState(form.Id, 0)
 

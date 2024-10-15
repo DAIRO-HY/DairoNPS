@@ -9,9 +9,8 @@ import (
 //TCP桥接会话管理
 
 // 当前正在通信的桥接
-var BridgeList1 []*TCPBridge
-var BridgeListMap = make(map[*TCPBridge]bool)
-var BridgeListLock sync.Mutex
+var bridgeMap = make(map[*TCPBridge]bool)
+var bridgeLock sync.Mutex
 
 ///**
 // * 当前桥接数量
@@ -50,49 +49,47 @@ func MakeBridge(client *dto.ClientDto, channel *dto.ChannelDto, proxySocket net.
 	//this.BridgeListLock.synchronized {
 	//    this.BridgeList.add(bridge)
 	//}
-	BridgeListLock.Lock()
-	BridgeListMap[bridge] = true
-	BridgeListLock.Unlock()
+	bridgeLock.Lock()
+	bridgeMap[bridge] = true
+	bridgeLock.Unlock()
 	bridge.start()
-}
-
-/**
- * 移除会话
- */
-func removeBridgeList(bridge *TCPBridge) {
-	BridgeListLock.Lock()
-	delete(BridgeListMap, bridge)
-	BridgeListLock.Unlock()
 }
 
 /**
  * 关闭客户端所有正在通信的连接
  */
 func CloseByClient(clientId int) {
-	BridgeListLock.Lock()
+	bridgeLock.Lock()
 
 	//帅选出要删除的客户端桥接
-	for bridge := range BridgeListMap {
+	for bridge := range bridgeMap {
 		if bridge.Client.Id == clientId {
 			bridge.shutdown()
 		}
 	}
-	BridgeListLock.Unlock()
+	bridgeLock.Unlock()
 }
 
 /**
  * 关闭隧道所有正在通信的连接
  */
 func CloseByChannel(channelId int) {
-	BridgeListLock.Lock()
+	bridgeLock.Lock()
 
 	//帅选出要删除的客户端桥接
-	for bridge := range BridgeListMap {
+	for bridge := range bridgeMap {
 		if bridge.Channel.Id == channelId {
 			bridge.shutdown()
 		}
 	}
-	BridgeListLock.Unlock()
+	bridgeLock.Unlock()
+}
+
+// 移除会话
+func remove(bridge *TCPBridge) {
+	bridgeLock.Lock()
+	delete(bridgeMap, bridge)
+	bridgeLock.Unlock()
 }
 
 /**
