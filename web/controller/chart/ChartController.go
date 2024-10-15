@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/gorilla/websocket"
 	"net/http"
-	"time"
+	"strconv"
 )
 
 func init() {
@@ -32,14 +32,14 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 
 	for {
 		// 读取消息
-		//mt, message, err := conn.ReadMessage()
-		//if err != nil {
-		//	fmt.Println("读取消息失败:", err)
-		//	break
-		//}
-		//fmt.Printf("收到消息: %s\n", message)
-
-		channelId := 1
+		_, idData, err := conn.ReadMessage()
+		if err != nil {
+			fmt.Println("读取消息失败:", err)
+			break
+		}
+		idStr := string(idData)
+		id, _ := strconv.ParseInt(idStr, 10, 64)
+		channelId := int(id)
 		channelData := StatisticsUtil.ChannelDataSizeMap[channelId]
 
 		var message string
@@ -55,7 +55,6 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Println("发送消息失败:", err)
 			break
 		}
-		time.Sleep(1 * time.Second)
 	}
 }
 
