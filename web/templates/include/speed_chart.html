@@ -1,5 +1,5 @@
 ﻿{{define "speed_chart"}}
-<div class="p-3" style="width: 100%;height: 200px;">
+<div id="speedChat" class="p-3" style="width: 100%;height: 200px;display: none;">
     <canvas id="myChart" class="bg-white rounded" style="width: 100%;height: 100%;">
     </canvas>
 </div>
@@ -40,17 +40,12 @@
      * 网速报表
      */
     let speedChart = null
-
-    let channelId = getParam("id")
-    $(function () {
-        initSpeedChartWebSocket()
-    })
-
-    function initSpeedChartWebSocket() {
+    function showSpeedChart(id = "A") {
         let ws = new WebSocket("ws://localhost:8080/ws/speed_chart");
         ws.onopen = function () {
+            $("#speedChat").show()
             initSpeedChart()
-            ws.send(channelId)
+            ws.send(id)
         };
 
         ws.onmessage = function (event) {
@@ -59,16 +54,8 @@
 
             //每隔一段时间去取新的数据
             setTimeout(function () {
-                ws.send(channelId)
+                ws.send(id)
             }, 1000)
-        };
-
-        ws.onclose = function () {
-            console.log("Connection closed");
-        };
-
-        ws.onerror = function (error) {
-            console.log("WebSocket error: " + error);
         };
     }
 

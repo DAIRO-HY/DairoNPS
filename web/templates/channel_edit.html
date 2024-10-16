@@ -195,6 +195,10 @@
     // $("#aclIpDiv").empty()
 
     $(function () {
+        const channelId = getParam("id")
+        if(channelId !== ""){//网速统计报表显示
+            showSpeedChart("N" + channelId)
+        }
 
         //初始化数据
         init()

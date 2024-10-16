@@ -6,6 +6,7 @@
 </head>
 <body>
 {{template "top-bar" .}}
+{{template "speed_chart" .}}
 <!--<iframe th:if="${form.id != null}" class="bg-white border mt-3" th:src="'/admin/chart?clientId=' + ${form.id}"
         style="width: 100%;height: 200px;"></iframe>-->
 <div class="m-3 p-2 bg-white rounded">
@@ -111,8 +112,10 @@
 <script>
 
     $(function () {
-        // const id = getParam("id")
-        // $("#id").val(id)
+        const clientId = getParam("id")
+        if(clientId !== ""){//网速统计报表显示
+            showSpeedChart("C" + clientId)
+        }
         init()
     })
 
