@@ -5,8 +5,8 @@ import (
 	"DairoNPS/dao/dto"
 	"DairoNPS/util/StatisticsUtil"
 	"DairoNPS/util/TcpUtil"
-	"fmt"
 	"net"
+	"strconv"
 	"sync/atomic"
 	"time"
 )
@@ -90,7 +90,7 @@ func (mine *TCPBridge) sendHeaderToClient() {
 
 	//将加密类型及目标端口 格式:加密状态|端口  1|80   1|127.0.0.1:80
 	//1:加密  0:不加密
-	header := fmt.Sprintf("%d|%s", mine.Channel.SecurityState, mine.Channel.TargetPort)
+	header := strconv.Itoa(mine.Channel.SecurityState) + "|" + mine.Channel.TargetPort
 	headerData := []byte(header)
 
 	//写入数据长度标识

@@ -47,7 +47,6 @@ func currentData(w http.ResponseWriter, r *http.Request) {
 			channelId = int(id)
 		} else {
 		}
-
 		var inData int64 = 0
 		var outData int64 = 0
 		StatisticsUtil.Lock.Lock()

@@ -4,7 +4,7 @@ package ChannelDao
 import (
 	"DairoNPS/dao/dto"
 	"DairoNPS/util/DBUtil"
-	"fmt"
+	"strconv"
 )
 
 /**
@@ -114,11 +114,11 @@ func Search(searchDto dto.ChannelListSearchDto) []*dto.ChannelSearchDto {
 		" from channel left join client on channel.client_id = client.id where 1=1 "
 
 	if searchDto.ClientId != 0 {
-		sql += fmt.Sprintf(" and channel.client_id = %d", searchDto.ClientId)
+		sql += " and channel.client_id = " + strconv.Itoa(searchDto.ClientId)
 	}
 
 	if searchDto.Mode != 0 {
-		sql += fmt.Sprintf(" and channel.type = %d", searchDto.Mode)
+		sql += " and channel.mode = " + strconv.Itoa(searchDto.Mode)
 	}
 	sql += " order by id desc"
 	return DBUtil.SelectList[dto.ChannelSearchDto](sql)

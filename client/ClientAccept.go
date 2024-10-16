@@ -9,13 +9,14 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strconv"
 	"strings"
 	"time"
 )
 
 // Accept 监听客户端连接
 func Accept() {
-	listen, err := net.Listen("tcp", fmt.Sprintf(":%d", CLSConfig.CLIENT_TO_SERVER_TCP_PORT))
+	listen, err := net.Listen("tcp", ":"+strconv.Itoa(CLSConfig.CLIENT_TO_SERVER_TCP_PORT))
 	defer listen.Close()
 	if err != nil {
 		println("启动失败，请参考错误信息。")

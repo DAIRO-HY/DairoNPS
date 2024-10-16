@@ -7,6 +7,7 @@ import (
 	"DairoNPS/util/StatisticsUtil"
 	"fmt"
 	"net"
+	"strconv"
 	"sync"
 )
 
@@ -41,7 +42,7 @@ func acceptChannel(client *dto.ClientDto, channel *dto.ChannelDto) {
 	//    ChannelType.UDP -> ProxyUDPAccept(client, channel)
 	//    else -> return@synchronized
 	//}
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", channel.ServerPort))
+	listener, err := net.Listen("tcp", ":"+strconv.Itoa(channel.ServerPort))
 	if err != nil {
 		fmt.Printf("端口:%d 监听失败。err:%p\n", channel.ServerPort, err)
 		proxyAcceptLock.Unlock()
