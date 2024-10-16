@@ -5,6 +5,100 @@
 </head>
 <body>
 {{template "top-bar" .}}
-fgdfgfdfgdgdfgd
+
+<div class="m-3 p-2">
+    <div class="row row-cols-xl-6 row-cols-lg-5 row-cols-md-4 row-cols-sm-3 row-cols-2 text-muted">
+        <div class="col text-center p-2">
+            <div class="bg-white border rounded">
+                <div class="py-2">入网流量</div>
+                <div class="border-top fs-2" id="inDataTotal">
+                </div>
+            </div>
+        </div>
+        <div class="col text-center p-2">
+            <div class="bg-white border rounded">
+                <div class="py-2">出网流量</div>
+                <div class="border-top fs-2" id="outDataTotal">
+                </div>
+            </div>
+        </div>
+        <div class="col text-center p-2">
+            <div class="bg-white border rounded">
+                <div class="py-2">在线客服端</div>
+                <div class="border-top fs-2" id="onlineClientCount">
+                </div>
+            </div>
+        </div>
+        <div class="col text-center p-2">
+            <div class="bg-white border rounded">
+                <div class="py-2">穿透连接</div>
+                <div class="border-top fs-2" id="proxyCount">
+                </div>
+            </div>
+        </div>
+        <div class="col text-center p-2">
+            <div class="bg-white border rounded">
+                <div class="py-2">TCP连接数/连接池</div>
+                <div class="border-top fs-2" id="">
+                    <span id="tcpSessionCount"></span>/<span id="tcpPoolCount"></span>
+                </div>
+            </div>
+        </div>
+        <div class="col text-center p-2">
+            <div class="bg-white border rounded">
+                <div class="py-2">UDP连接数/连接池</div>
+                <div class="border-top fs-2">
+                    <span id="udpSessionCount"></span>/<span id="udpPoolCount"></span>
+                </div>
+            </div>
+        </div>
+        <div class="col text-center p-2">
+            <div class="bg-white border rounded">
+                <div class="py-2">数据转发服务数</div>
+                <div class="border-top fs-2" id="forwardCount">
+                </div>
+            </div>
+        </div>
+        <div class="col text-center p-2">
+            <div class="bg-white border rounded">
+                <div class="py-2">数据转发连接数</div>
+                <div class="border-top fs-2" id="forwardBridgeCount">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{template "speed_chart" .}}
+<script>
+    // $(loadData)
+    $(function(){
+        showSpeedChart()
+    })
+
+    /**
+     * 加载数据
+     */
+    function loadData() {
+        $.ajax({
+            url: "/admin/index",
+            type: "POST"
+        }).fail(() => {
+            setTimeout(loadData, 1000)
+        }).done((data) => {
+            fillData(data)
+            setTimeout(loadData, 1000)
+        })
+    }
+
+    /**
+     * 填充数据
+     * @param data
+     */
+    function fillData(data) {
+        for (let key in data) {
+            $("#" + key).text(data[key])
+        }
+    }
+</script>
 </body>
 </html>
