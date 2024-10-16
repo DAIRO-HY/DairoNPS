@@ -13,7 +13,7 @@ import (
 var ChannelDataSizeMap = make(map[int]*ChannelDataSizeLog)
 
 // 统计锁
-var lock sync.Mutex
+var Lock sync.Mutex
 
 // 流量统计
 func init() {
@@ -24,15 +24,15 @@ func init() {
 func timer() {
 	for {
 		time.Sleep(10 * time.Second)
-		lock.Lock()
+		Lock.Lock()
 		saveStatistics()
-		lock.Unlock()
+		Lock.Unlock()
 	}
 }
 
 // 加载隧道统计数据
 func LoadChannelDataLog() {
-	lock.Lock()
+	Lock.Lock()
 	channelList := ChannelDao.SelectAll()
 
 	//隧道ID对应的隧道信息
@@ -67,7 +67,7 @@ func LoadChannelDataLog() {
 			delete(ChannelDataSizeMap, channelId)
 		}
 	}
-	lock.Unlock()
+	Lock.Unlock()
 }
 
 // 保存流量记录

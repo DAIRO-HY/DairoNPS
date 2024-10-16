@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/websocket"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 func init() {
@@ -34,30 +35,45 @@ func currentData(w http.ResponseWriter, r *http.Request) {
 		// 读取消息
 		_, idData, err := conn.ReadMessage()
 		if err != nil {
-			fmt.Println("读取消息失败:", err)
 			break
 		}
+		channelId := 0
+		clientId := 0
 		idStr := string(idData)
-		id, _ := strconv.ParseInt(idStr, 10, 64)
-		channelId := int(id)
-		channelData := StatisticsUtil.ChannelDataSizeMap[channelId]
-
-		var message string
-		if channelData == nil {
-			message = "0:0"
+		id, _ := strconv.ParseInt(idStr[1:], 10, 64)
+		if strings.HasPrefix(idStr, "C") {
+			clientId = int(id)
+		} else if strings.HasPrefix(idStr, "N") {
+			channelId = int(id)
 		} else {
-			message = fmt.Sprintf("%d:%d", channelData.InData, channelData.OutData)
 		}
+
+		var inData int64 = 0
+		var outData int64 = 0
+		StatisticsUtil.Lock.Lock()
+		for cid, dataSize := range StatisticsUtil.ChannelDataSizeMap {
+			if channelId != 0 { //统计某个隧道
+				if cid == channelId {
+					inData += dataSize.InData
+					outData += dataSize.OutData
+				}
+			} else if clientId != 0 { //统计某个客户端
+				if dataSize.ClientId == clientId {
+					inData += dataSize.InData
+					outData += dataSize.OutData
+				}
+			} else { //统计所有
+				inData += dataSize.InData
+				outData += dataSize.OutData
+			}
+		}
+		StatisticsUtil.Lock.Unlock()
+		message := strconv.FormatInt(inData, 10) + ":" + strconv.FormatInt(outData, 10)
 
 		// 发送消息
 		err = conn.WriteMessage(websocket.TextMessage, []byte(message))
 		if err != nil {
-			fmt.Println("发送消息失败:", err)
 			break
 		}
 	}
-}
-
-func data() {
-
 }
