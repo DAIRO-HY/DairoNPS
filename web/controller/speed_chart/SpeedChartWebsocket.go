@@ -1,4 +1,4 @@
-package chart
+package speed_chart
 
 import (
 	"DairoNPS/util/StatisticsUtil"
@@ -9,7 +9,7 @@ import (
 )
 
 func init() {
-	http.HandleFunc("/ws", wsHandler)
+	http.HandleFunc("/ws/speed_chart", currentData)
 }
 
 // 创建WebSocket升级器
@@ -21,7 +21,7 @@ var upgrader = websocket.Upgrader{
 }
 
 // WebSocket处理函数
-func wsHandler(w http.ResponseWriter, r *http.Request) {
+func currentData(w http.ResponseWriter, r *http.Request) {
 	// 将HTTP连接升级为WebSocket连接
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {

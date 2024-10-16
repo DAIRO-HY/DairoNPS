@@ -1,19 +1,15 @@
-﻿<!DOCTYPE html>
-<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-</head>
-<body style="overflow: hidden;">
-<canvas id="myChart" style="width: 100vw;height: 100vh;"></canvas>
-<script src="/plugins/jquery-3.6.3.min.js"></script>
-<script src="/js/common.js"></script>
-<script src="/plugins/chart.js"></script>
+﻿{{define "speed_chart"}}
+<div class="p-3" style="width: 100%;height: 200px;">
+    <canvas id="myChart" class="bg-white rounded" style="width: 100%;height: 100%;">
+    </canvas>
+</div>
+<script src="/static/plugins/chart.js"></script>
 <script>
 
     /**
-     * 曲线图X坐标长度1表示2秒
+     * 曲线图X坐标长度
      */
-    const DATA_COUNT = 30;
+    const SPEED_CHART_COUNT = 30;
 
     /**
      * 上次计算时间
@@ -33,41 +29,73 @@
     /**
      * 入网网速
      */
-    const mInSpeedData = initArray(DATA_COUNT, NaN)
+    const inDataSpeed = Array(SPEED_CHART_COUNT).fill(NaN)
 
     /**
      * 出网网速
      */
-    const mOutSpeedData = initArray(DATA_COUNT, NaN)
+    const outDataSpeed = Array(SPEED_CHART_COUNT).fill(NaN)
 
-    let chart = null
+    /**
+     * 网速报表
+     */
+    let speedChart = null
 
-    $(() => {
-        initChart()
-        getData()
-    });
+    let channelId = getParam("id")
+    $(function () {
+        initSpeedChartWebSocket()
+    })
 
+    function initSpeedChartWebSocket() {
+        let ws = new WebSocket("ws://localhost:8080/ws/speed_chart");
+        ws.onopen = function () {
+            initSpeedChart()
+            ws.send(channelId)
+        };
+
+        ws.onmessage = function (event) {
+            const datas = event.data.split(":")
+            computeSpeed(parseInt(datas[0]), parseInt(datas[1]))
+
+            //每隔一段时间去取新的数据
+            setTimeout(function () {
+                ws.send(channelId)
+            }, 1000)
+        };
+
+        ws.onclose = function () {
+            console.log("Connection closed");
+        };
+
+        ws.onerror = function (error) {
+            console.log("WebSocket error: " + error);
+        };
+    }
 
     /**
      * 曲线图初始化
      */
-    function initChart() {
+    function initSpeedChart() {
         const data = {
-            labels: initArray(DATA_COUNT, ""),
+            labels: Array(SPEED_CHART_COUNT).fill(""),
             datasets: [
                 {
                     label: '入网网速',
-                    data: initArray(DATA_COUNT, NaN),
+                    data: Array(SPEED_CHART_COUNT).fill(NaN),
+                    pointRadius:1,//小圆点大小
+                    borderWidth:2,//线粗细
                     borderColor: "#22ff00",
                     fill: false,
                     // cubicInterpolationMode: 'monotone',
-                    tension: 0.4
+                    tension: 0.4//线条贝塞尔曲线的张力，0：代表折线   1：代表非常圆滑
                 }, {
                     label: '出网网速',
-                    data: initArray(DATA_COUNT, NaN),
+                    data: Array(SPEED_CHART_COUNT).fill(NaN),
+                    pointRadius:1,//小圆点大小
+                    borderWidth:2,//线粗细
                     borderColor: "#ff0000",
                     fill: false,
-                    tension: 0.4
+                    tension: 0.4//线条贝塞尔曲线的张力，0：代表折线   1：代表非常圆滑
                 }
             ]
         };
@@ -76,7 +104,7 @@
             type: 'line',
             data: data,
             options: {
-                animation:false,//禁用动画
+                animation: false,//禁用动画
                 // animation: {//禁用动画
                 //     duration: 0
                 // },
@@ -111,36 +139,7 @@
             },
         };
         const ctx = document.getElementById('myChart')
-        chart = new Chart(ctx, config);
-    }
-
-    /**
-     * 获取数据
-     */
-    function getData() {
-        $.ajax({
-            url: "/admin/chart?clientId=[[${param.clientId}]]",
-            type: "POST"
-        }).fail(() => {
-            computeSpeed()
-            setTimeout(getData, 2000)
-        }).done((data) => {
-            computeSpeed(data.inDataTotal, data.outDataTotal)
-            setTimeout(getData, 2000)
-        })
-    }
-
-    /**
-     * 初始化一个数组
-     * @param size
-     * @param value
-     */
-    function initArray(size, value) {
-        const array = []
-        for (let i = 0; i < size; i++) {
-            array.push(value)
-        }
-        return array
+        speedChart = new Chart(ctx, config);
     }
 
     /**
@@ -149,17 +148,6 @@
      * @param outDataTotal
      */
     function computeSpeed(inDataTotal, outDataTotal) {
-        if (inDataTotal === undefined) {//获取数据失败的时候
-            preComputeTime = -1
-            mInSpeedData.push(NaN)
-            mInSpeedData.splice(0, 1)
-            mOutSpeedData.push(NaN)
-            mOutSpeedData.splice(0, 1)
-
-            //设置报表视图
-            setChartData()
-            return
-        }
 
         //本次计算时间
         const currentTime = new Date().getTime()
@@ -181,70 +169,68 @@
 
         //以兆为单位
         const inSpeed = cInData / time * 1000
-        mInSpeedData.push(inSpeed)
-        mInSpeedData.splice(0, 1)
+        inDataSpeed.push(inSpeed)
+        inDataSpeed.splice(0, 1)
 
         //以兆为单位
         const outSpeed = cOutData / time * 1000
-        mOutSpeedData.push(outSpeed)
-        mOutSpeedData.splice(0, 1)
+        outDataSpeed.push(outSpeed)
+        outDataSpeed.splice(0, 1)
 
         preComputeTime = currentTime
         preInDataTotal = inDataTotal
         preOutDataTotal = outDataTotal
 
-        //设置报表视图
-        setChartData()
+        //更新报表视图
+        updateSpeedChartData()
     }
 
     /**
      * 设置报表数据
      */
-    function setChartData(){
+    function updateSpeedChartData() {
         let maxSpeed = 0
-        mInSpeedData.forEach((it)=>{
-            if(isNaN(it)) return
-            maxSpeed = Math.max(maxSpeed,it)
+        inDataSpeed.forEach((it) => {
+            if (isNaN(it)) return
+            maxSpeed = Math.max(maxSpeed, it)
         })
-        mOutSpeedData.forEach((it)=>{
-            if(isNaN(it)) return
-            maxSpeed = Math.max(maxSpeed,it)
+        outDataSpeed.forEach((it) => {
+            if (isNaN(it)) return
+            maxSpeed = Math.max(maxSpeed, it)
         })
 
         //倍率
         let rate = 1
-        if(maxSpeed >= 1024 * 1024){
+        if (maxSpeed >= 1024 * 1024) {
             rate = 1024 * 1024
-            chart.options.scales.y.title.text = "MB/S"
-        }else if(maxSpeed >= 1024){
+            speedChart.options.scales.y.title.text = "MB/S"
+        } else if (maxSpeed >= 1024) {
             rate = 1024
-            chart.options.scales.y.title.text = "KB/S"
-        }else{
-            chart.options.scales.y.title.text = "B/S"
+            speedChart.options.scales.y.title.text = "KB/S"
+        } else {
+            speedChart.options.scales.y.title.text = "B/S"
         }
 
         //入网网速
-        const inSpeedData = mInSpeedData.map((it)=>{
-            if(isNaN(it)){
+        const inSpeedData = inDataSpeed.map((it) => {
+            if (isNaN(it)) {
                 return NaN
-            }else{
+            } else {
                 return (it / rate).toFixed(2)
             }
         })
 
         //出网网速
-        const outSpeedData = mOutSpeedData.map((it)=>{
-            if(isNaN(it)){
+        const outSpeedData = outDataSpeed.map((it) => {
+            if (isNaN(it)) {
                 return NaN
-            }else{
+            } else {
                 return (it / rate).toFixed(2)
             }
         })
-        chart.data.datasets[0].data = inSpeedData //入网网速
-        chart.data.datasets[1].data = outSpeedData //出网网速
-
-        chart.update();
+        speedChart.data.datasets[0].data = inSpeedData //入网网速
+        speedChart.data.datasets[1].data = outSpeedData //出网网速
+        speedChart.update();
     }
 </script>
-</body>
-</html>
+{{end}}

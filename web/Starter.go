@@ -38,7 +38,7 @@ func renderTemplate(w http.ResponseWriter, tmpl string) {
 	tmplPath := filepath.Join("web/templates", tmpl)
 	t, err := template.ParseFiles(
 		tmplPath,
-		//"web/templates/include/content.html",
+		"web/templates/include/speed_chart.html",
 		"web/templates/include/head.html",
 		"web/templates/include/top-bar.html",
 	)
