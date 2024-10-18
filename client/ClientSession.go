@@ -2,6 +2,7 @@ package client
 
 import (
 	"DairoNPS/client/HeaderUtil"
+	"DairoNPS/constant/CLSConfig"
 	"DairoNPS/dao/dto"
 	"DairoNPS/util/SecurityUtil"
 	"DairoNPS/util/TcpUtil"
@@ -133,4 +134,15 @@ func (mine *ClientSession) Send(data []byte) error {
  */
 func (mine *ClientSession) Close() {
 	mine.tcp.Close()
+}
+
+// 客户端是否在线监测
+func (mine *ClientSession) IsOnline() bool {
+	now := time.Now().UnixNano() / int64(time.Millisecond)
+
+	//在指定时间内没有收到客户端心跳,则视为离线
+	if now-mine.lastHeartBeatTime > CLSConfig.HEART_TIME*2 {
+		return false
+	}
+	return true
 }

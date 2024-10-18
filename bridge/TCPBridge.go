@@ -21,7 +21,7 @@ type RemoveBridgeFunc func(bridge *TCPBridge)
  * @param clientSocket 内网穿透客户端Socket
  */
 type TCPBridge struct {
-	Client       *dto.ClientDto
+	ClientId     int
 	Channel      *dto.ChannelDto
 	ProxySocket  net.Conn
 	ClientSocket net.Conn
@@ -35,22 +35,6 @@ type TCPBridge struct {
 	 * 最后一次读取到数据的时间,用来判断Socket是否存活
 	 */
 	lastSessionTime int64
-	//
-	///**
-	// * 是否加密数据
-	// */
-	//private val isEncodeData = this.channel.securityState == 1
-
-	/**
-	 * 本次连接入网总计
-	 */
-	inData int64
-
-	/**
-	 * 本次连接出网总计
-	 */
-
-	outData int64
 
 	/**
 	 * 代理连接入方向是否被关闭

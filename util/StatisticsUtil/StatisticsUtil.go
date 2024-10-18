@@ -4,6 +4,7 @@ import (
 	"DairoNPS/dao/ChannelDao"
 	"DairoNPS/dao/ChannelDataStatisticsDao"
 	"DairoNPS/dao/ClientDao"
+	"DairoNPS/dao/SystemConfigDao"
 	"DairoNPS/dao/dto"
 	"sync"
 	"time"
@@ -122,8 +123,16 @@ func saveStatistics() {
 		}
 	}
 
+	var inData int64 = 0
+	var outData int64 = 0
+
 	//统计客户端入出网流量
 	for clientId, client := range clientMap {
+		inData += client.InData
+		outData += client.OutData
 		ClientDao.SetDataSize(clientId, client.InData, client.OutData)
 	}
+
+	//统计系统总流量
+	SystemConfigDao.AddDataSize(inData, outData)
 }

@@ -12,11 +12,25 @@ import (
 var bridgeMap = make(map[*TCPBridge]bool)
 var bridgeLock sync.Mutex
 
-///**
-// * 当前桥接数量
-// */
-//val bridgeCount: Int
-//    get() = this.BridgeList.count()
+// 当前桥接数量
+func GetBridgeCount() int {
+	count := 0
+	bridgeLock.Lock()
+	count = len(bridgeMap)
+	bridgeLock.Unlock()
+	return count
+}
+
+// 获取当前桥接列表
+func GetBridgeList() []TCPBridge {
+	list := []TCPBridge{}
+	bridgeLock.Lock()
+	for item := range bridgeMap {
+		list = append(list, *item)
+	}
+	bridgeLock.Unlock()
+	return list
+}
 
 //init {
 //    GlobalScope.launch {
@@ -42,7 +56,7 @@ var bridgeLock sync.Mutex
 func MakeBridge(client *dto.ClientDto, channel *dto.ChannelDto, proxySocket net.Conn, clientSocket net.Conn) {
 	bridge := &TCPBridge{
 		Channel:      channel,
-		Client:       client,
+		ClientId:     client.Id,
 		ProxySocket:  proxySocket,
 		ClientSocket: clientSocket,
 	}
@@ -63,7 +77,7 @@ func CloseByClient(clientId int) {
 
 	//帅选出要删除的客户端桥接
 	for bridge := range bridgeMap {
-		if bridge.Client.Id == clientId {
+		if bridge.ClientId == clientId {
 			bridge.shutdown()
 		}
 	}
@@ -102,7 +116,7 @@ func Recycle() {
 	//
 	//        //当前是同时间戳
 	//        val now = System.currentTimeMillis()
-	//        var result: List<TCPBridge>? = null
+	//    result: List<TCPBridge>? = null
 	//        this.BridgeListLock.synchronized {
 	//            result = this.BridgeList.filter {
 	//                (now - it.lastSessionTime) > CLSConfig.BRIDGE_SESSION_TIMEOUT

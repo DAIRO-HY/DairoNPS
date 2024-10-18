@@ -49,6 +49,7 @@ Date.prototype.format = function (pattern = "yyyy-MM-dd hh:mm:ss") {
 }
 
 $(function () {
+    initDropdown()
     if ($(".navbar").length > 0) {
         initTopBar();
     }
@@ -102,4 +103,27 @@ function getParam(key) {
         return ""
     }
     return value
+}
+
+/**
+ * 初始化dropdown数据
+ */
+function initDropdown(){
+    let query = ""
+    $.each($("select[dropdown-tag]"),(_,obj)=>{
+        query += $(obj).attr("dropdown-tag") + "=1&"
+    })
+    if(query === ""){
+        return
+    }
+    $.ajaxByData("common/dropdown?" + query).success(data=>{
+        console.log(data)
+        for(const key in data){
+            const $select = $(`select[dropdown-tag="${key}"]`)
+            const options = data[key]
+            options.forEach(item=>{
+                $select.append(`<option value="${item.Value}">${item.Label}</option>`)
+            })
+        }
+    }).post()
 }

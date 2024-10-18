@@ -2,14 +2,12 @@ package client
 
 import (
 	"DairoNPS/client/HeaderUtil"
-	"DairoNPS/constant/CLSConfig"
 	"DairoNPS/dao/dto"
 	"DairoNPS/pool"
 	"DairoNPS/proxy"
 	"net"
 	"strconv"
 	"sync"
-	"time"
 )
 
 type ClientSessionManager struct{}
@@ -184,11 +182,18 @@ func IsOnline(clientId int) bool {
 	if session == nil {
 		return false
 	}
-	now := time.Now().UnixNano() / int64(time.Millisecond)
+	return session.IsOnline()
+}
 
-	//在指定时间内没有收到客户端心跳,则视为离线
-	if now-session.lastHeartBeatTime > CLSConfig.HEART_TIME*2 {
-		return false
+// 获取当前在线客户端数量
+func OnlineCount() int {
+	onlineClientCount := 0
+	clientSessionLock.Lock()
+	for _, session := range clientSessionMap {
+		if session.IsOnline() {
+			onlineClientCount++
+		}
 	}
-	return true
+	clientSessionLock.Unlock()
+	return onlineClientCount
 }

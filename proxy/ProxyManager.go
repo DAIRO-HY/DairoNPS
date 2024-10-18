@@ -17,6 +17,15 @@ var proxyAcceptMap = make(map[int]*ProxyAccept)
 // proxyAcceptMap操作互斥锁
 var proxyAcceptLock sync.Mutex
 
+// 隧道代理端口数量
+func GetProxyCount() int {
+	count := 0
+	proxyAcceptLock.Lock()
+	count = len(proxyAcceptMap)
+	proxyAcceptLock.Unlock()
+	return count
+}
+
 // 开始客户端的所有监听
 func AcceptClient(clientDto *dto.ClientDto) {
 

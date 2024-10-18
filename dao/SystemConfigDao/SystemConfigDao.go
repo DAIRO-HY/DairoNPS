@@ -18,7 +18,7 @@ func SelectOne() *dto.SystemConfigDto {
 /**
  * 同步入出网流量
  */
-func SetDataLen(dto dto.SystemConfigDto) {
-	sql := "update system_config set inData = ?,outData=?"
-	DBUtil.Exec(sql, dto.InData, dto.OutData)
+func AddDataSize(inData int64, outData int64) {
+	sql := "update system_config set inData = inData + ?,outData = outData + ?"
+	DBUtil.ExecIgnoreError(sql, inData, outData)
 }

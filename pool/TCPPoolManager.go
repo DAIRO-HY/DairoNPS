@@ -11,31 +11,19 @@ import (
 	"time"
 )
 
-//客户端TCP连接池管理
-
 /**
  * 客户端连接池
  */
 var poolMap = make(map[int]*[]*TCPPool)
 var poolLock sync.Mutex
 
-//init {
-//    GlobalScope.launch {
-//        //recyle()
-//    }
-//}
-
-/**
- * 当前连接池数量
- */
-func getCount() int {
-	var total = 0
-	//this.poolMapLock.withLock {
-	//    this.poolMap.forEach { (_, v) ->
-	//        total += v.count()
-	//    }
-	//}
-	return total
+// 当前连接池数量
+func GetPoolCount() int {
+	count := 0
+	poolLock.Lock()
+	count = len(poolMap)
+	poolLock.Unlock()
+	return count
 }
 
 /**
