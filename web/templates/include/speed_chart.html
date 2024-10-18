@@ -40,7 +40,7 @@
      */
     let speedChart = null
     function showSpeedChart(id = "A") {
-        let ws = new WebSocket("ws://localhost:8080/ws/speed_chart");
+        let ws = new WebSocket(`ws://${location.host}/ws/speed_chart`);
         ws.onopen = function () {
             $("#speedChatDiv").show()
             initSpeedChart()

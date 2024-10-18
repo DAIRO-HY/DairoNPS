@@ -1,6 +1,7 @@
 package web
 
 import (
+	"DairoNPS/constant/CLSConfig"
 	"encoding/json"
 	"html/template"
 	"log"
@@ -189,11 +190,9 @@ func Start() {
 
 	// 设置路由
 	http.HandleFunc("/", htmlHandler)
-
-	//客户端列表
-	//http.HandleFunc("/client_list/init", apiHandler(client_list.Init))
+	port := CLSConfig.WEB_PORT
 
 	// 启动服务器
-	log.Println("Server starting at :8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Printf("Server starting at :%d\n", port)
+	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(port), nil))
 }

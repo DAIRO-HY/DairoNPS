@@ -2,7 +2,7 @@ package form
 
 type IndexOutForm struct {
 
-	// 当前正在代理数
+	// 正在监听的隧道
 	ProxyCount int
 
 	// 在线客户端数量

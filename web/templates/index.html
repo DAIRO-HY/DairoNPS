@@ -31,7 +31,7 @@
         </div>
         <div class="col text-center p-2">
             <div class="bg-white border rounded">
-                <div class="py-2">穿透连接</div>
+                <div class="py-2">正在监听隧道</div>
                 <div class="border-top fs-2" id="ProxyCount">
                 </div>
             </div>
@@ -81,7 +81,7 @@
      * 加载数据
      */
     function initGetDataWebsocket() {
-        let ws = new WebSocket("ws://localhost:8080/index/data");
+        let ws = new WebSocket(`ws://${location.host}/index/data`);
         ws.onopen = function () {
             ws.send("0")
         };

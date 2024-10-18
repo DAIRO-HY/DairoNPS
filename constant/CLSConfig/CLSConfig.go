@@ -1,6 +1,11 @@
 package CLSConfig
 
 /**
+ * WEB管理端口
+ */
+var WEB_PORT = 1780
+
+/**
  * 服务端监听TCP端口,客户端通过此端口进行连接
  */
 var CLIENT_TO_SERVER_TCP_PORT = 1781
