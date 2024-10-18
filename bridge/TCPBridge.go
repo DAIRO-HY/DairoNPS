@@ -8,7 +8,6 @@ import (
 	"net"
 	"strconv"
 	"sync/atomic"
-	"time"
 )
 
 type RemoveBridgeFunc func(bridge *TCPBridge)
@@ -31,19 +30,14 @@ type TCPBridge struct {
 	// */
 	//private val closeLock = Mutex()
 	//
-	/**
-	 * 最后一次读取到数据的时间,用来判断Socket是否存活
-	 */
-	lastSessionTime int64
 
-	/**
-	 * 代理连接入方向是否被关闭
-	 */
+	// 创建时间
+	CreateTime int64
+
+	//代理连接入方向是否被关闭
 	proxyInIsClosed bool
 
-	/**
-	 * 客户端连接入方向是否被关闭
-	 */
+	//客户端连接入方向是否被关闭
 	clientInIsClosed bool
 
 	//val tag = System.currentTimeMillis().toString() + (Math.random() * 1000).toInt()
@@ -99,8 +93,8 @@ func (mine *TCPBridge) receiveByProxySendToClient() {
 			break
 		}
 
-		//TODO:每次都计时可能影响性能
-		mine.lastSessionTime = time.Now().UnixNano() / int64(time.Millisecond) //标记最后一次读取到数据的时间
+		////TODO:每次都计时可能影响性能
+		//mine.lastSessionTime = time.Now().UnixNano() / int64(time.Millisecond) //标记最后一次读取到数据的时间
 
 		//入网统计
 		//mine.inDataTotal = mine.inDataTotal + int64(length)
@@ -144,8 +138,8 @@ func (mine *TCPBridge) receiveByClientSendToProxy() {
 			break
 		}
 
-		//TODO:每次都计时可能影响性能
-		mine.lastSessionTime = time.Now().UnixNano() / int64(time.Millisecond) //标记最后一次读取到数据的时间
+		////TODO:每次都计时可能影响性能
+		//mine.lastSessionTime = time.Now().UnixNano() / int64(time.Millisecond) //标记最后一次读取到数据的时间
 
 		//入网统计
 		//mine.outDataTotal = mine.outDataTotal + int64(length)

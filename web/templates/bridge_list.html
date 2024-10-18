@@ -7,7 +7,7 @@
 <body>
 {{template "top-bar" .}}
 <div class="m-3 p-2 bg-white rounded">
-    <form onchange="onSearchSubmit()" action="/admin/proxy_client" method="get">
+    <form onchange="loadData()" action="/bridge_list/load_data">
         <div class="row row-cols-sm-2 row-cols-md-3 row-cols-lg-4">
             <div class="col">
                 <div class="row">
@@ -29,7 +29,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col">
+            <div class="col" style="display: none">
                 <div class="row">
                     <label class="col-sm-4 col-form-label text-end">隧道模式</label>
                     <div class="col-sm-8">
@@ -41,6 +41,9 @@
                     </div>
                 </div>
             </div>
+            <div class="col">
+                <button type="button" class="btn btn-primary" onclick="loadData();">查询</button>
+            </div>
         </div>
     </form>
 </div>
@@ -51,7 +54,7 @@
             <th>客户端</th>
             <th>隧道名</th>
             <th>隧道模式</th>
-            <th>IP</th>
+            <th>用户端IP</th>
             <th>连接时间</th>
         </tr>
         </thead>
@@ -67,10 +70,10 @@
 
     /**
      * 修改可用状态
-     * @param id
      */
-    function loadData(id) {
-        $.ajaxByData("/bridge_list/load_data").success(data => {
+    function loadData() {
+        $("#tbody").empty()
+        $("form").ajaxByForm("/bridge_list/load_data").success(data => {
             fillData(data)
         }).post()
     }
@@ -83,7 +86,7 @@
                 <tr>
                     <td>${item.ClientName}</td>
                     <td>${item.ChannelName}</td>
-                    <td>${item.Type}</td>
+                    <td>${item.Mode}</td>
                     <td>${item.Ip}</td>
                     <td>${item.OnlineTime}</td>
                 </tr>`)

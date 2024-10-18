@@ -102,10 +102,8 @@ func CloseByClient(clientId int) {
 // 停止监听端口
 func shutdown(proxyTCPAccept *ProxyAccept) {
 	proxyTCPAccept.listen.Close()
-	proxyAcceptLock.Lock()
 	channelId := proxyTCPAccept.Channel.Id
 	if proxyAcceptMap[channelId] != nil {
 		delete(proxyAcceptMap, channelId)
 	}
-	proxyAcceptLock.Unlock()
 }

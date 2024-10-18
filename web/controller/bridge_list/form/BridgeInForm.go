@@ -3,11 +3,11 @@ package form
 type BridgeInForm struct {
 
 	// 客户端id
-	clientId int
+	ClientId int
 
 	// 隧道ID
-	channelId int
+	ChannelId int
 
 	// 隧道类型
-	mode int
+	Mode int
 }

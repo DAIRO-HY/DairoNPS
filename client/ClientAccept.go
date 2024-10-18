@@ -4,6 +4,7 @@ import (
 	"DairoNPS/client/HeaderUtil"
 	"DairoNPS/constant/CLSConfig"
 	"DairoNPS/dao/ClientDao"
+	"DairoNPS/dao/dto"
 	"DairoNPS/pool"
 	"DairoNPS/util/TcpUtil"
 	"fmt"
@@ -96,17 +97,22 @@ func validateSession(clientSocket net.Conn) {
 		clientSocket.Close()
 		return
 	}
-	holdOnClient(client, clientSocket)
 
-	////客户端ip
-	//ip := clientSocket.RemoteAddr().String()
-	//
-	////从头部信息中得到客户端版本号
-	//version := headers[0]
-	//loginClientDto := dto.ClientDto{
-	//	Id:      client.Id,
-	//	Ip:      ip,
-	//	Version: version,
-	//}
-	//ClientDao.SetClientInfo(loginClientDto)
+	//设置客户端登录信息-------------------------------------------------------------------------------START
+	remoteAddr := clientSocket.RemoteAddr().String()
+
+	//客户端ip
+	ip := strings.Split(remoteAddr, ":")[0]
+
+	//从头部信息中得到客户端版本号
+	version := headers[1]
+	loginClientDto := dto.ClientDto{
+		Id:      client.Id,
+		Ip:      ip,
+		Version: version,
+	}
+	ClientDao.SetClientInfo(loginClientDto)
+	//设置客户端登录信息-------------------------------------------------------------------------------END
+
+	holdOnClient(client, clientSocket)
 }

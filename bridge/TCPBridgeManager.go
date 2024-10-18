@@ -4,6 +4,7 @@ import (
 	"DairoNPS/dao/dto"
 	"net"
 	"sync"
+	"time"
 )
 
 //TCP桥接会话管理
@@ -59,6 +60,7 @@ func MakeBridge(client *dto.ClientDto, channel *dto.ChannelDto, proxySocket net.
 		ClientId:     client.Id,
 		ProxySocket:  proxySocket,
 		ClientSocket: clientSocket,
+		CreateTime:   time.Now().Unix(),
 	}
 	//this.BridgeListLock.synchronized {
 	//    this.BridgeList.add(bridge)

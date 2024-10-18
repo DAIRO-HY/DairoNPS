@@ -3,6 +3,7 @@ package ClientDao
 import (
 	"DairoNPS/dao/dto"
 	"DairoNPS/util/DBUtil"
+	"time"
 )
 
 // Add 添加一条客户端数据
@@ -51,9 +52,10 @@ func SetDataSize(id int, inAdd int64, outAdd int64) {
  * 设置客户端ip地址信息
  */
 func SetClientInfo(dto dto.ClientDto) {
+	lastLoginDate := time.Now().UnixNano() / int64(time.Millisecond)
 	sql :=
-		"update client set ip = ?,version=?,lastLoginDate=CURRENT_TIMESTAMP where id = ?"
-	DBUtil.ExecIgnoreError(sql, dto.Ip, dto.Version, dto.Id)
+		"update client set ip = ?, version=?, lastLoginDate = ? where id = ?"
+	DBUtil.ExecIgnoreError(sql, dto.Ip, dto.Version, lastLoginDate, dto.Id)
 }
 
 /**
