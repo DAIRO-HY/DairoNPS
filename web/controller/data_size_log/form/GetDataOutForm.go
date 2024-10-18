@@ -10,12 +10,12 @@ type GetDataOutForm struct {
 	/**
 	 * 入网流量
 	 */
-	InDatas []int64
+	InDatas []float64
 
 	/**
 	 * 出网流量
 	 */
-	OutDatas []int64
+	OutDatas []float64
 
 	/**
 	 * 单位

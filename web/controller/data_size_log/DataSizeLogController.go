@@ -44,8 +44,8 @@ func getDataSize(inForm form.GetDataInForm) form.GetDataOutForm {
 
 	label2DataForm := make(map[string]*dto.ChannelDataStatisticsDto)
 
-	//单位
-	//unit := ""
+	//记录某个时间点的最大数据流量
+	var maxDataSize int64 = 0
 	list := ChannelDataStatisticsDao.SelectList(inForm.ClientId, inForm.ChannelId, inForm.StartTime, inForm.EndTime)
 	for _, item := range list { //为每一个时间点去匹配数据
 		label := time.Unix(item.Date, 0).Format(labelFormat)
@@ -60,20 +60,47 @@ func getDataSize(inForm form.GetDataInForm) form.GetDataOutForm {
 			dataForm.InData += item.InData
 			dataForm.OutData += item.OutData
 		}
+
+		//寻炸最大值
+		if dataForm.InData > maxDataSize {
+			maxDataSize = dataForm.InData
+		}
+		if dataForm.OutData > maxDataSize {
+			maxDataSize = dataForm.OutData
+		}
 	}
 
+	//单位
+	unit := ""
+
 	//报表标题列表
-	labels := []string{}
+	var labels []string
 
 	//入网数据列表
-	inDatas := []int64{}
+	var inDatas []float64
 
 	//出网数据列表
-	outDatas := []int64{}
+	var outDatas []float64
+
+	var unitSize float64
+	if maxDataSize > 1024*1024*1024 {
+		unitSize = 1024 * 1024 * 1024
+		unit = "GB"
+	} else if maxDataSize > 1024*1024 {
+		unitSize = 1024 * 1024
+		unit = "MB"
+	} else if maxDataSize > 1024 {
+		unitSize = 1024
+		unit = "KB"
+	} else {
+		unitSize = 1
+		unit = "B"
+	}
 
 	loopTime := time.Unix(inForm.StartTime, 0)
 	endTime := time.Unix(inForm.EndTime+1, 0)
 
+	//为每个时间点生成数据
 	for loopTime.Before(endTime) {
 		label := loopTime.Format(labelFormat)
 		labels = append(labels, label)
@@ -82,8 +109,8 @@ func getDataSize(inForm form.GetDataInForm) form.GetDataOutForm {
 			inDatas = append(inDatas, 0)
 			outDatas = append(outDatas, 0)
 		} else {
-			inDatas = append(inDatas, dataSize.InData)
-			outDatas = append(outDatas, dataSize.OutData)
+			inDatas = append(inDatas, float64(dataSize.InData)/unitSize)
+			outDatas = append(outDatas, float64(dataSize.OutData)/unitSize)
 		}
 		if labelFormat == "2006-01-02 15:04:05" { //精确到秒
 			loopTime = loopTime.Add(1 * time.Second)
@@ -112,6 +139,6 @@ func getDataSize(inForm form.GetDataInForm) form.GetDataOutForm {
 		OutDatas: outDatas,
 
 		// 单位
-		Unit: "KB",
+		Unit: unit,
 	}
 }
