@@ -6,9 +6,8 @@
 </head>
 <body>
 {{template "top-bar" .}}
+{{template "data_size_chart" .}}
 {{template "speed_chart" .}}
-<!--<iframe th:if="${form.id != null}" class="bg-white border mt-3" th:src="'/admin/chart?clientId=' + ${form.id}"
-        style="width: 100%;height: 200px;"></iframe>-->
 <div class="m-3 p-2 bg-white rounded">
     <form action="/client_list/client_edit/edit">
         <input type="hidden" id="Id" name="Id">
@@ -113,7 +112,8 @@
 
     $(function () {
         const clientId = getParam("id")
-        if(clientId !== ""){//网速统计报表显示
+        if (clientId !== "") {//网速统计报表显示
+            showDataSizeChart(clientId)
             showSpeedChart("C" + clientId)
         }
         init()

@@ -12,11 +12,8 @@
 </head>
 <body>
 {{template "top-bar" .}}
+{{template "data_size_chart" .}}
 {{template "speed_chart" .}}
-<!--<iframe th:if="${form.id != null}" class="bg-white border mt-3" th:src="'/admin/data_log?type=1&targetId=' + ${form.id}"-->
-<!--        style="width: 100%;height: 360px;"></iframe>-->
-<!--<iframe th:if="${form.id != null}" class="bg-white border mt-3" th:src="'/admin/chart?channelId=' + ${form.id}"-->
-<!--        style="width: 100%;height: 200px;"></iframe>-->
 <div class="m-3 p-2 bg-white rounded">
     <form action="/channel_list/channel_edit/edit">
         <input type="hidden" name="ClientId">
@@ -196,7 +193,8 @@
 
     $(function () {
         const channelId = getParam("id")
-        if(channelId !== ""){//网速统计报表显示
+        if (channelId !== "") {//网速统计报表显示
+            showDataSizeChart(0, channelId)
             showSpeedChart("N" + channelId)
         }
 
@@ -218,8 +216,8 @@
     function init() {
         $.ajaxByData("/channel_list/channel_edit/info")
             .addAll({
-                id: getParam("id"),
-                clientId: getParam("clientId")
+                Id: getParam("id"),
+                ClientId: getParam("clientId")
             })
             .success(data => {
                 $("form").bindValue(data)
@@ -239,22 +237,22 @@
     /**
      * 添加IP地址点击事件
      */
-        // function onAddAclIPClick() {
-        //     const ip = $("#aclIp").val()
-        //     addIp(ip)
-        // }
+    // function onAddAclIPClick() {
+    //     const ip = $("#aclIp").val()
+    //     addIp(ip)
+    // }
 
-        // function aclShowState() {
-        //     if ($("[name='aclState']:checked").val() === "0") {
-        //         $("#aclIpRow").hide()
-        //     } else {
-        //         $("#aclIpRow").show()
-        //     }
-        // }
-        //
-        // function addIp(ip) {
-        //     $("#aclIpDiv").append(aclIpHtml.replace(/\{IP\}/g, ip))
-        // }
+    // function aclShowState() {
+    //     if ($("[name='aclState']:checked").val() === "0") {
+    //         $("#aclIpRow").hide()
+    //     } else {
+    //         $("#aclIpRow").show()
+    //     }
+    // }
+    //
+    // function addIp(ip) {
+    //     $("#aclIpDiv").append(aclIpHtml.replace(/\{IP\}/g, ip))
+    // }
 </script>
 </body>
 </html>

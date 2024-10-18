@@ -6,8 +6,8 @@ type ChannelDataStatisticsDto struct {
 	//隧道id
 	ChannelId int
 
-	//年月日时分
-	Ymdhm int64
+	//年月日时分秒
+	Date int64
 
 	//入网流量
 	InData int64

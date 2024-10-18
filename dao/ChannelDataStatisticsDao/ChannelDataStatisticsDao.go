@@ -3,7 +3,6 @@ package ChannelDataStatisticsDao
 import (
 	"DairoNPS/dao/dto"
 	"DairoNPS/util/DBUtil"
-	"strconv"
 	"time"
 )
 
@@ -15,43 +14,36 @@ import (
  */
 func Add(channelId int, inData int64, outData int64) {
 
-	//年月日时分
-	ymdhm, _ := strconv.ParseInt(time.Now().Format("200601021504"), 10, 64)
+	//当前时间戳（秒）
+	date := time.Now().Unix()
 	sql :=
-		"insert into channel_data_statistics(channelId,ymdhm,inData,outData)values(?,?,?,?)"
-	DBUtil.ExecIgnoreError(sql, channelId, ymdhm, inData, outData)
+		"insert into channel_data_statistics(channelId,date,inData,outData)values(?,?,?,?)"
+	DBUtil.ExecIgnoreError(sql, channelId, date, inData, outData)
 }
 
 /**
  * 获取数据流量日志列表
- * @param targetId 要统计的目标ID
- * @param type 统计类型, 1:隧道  2:数据转发
- * @param ymdhmStart 统计时间（分）开始
- * @param ymdhmEnd 统计时间（分）结束
- * @param groupBy 分组
+ * @param clientId 客户端id
+ * @param channelId 隧道ID
+ * @param startTime 开始时间
+ * @param endTime 结束时间
+ * @return 数据流量统计列表
  */
-func GetList(
-	targetId int,
-	mode int,
-	ymdhmStart int64,
-	ymdhmEnd int64,
-	groupBy string,
-) map[int64]dto.ChannelDataStatisticsDto {
-	sql :=
-		"select $groupBy,sum(inData),sum(outData) from data_log where targetId = ? and type = ? and ymdhm between ? and ? group by ?"
-
-	list := DBUtil.SelectToListMap(sql, targetId, mode, ymdhmStart, ymdhmEnd, groupBy)
-
-	dateToData := make(map[int64]dto.ChannelDataStatisticsDto)
-	for _, item := range list {
-		inData, _ := strconv.ParseInt(item["inData"], 10, 64)
-		outData, _ := strconv.ParseInt(item["outData"], 10, 64)
-		dto := dto.ChannelDataStatisticsDto{
-			InData:  inData,
-			OutData: outData,
-		}
-		date, _ := strconv.ParseInt(item["date"], 10, 64)
-		dateToData[date] = dto
+func SelectList(
+	clientId int,
+	channelId int,
+	startTime int64,
+	endTime int64,
+) []*dto.ChannelDataStatisticsDto {
+	var sql string
+	if clientId == 0 && channelId == 0 { //所有的统计
+		sql = "select date,inData,outData from channel_data_statistics where date between ? and ?"
+		return DBUtil.SelectList[dto.ChannelDataStatisticsDto](sql, startTime, endTime)
+	} else if clientId != 0 { //统计某个客户端
+		sql = "select date,inData,outData from channel_data_statistics where channelId in (select id from channel where clientId = ?) and date between ? and ?"
+		return DBUtil.SelectList[dto.ChannelDataStatisticsDto](sql, clientId, startTime, endTime)
+	} else { //统计某个隧道
+		sql = "select date,inData,outData from channel_data_statistics where channelId = ? and date between ? and ?"
+		return DBUtil.SelectList[dto.ChannelDataStatisticsDto](sql, channelId, startTime, endTime)
 	}
-	return dateToData
 }

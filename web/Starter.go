@@ -38,9 +38,10 @@ func renderTemplate(w http.ResponseWriter, tmpl string) {
 	tmplPath := filepath.Join("web/templates", tmpl)
 	t, err := template.ParseFiles(
 		tmplPath,
-		"web/templates/include/speed_chart.html",
 		"web/templates/include/head.html",
 		"web/templates/include/top-bar.html",
+		"web/templates/include/data_size_chart.html",
+		"web/templates/include/speed_chart.html",
 	)
 	if err != nil {
 		http.Error(w, "Error loading template", http.StatusInternalServerError)
@@ -112,11 +113,16 @@ func ApiHandler(controller any) func(writer http.ResponseWriter, request *http.R
 		switch returnBody := body.(type) {
 		case string:
 			writer.Write([]byte(returnBody))
+		case int:
+			writer.Write([]byte(strconv.Itoa(returnBody)))
 		case int8:
-		case int16:
-		case int32:
-		case int64:
 			writer.Write([]byte(strconv.Itoa(int(returnBody))))
+		case int16:
+			writer.Write([]byte(strconv.Itoa(int(returnBody))))
+		case int32:
+			writer.Write([]byte(strconv.Itoa(int(returnBody))))
+		case int64:
+			writer.Write([]byte(strconv.FormatInt(returnBody, 10)))
 		case error:
 			// 设置 HTTP 状态码
 			writer.WriteHeader(http.StatusInternalServerError) // 设置状态码
@@ -163,7 +169,7 @@ func getForm(request *http.Request, argType reflect.Type) any {
 
 		// 设置字段值（这里我们设置为示例值）
 		switch field.Type.Kind() {
-		case reflect.Int:
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 
 			// 设置整数字段
 			intValue, _ := strconv.ParseInt(value[0], 10, 64)

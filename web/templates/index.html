@@ -68,10 +68,12 @@
         </div>
     </div>
 </div>
+{{template "data_size_chart" .}}
 {{template "speed_chart" .}}
 <script>
     // $(loadData)
     $(function(){
+        showDataSizeChart()
         showSpeedChart()
     })
 
