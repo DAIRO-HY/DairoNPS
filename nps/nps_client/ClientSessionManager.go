@@ -1,10 +1,10 @@
-package client
+package nps_client
 
 import (
-	"DairoNPS/client/HeaderUtil"
 	"DairoNPS/dao/dto"
-	"DairoNPS/pool"
-	"DairoNPS/proxy"
+	"DairoNPS/nps/nps_channel_proxy"
+	"DairoNPS/nps/nps_client/HeaderUtil"
+	"DairoNPS/nps/nps_pool"
 	"net"
 	"strconv"
 	"sync"
@@ -75,10 +75,10 @@ func holdOnClient(client *dto.ClientDto, tcp net.Conn) {
 	clientSessionLock.Unlock()
 
 	//初始化客户端连接池
-	pool.InitEmptyPoolByClient(client.Id)
+	nps_pool.InitEmptyPoolByClient(client.Id)
 
 	//开启该客户端下所有隧道监听
-	proxy.AcceptClient(client)
+	nps_channel_proxy.AcceptClient(client)
 	session.Start()
 }
 
@@ -130,7 +130,7 @@ func removeSession(closeSession *ClientSession) {
 		if session == closeSession { //当前没有加入新的回话
 			delete(clientSessionMap, clientId)
 		} else { //由于关闭延迟,有新的回话加入,但是在之前已经关掉了所有的代理监听,所以这里需要再次开启代理监听,概率很小，但不能排除
-			go proxy.AcceptClient(session.Client)
+			go nps_channel_proxy.AcceptClient(session.Client)
 		}
 	}
 	clientSessionLock.Unlock()
@@ -142,10 +142,10 @@ func removeSession(closeSession *ClientSession) {
 func closeProxyAndPoolAndBridge(clientId int) {
 
 	//关闭代理监听
-	proxy.CloseByClient(clientId)
+	nps_channel_proxy.CloseByClient(clientId)
 
 	//关闭所有TCP连接池
-	pool.CloseByClient(clientId)
+	nps_pool.CloseByClient(clientId)
 
 	//关闭所有UDP连接池
 	//try {

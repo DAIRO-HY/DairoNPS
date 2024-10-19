@@ -1,9 +1,9 @@
-package client
+package nps_client
 
 import (
-	"DairoNPS/client/HeaderUtil"
 	"DairoNPS/constant/CLSConfig"
 	"DairoNPS/dao/dto"
+	"DairoNPS/nps/nps_client/HeaderUtil"
 	"DairoNPS/util/SecurityUtil"
 	"DairoNPS/util/TcpUtil"
 	"errors"

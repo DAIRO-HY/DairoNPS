@@ -1,4 +1,4 @@
-package bridge
+package nps_bridge
 
 import (
 	"DairoNPS/dao/dto"

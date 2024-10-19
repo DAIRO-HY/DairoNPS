@@ -1,10 +1,10 @@
 package client
 
 import (
-	"DairoNPS/client"
 	"DairoNPS/dao/ChannelDao"
 	"DairoNPS/dao/ClientDao"
 	"DairoNPS/extension/Number"
+	"DairoNPS/nps/nps_client"
 	"DairoNPS/web"
 	"DairoNPS/web/controller/client/form"
 	"net/http"
@@ -31,7 +31,7 @@ func List() any {
 			EnableState: dto.EnableState,
 			InData:      Number.ToDataSize(dto.InData),
 			OutData:     Number.ToDataSize(dto.OutData),
-			IsOnline:    client.IsOnline(dto.Id),
+			IsOnline:    nps_client.IsOnline(dto.Id),
 		}
 		forms = append(forms, frm)
 	}
@@ -47,7 +47,7 @@ type DeleteForm struct {
 func Delete(form DeleteForm) {
 
 	//关闭代理监听
-	client.Close(form.Id)
+	nps_client.Close(form.Id)
 	ClientDao.Delete(form.Id)
 	ChannelDao.DeleteByClient(form.Id)
 }
@@ -64,6 +64,6 @@ func SetState(form SetStateForm) {
 		ClientDao.SetEnableState(form.Id, 1)
 	} else {
 		ClientDao.SetEnableState(form.Id, 0)
-		client.Close(form.Id)
+		nps_client.Close(form.Id)
 	}
 }

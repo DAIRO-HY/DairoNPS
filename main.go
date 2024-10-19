@@ -1,8 +1,8 @@
 package main
 
 import (
-	"DairoNPS/client"
-	"DairoNPS/pool"
+	"DairoNPS/nps/nps_client"
+	"DairoNPS/nps/nps_pool"
 	"DairoNPS/web"
 
 	_ "DairoNPS/web/controller/bridge_list"
@@ -18,7 +18,7 @@ import (
 func init() {
 
 	// 初始化共享接口
-	pool.Csmi = &client.ClientSessionManager{}
+	nps_pool.Csmi = &nps_client.ClientSessionManager{}
 }
 
 var list = make([]int, 0)
@@ -29,5 +29,5 @@ func main() {
 	go web.Start()
 
 	//启动客户端监听
-	client.Accept()
+	nps_client.Accept()
 }

@@ -1,8 +1,8 @@
 package bridge_list
 
 import (
-	"DairoNPS/bridge"
 	"DairoNPS/dao/ClientDao"
+	"DairoNPS/nps/nps_bridge"
 	"DairoNPS/web"
 	"DairoNPS/web/controller/bridge_list/form"
 	"net/http"
@@ -31,7 +31,7 @@ func loadData(search form.BridgeInForm) []form.BridgeOutForm {
 
 	//当前时间戳
 	nowTime := time.Now().Unix()
-	bridgeList := bridge.GetBridgeList()
+	bridgeList := nps_bridge.GetBridgeList()
 	for _, it := range bridgeList {
 		if search.ClientId != 0 && search.ClientId != it.ClientId {
 			continue

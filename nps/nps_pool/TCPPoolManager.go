@@ -1,9 +1,9 @@
-package pool
+package nps_pool
 
 import (
-	"DairoNPS/client/ClientSessionManagerInterface"
-	"DairoNPS/client/HeaderUtil"
 	"DairoNPS/constant/CLSConfig"
+	"DairoNPS/nps/nps_client/ClientSessionManagerInterface"
+	"DairoNPS/nps/nps_client/HeaderUtil"
 	"log"
 	"net"
 	"strconv"

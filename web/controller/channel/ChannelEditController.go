@@ -1,14 +1,14 @@
 package channel
 
 import (
-	"DairoNPS/client"
 	"DairoNPS/dao/ChannelDao"
 	"DairoNPS/dao/ClientDao"
 	"DairoNPS/dao/dto"
 	"DairoNPS/extension/Bool"
 	"DairoNPS/extension/Date"
 	"DairoNPS/extension/Number"
-	"DairoNPS/proxy"
+	"DairoNPS/nps/nps_channel_proxy"
+	"DairoNPS/nps/nps_client"
 	"DairoNPS/web"
 	"DairoNPS/web/controller"
 	"DairoNPS/web/controller/channel/form"
@@ -122,10 +122,10 @@ func Edit(form form.ChannelEditForm) any {
 	//UDPBridgeManager.closeByChannel(channelId)
 
 	//关闭代理监听
-	proxy.CloseByChannel(channel.Id)
+	nps_channel_proxy.CloseByChannel(channel.Id)
 	clientDto := ClientDao.SelectOne(channel.ClientId)
-	if client.IsOnline(clientDto.Id) {
-		proxy.AcceptClient(clientDto) //重新开启监听该客户端
+	if nps_client.IsOnline(clientDto.Id) {
+		nps_channel_proxy.AcceptClient(clientDto) //重新开启监听该客户端
 	}
 	return nil
 }

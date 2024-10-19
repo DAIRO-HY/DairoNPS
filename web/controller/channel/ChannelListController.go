@@ -1,12 +1,12 @@
 package channel
 
 import (
-	"DairoNPS/client"
 	"DairoNPS/dao/ChannelDao"
 	"DairoNPS/dao/ClientDao"
 	"DairoNPS/extension/Bool"
 	"DairoNPS/extension/Number"
-	"DairoNPS/proxy"
+	"DairoNPS/nps/nps_channel_proxy"
+	"DairoNPS/nps/nps_client"
 	"DairoNPS/web"
 	"DairoNPS/web/controller/channel/form"
 	"net/http"
@@ -75,7 +75,7 @@ type DeleteForm struct {
 func Delete(form DeleteForm) {
 
 	//关闭代理监听
-	proxy.CloseByChannel(form.Id)
+	nps_channel_proxy.CloseByChannel(form.Id)
 	ChannelDao.Delete(form.Id)
 }
 
@@ -90,13 +90,13 @@ func setState(form SetStateForm) {
 	if channel.EnableState == 0 {
 		ChannelDao.SetEnableState(form.Id, 1)
 		clientDto := ClientDao.SelectOne(channel.ClientId)
-		if client.IsOnline(clientDto.Id) {
-			proxy.AcceptClient(clientDto) //重新开启监听该客户端
+		if nps_client.IsOnline(clientDto.Id) {
+			nps_channel_proxy.AcceptClient(clientDto) //重新开启监听该客户端
 		}
 	} else {
 		ChannelDao.SetEnableState(form.Id, 0)
 
 		//关闭代理监听
-		proxy.CloseByChannel(channel.Id)
+		nps_channel_proxy.CloseByChannel(channel.Id)
 	}
 }

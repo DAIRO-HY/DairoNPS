@@ -1,9 +1,9 @@
-package proxy
+package nps_channel_proxy
 
 import (
-	"DairoNPS/bridge"
 	"DairoNPS/dao/ChannelDao"
 	"DairoNPS/dao/dto"
+	"DairoNPS/nps/nps_bridge"
 	"DairoNPS/util/StatisticsUtil"
 	"fmt"
 	"net"
@@ -83,7 +83,7 @@ func CloseByChannel(channelId int) {
 	proxyAcceptLock.Unlock()
 
 	//关闭隧道所有正在通信的连接
-	bridge.CloseByChannel(channelId)
+	nps_bridge.CloseByChannel(channelId)
 }
 
 // 关闭某个客户端下所有的隧道
@@ -96,7 +96,7 @@ func CloseByClient(clientId int) {
 	}
 
 	//关闭客户端所有正在通信的连接
-	bridge.CloseByClient(clientId)
+	nps_bridge.CloseByClient(clientId)
 }
 
 // 停止监听端口

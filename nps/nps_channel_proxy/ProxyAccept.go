@@ -1,9 +1,9 @@
-package proxy
+package nps_channel_proxy
 
 import (
-	"DairoNPS/bridge"
 	"DairoNPS/dao/dto"
-	"DairoNPS/pool"
+	"DairoNPS/nps/nps_bridge"
+	"DairoNPS/nps/nps_pool"
 	"fmt"
 	"net"
 )
@@ -60,12 +60,12 @@ func (mine *ProxyAccept) accept() {
 		}
 
 		//NPS客户端Socket
-		clientSocket := pool.GetAndAddPool(mine.Channel.ClientId)
+		clientSocket := nps_pool.GetAndAddPool(mine.Channel.ClientId)
 		if clientSocket == nil { //没有可用的Socket
 			proxySocket.Close()
 			continue
 		}
-		bridge.MakeBridge(mine.Client, mine.Channel, proxySocket, clientSocket)
+		nps_bridge.MakeBridge(mine.Client, mine.Channel, proxySocket, clientSocket)
 	}
 	mine.isFinished = true
 }

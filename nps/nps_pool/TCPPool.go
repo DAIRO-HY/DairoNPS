@@ -1,4 +1,4 @@
-package pool
+package nps_pool
 
 import (
 	"net"

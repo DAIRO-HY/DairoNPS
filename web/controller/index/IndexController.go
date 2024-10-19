@@ -1,12 +1,12 @@
 package index
 
 import (
-	"DairoNPS/bridge"
-	"DairoNPS/client"
 	"DairoNPS/dao/SystemConfigDao"
 	"DairoNPS/extension/Number"
-	"DairoNPS/pool"
-	"DairoNPS/proxy"
+	"DairoNPS/nps/nps_bridge"
+	"DairoNPS/nps/nps_channel_proxy"
+	"DairoNPS/nps/nps_client"
+	"DairoNPS/nps/nps_pool"
 	"DairoNPS/web"
 	"DairoNPS/web/controller/index/form"
 	"encoding/json"
@@ -62,14 +62,14 @@ func data(w http.ResponseWriter, r *http.Request) {
 func getData() form.IndexOutForm {
 	systemDto := SystemConfigDao.SelectOne()
 	outForm := form.IndexOutForm{
-		OnlineClientCount: client.OnlineCount(),                 //在线客户端数量
-		TcpBridgeCount:    bridge.GetBridgeCount(),              //当前TCP会话数
-		TcpPoolCount:      pool.GetPoolCount(),                  //当前TCP连接池
+		OnlineClientCount: nps_client.OnlineCount(),             //在线客户端数量
+		TcpBridgeCount:    nps_bridge.GetBridgeCount(),          //当前TCP会话数
+		TcpPoolCount:      nps_pool.GetPoolCount(),              //当前TCP连接池
 		UdpSessionCount:   0,                                    //当前UDP会话数
 		UdpPoolCount:      0,                                    //当前UDP连接池
 		InDataTotal:       Number.ToDataSize(systemDto.InData),  //入网流量
 		OutDataTotal:      Number.ToDataSize(systemDto.OutData), //出网流量
-		ProxyCount:        proxy.GetProxyCount(),                //当前正在代理数
+		ProxyCount:        nps_channel_proxy.GetProxyCount(),    //当前正在代理数
 		//ForwardCount:       CLSStatus.forwardCount,               //当前正在代理服务数
 		//ForwardBridgeCount: CLSStatus.forwardBridgeCount,         //代理服务会话数
 	}

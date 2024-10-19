@@ -1,12 +1,12 @@
 package client
 
 import (
-	"DairoNPS/client"
 	"DairoNPS/dao/ClientDao"
 	"DairoNPS/dao/dto"
 	"DairoNPS/extension/Bool"
 	"DairoNPS/extension/Date"
 	"DairoNPS/extension/Number"
+	"DairoNPS/nps/nps_client"
 	"DairoNPS/web"
 	"DairoNPS/web/controller"
 	"DairoNPS/web/controller/client/form"
@@ -33,7 +33,7 @@ func Info(inForm form.ClientEditForm) form.ClientEditForm {
 			EnableState:   Bool.Is(clientDto.EnableState == 0, "关闭", "开启"),
 			InData:        Number.ToDataSize(clientDto.InData),
 			OutData:       Number.ToDataSize(clientDto.OutData),
-			OnlineState:   Bool.Is(client.IsOnline(clientDto.Id), "在线", "离线"),
+			OnlineState:   Bool.Is(nps_client.IsOnline(clientDto.Id), "在线", "离线"),
 			LastLoginDate: Date.FormatByTimespan(clientDto.LastLoginDate),
 		}
 	}
@@ -69,7 +69,7 @@ func Edit(form form.ClientEditForm) any {
 	} else {
 		ClientDao.Update(clientDto)
 	}
-	client.Close(form.Id)
+	nps_client.Close(form.Id)
 	return nil
 }
 
