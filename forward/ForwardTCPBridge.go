@@ -1,0 +1,142 @@
+package forward
+
+import (
+	"DairoNPS/constant/CLSConfig"
+	"DairoNPS/dao/dto"
+	"DairoNPS/util/TcpUtil"
+	"net"
+)
+
+/**
+ * 数据转发桥接管理
+ * @param forwardDto 隧道信息
+ * @param ProxyTCP TCP代理服务端Socket
+ * @param TargetTCP 内网穿透客户端Socket
+ */
+type ForwardBridge struct {
+
+	//转发明细
+	ForwardDto dto.ForwardDto
+
+	//转发代理端的TCP
+	ProxyTCP net.Conn
+
+	//目标端的TCP
+	TargetTCP net.Conn
+
+	///**
+	// * 最后一次读取到数据的时间,用来判断Socket是否存活
+	// */
+	//var lastSessionTime = System.currentTimeMillis()
+
+	/**
+	 * 本次连接入网总计
+	 */
+	inDataTotal int64
+
+	/**
+	 * 本次连接出网总计
+	 */
+	outDataTotal int64
+
+	/**
+	 * 代理连接入方向是否被关闭
+	 */
+	isProxyReadClosed bool
+
+	/**
+	 * 目标端的du操作关闭标识
+	 */
+	isTargetReadClosed bool
+}
+
+/**
+ * 开始传输数据
+ */
+func (mine *ForwardBridge) Start() {
+	go mine.receiveByForwardSendToTarget()
+	go mine.receiveByTargetSendToForward()
+}
+
+/**
+ * 从代理服务接收数据发送到目标端
+ */
+func (mine *ForwardBridge) receiveByForwardSendToTarget() {
+	data := make([]byte, CLSConfig.READ_CACHE_SIZE)
+	for {
+		length, err := mine.ProxyTCP.Read(data)
+		if err != nil {
+			break
+		}
+
+		//原子递增
+		//atomic.AddInt64(&mine.channelDataSize.InData, int64(length))
+
+		//从代理端读取到的数据立即发送目标端
+		err = TcpUtil.WriteAll(mine.TargetTCP, data[:length])
+		if err != nil {
+			break
+		}
+	}
+
+	//关闭代理端的读操作
+	mine.ProxyTCP.(*net.TCPConn).CloseRead()
+
+	//关闭目标端的写操作
+	mine.TargetTCP.(*net.TCPConn).CloseWrite()
+
+	//标记代理端读操作已经关闭
+	mine.isProxyReadClosed = true
+	mine.recycle()
+}
+
+/**
+ * 从目标端接收发送到代理端
+ */
+func (mine *ForwardBridge) receiveByTargetSendToForward() {
+	data := make([]byte, CLSConfig.READ_CACHE_SIZE)
+	for {
+		length, err := mine.TargetTCP.Read(data)
+		if err != nil {
+			break
+		}
+
+		//原子递增
+		//atomic.AddInt64(&mine.channelDataSize.InData, int64(length))
+
+		//将读取到的数据立即发送客户端
+		err = TcpUtil.WriteAll(mine.ProxyTCP, data[:length])
+		if err != nil {
+			break
+		}
+	}
+
+	//关闭目标端的读操作
+	mine.TargetTCP.(*net.TCPConn).CloseRead()
+
+	//关闭代理端的写操作
+	mine.ProxyTCP.(*net.TCPConn).CloseWrite()
+
+	//标记目标读操作已经关闭
+	mine.isTargetReadClosed = true
+	mine.recycle()
+}
+
+/**
+ * 资源回收
+ */
+func (mine *ForwardBridge) recycle() {
+	if mine.isProxyReadClosed && mine.isTargetReadClosed {
+		mine.TargetTCP.Close()
+		mine.ProxyTCP.Close()
+		removeBridge(mine)
+	}
+}
+
+/**
+ * 关闭连接
+ */
+func (mine *ForwardBridge) shutdown() {
+	mine.TargetTCP.Close()
+	mine.ProxyTCP.Close()
+}

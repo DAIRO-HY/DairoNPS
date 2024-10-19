@@ -56,6 +56,7 @@ func (mine *ProxyAccept) accept() {
 		}
 
 		if !mine.hasAccess(proxySocket) { //判断是否有访问权限
+			proxySocket.Close()
 			continue
 		}
 
