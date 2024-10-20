@@ -5,6 +5,7 @@ import (
 	"DairoNPS/dao/dto"
 	"DairoNPS/util/ChannelStatisticsUtil"
 	"DairoNPS/util/TcpUtil"
+	"log"
 	"net"
 	"strconv"
 	"sync/atomic"
@@ -77,6 +78,7 @@ func (mine *TCPBridge) sendHeaderToClient() {
 	data = append(data, headerData...)
 	err := TcpUtil.WriteAll(mine.ClientSocket, data)
 	if err != nil {
+		log.Println("-->往客户端发送头部失败")
 		mine.ClientSocket.Close()
 	}
 }

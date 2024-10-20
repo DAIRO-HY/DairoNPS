@@ -87,8 +87,6 @@ func Add(clientSocket net.Conn) {
  * @param clientID 客户端ID
  */
 func get(clientID int) net.Conn {
-
-	//TODO: 这里应该每个客户端创建一把锁
 	poolLock.Lock()
 
 	//客户端连接池
