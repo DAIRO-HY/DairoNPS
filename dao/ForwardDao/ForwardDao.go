@@ -3,7 +3,6 @@ package ForwardDao
 import (
 	"DairoNPS/dao/dto"
 	"DairoNPS/util/DBUtil"
-	"time"
 )
 
 //数据转发操作
@@ -11,18 +10,15 @@ import (
 /**
  * 添加一条隧道
  */
-func Add(dto dto.ForwardDto) {
-	updateDate := time.Now().UnixNano() / int64(time.Millisecond)
+func Add(dto *dto.ForwardDto) {
 	sql :=
-		"insert into forward(name,port,targetPort,aclState,enableState,updateDate)values(?,?,?,?,?,?)"
+		"insert into forward(name,port,targetPort,aclState)values(?,?,?,?)"
 	id := DBUtil.InsertIgnoreError(
 		sql,
 		dto.Name,
 		dto.Port,
 		dto.TargetPort,
 		dto.AclState,
-		dto.EnableState,
-		updateDate,
 	)
 	dto.Id = int(id)
 }
@@ -41,7 +37,7 @@ func SelectOne(id int) *dto.ForwardDto {
  * 获取所有数据
  * @return 隧道Dto
  */
-func selectAll() []*dto.ForwardDto {
+func SelectAll() []*dto.ForwardDto {
 	sql := "select * from forward"
 	return DBUtil.SelectList[dto.ForwardDto](sql)
 }
@@ -51,29 +47,37 @@ func selectAll() []*dto.ForwardDto {
  * @return 隧道Dto
  */
 func SelectActive() []*dto.ForwardDto {
-	sql := "select * from forward where enableState := 1"
+	sql := "select * from forward where enableState = 1"
 	return DBUtil.SelectList[dto.ForwardDto](sql)
+}
+
+// 通过端口查询一条数据
+func SelectByPort(port int) *dto.ForwardDto {
+	sql := "select * from forward where port = ?"
+	return DBUtil.SelectOne[dto.ForwardDto](sql, port)
 }
 
 /**
  * 更新一条数据
  */
-func Update(dto dto.ForwardDto) {
-	updateDate := time.Now().UnixNano() / int64(time.Millisecond)
+func Update(dto *dto.ForwardDto) {
 	sql :=
-		"update forward set name = ?,port=?,targetPort=?,enableState=?,aclState=?,remark=?,updateDate=? where id = ? and updateDate=?"
-	DBUtil.Exec(
+		"update forward set name = ?,port=?,targetPort=?,aclState=?,remark=? where id = ?"
+	DBUtil.ExecIgnoreError(
 		sql,
 		dto.Name,
 		dto.Port,
 		dto.TargetPort,
-		dto.EnableState,
 		dto.AclState,
 		dto.Remark,
-		updateDate,
 		dto.Id,
-		dto.UpdateDate,
 	)
+}
+
+// 设置可用状态
+func SetEnableState(id int, state int) {
+	sql := "update forward set enableState = ? where id = ?"
+	DBUtil.ExecIgnoreError(sql, state, id)
 }
 
 /**
@@ -81,7 +85,7 @@ func Update(dto dto.ForwardDto) {
  */
 func SetDataLen(dto dto.ForwardDto) {
 	sql := "update forward set inData = ?,outDataTotal=? where id = ?"
-	DBUtil.Exec(sql, dto.InDataTotal, dto.OutDataTotal, dto.Id)
+	DBUtil.Exec(sql, dto.InData, dto.OutData, dto.Id)
 }
 
 /**

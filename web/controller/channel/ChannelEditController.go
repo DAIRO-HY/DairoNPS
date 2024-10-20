@@ -3,6 +3,7 @@ package channel
 import (
 	"DairoNPS/dao/ChannelDao"
 	"DairoNPS/dao/ClientDao"
+	"DairoNPS/dao/ForwardDao"
 	"DairoNPS/dao/dto"
 	"DairoNPS/extension/Bool"
 	"DairoNPS/extension/Date"
@@ -131,45 +132,51 @@ func Edit(form form.ChannelEditForm) any {
 }
 
 // 表单验证
-func validate(form form.ChannelEditForm) error {
-	if len(form.Name) == 0 {
+func validate(inForm form.ChannelEditForm) error {
+	if len(inForm.Name) == 0 {
 		return &controller.BusinessException{
 			Message: "请填写隧道名",
 		}
 	}
-	if len(form.Name) > 32 {
+	if len(inForm.Name) > 32 {
 		return &controller.BusinessException{
 			Message: "隧道名长度不能超过32个字符",
 		}
 	}
-	//if len(form.ServerPort) == 0 {
+	//if len(inForm.ServerPort) == 0 {
 	//	return &controller.BusinessException{
 	//		Message: "服务端口必须设置",
 	//	}
 	//}
-	//port, err := strconv.ParseInt(form.ServerPort, 10, 64)
+	//port, err := strconv.ParseInt(inForm.ServerPort, 10, 64)
 	//if err != nil {
 	//	return &controller.BusinessException{
 	//		Message: "服务端口必须是一个数字",
 	//	}
 	//}
-	if form.ServerPort < 0 || form.ServerPort > 65535 {
+	if inForm.ServerPort < 0 || inForm.ServerPort > 65535 {
 		return &controller.BusinessException{
 			Message: "服务端口必须在0到65535之间",
 		}
 	}
-	portChannel := ChannelDao.SelectByPort(form.ServerPort)
-	if form.Id == 0 { //创建时
+	portChannel := ChannelDao.SelectByPort(inForm.ServerPort)
+	if inForm.Id == 0 { //创建时
 		if portChannel != nil {
 			return &controller.BusinessException{
-				Message: fmt.Sprintf("端口:%d已经被其他隧道占用", form.ServerPort),
+				Message: fmt.Sprintf("端口:%d已经被其他隧道占用", inForm.ServerPort),
 			}
 		}
 	} else {
-		if portChannel != nil && portChannel.Id != form.Id {
+		if portChannel != nil && portChannel.Id != inForm.Id {
 			return &controller.BusinessException{
-				Message: fmt.Sprintf("端口:%d已经被其他隧道占用", form.ServerPort),
+				Message: fmt.Sprintf("端口:%d已经被其他隧道占用", inForm.ServerPort),
 			}
+		}
+	}
+	portForward := ForwardDao.SelectByPort(inForm.ServerPort)
+	if portForward != nil {
+		return &controller.BusinessException{
+			Message: fmt.Sprintf("端口:%d已被端口转发:%s 占用", portForward.Port, portForward.Name),
 		}
 	}
 	return nil

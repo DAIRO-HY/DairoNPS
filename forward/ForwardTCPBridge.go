@@ -16,7 +16,7 @@ import (
 type ForwardBridge struct {
 
 	//转发明细
-	ForwardDto dto.ForwardDto
+	ForwardDto *dto.ForwardDto
 
 	//转发代理端的TCP
 	ProxyTCP net.Conn

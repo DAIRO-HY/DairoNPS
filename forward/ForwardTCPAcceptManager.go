@@ -26,12 +26,12 @@ var forwardIdToForwardAcceptLock sync.Mutex
 /**
  * 开启端口监听
  */
-func StartProxy() {
+func StartAcceptAll() {
 
 	//开启NPS客户端ID下所有的隧道
 	list := ForwardDao.SelectActive()
 	for _, item := range list {
-		accept(*item)
+		Accept(item)
 	}
 }
 
@@ -39,7 +39,7 @@ func StartProxy() {
  * 开启端口监听
  * @param forwardDto 隧道信息
  */
-func accept(forwardDto dto.ForwardDto) {
+func Accept(forwardDto *dto.ForwardDto) {
 	forwardIdToForwardAcceptLock.Lock()
 	old := forwardIdToForwardAccept[forwardDto.Id]
 	if old != nil { //若该隧道已经在监听,则先停止
@@ -48,10 +48,11 @@ func accept(forwardDto dto.ForwardDto) {
 
 	listen, err := net.Listen("tcp", ":"+strconv.Itoa(forwardDto.Port))
 	if err != nil {
-		fmt.Printf("端口:%d 监听失败。err:%p\n", forwardDto.Port, err)
+		fmt.Printf("转发端口:%d 监听失败。err:%p\n", forwardDto.Port, err)
 		forwardIdToForwardAcceptLock.Unlock()
 		return
 	}
+	fmt.Printf("转发端口:%d 监听开始", forwardDto.Port)
 	tcpAccept := &ForwardTCPAccept{
 		forwardDto: forwardDto,
 		listen:     listen,

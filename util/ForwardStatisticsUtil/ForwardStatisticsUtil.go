@@ -1,20 +1,21 @@
-package StatisticsUtil
+package ForwardStatisticsUtil
 
 import (
 	"DairoNPS/dao/ChannelDao"
 	"DairoNPS/dao/ChannelDataStatisticsDao"
 	"DairoNPS/dao/ClientDao"
+	"DairoNPS/dao/ForwardDao"
 	"DairoNPS/dao/SystemConfigDao"
 	"DairoNPS/dao/dto"
 	"sync"
 	"time"
 )
 
-// 隧道流量总和
-var ChannelDataSizeMap = make(map[int]*ChannelDataSizeLog)
+// 端口流量总和
+var ForwardDataSizeMap = make(map[int]*ForwardDataSize)
 
 // 统计锁
-var Lock sync.Mutex
+var lock sync.Mutex
 
 // 流量统计
 func init() {
@@ -25,56 +26,55 @@ func init() {
 func timer() {
 	for {
 		time.Sleep(10 * time.Second)
-		Lock.Lock()
-		saveStatistics()
-		Lock.Unlock()
+		lock.Lock()
+		save()
+		lock.Unlock()
 	}
 }
 
-// 加载隧道统计数据
-func LoadChannelDataLog() {
-	Lock.Lock()
-	channelList := ChannelDao.SelectAll()
+// 加载统计数据
+func InitForwardDataSizeMap() {
+	lock.Lock()
+	forwardList := ForwardDao.SelectAll()
 
 	//隧道ID对应的隧道信息
-	channelMap := make(map[int]*dto.ChannelDto)
-	for _, channel := range channelList {
-		if channel.EnableState == 0 {
+	forwardDtoMap := make(map[int]*dto.ForwardDto)
+	for _, forwardDto := range forwardList {
+		if forwardDto.EnableState == 0 {
 			continue
 		}
-		channelMap[channel.Id] = channel
+		forwardDtoMap[forwardDto.Id] = forwardDto
 	}
-	for _, channel := range channelMap {
-		if ChannelDataSizeMap[channel.Id] != nil { //该隧道已经在统计
+	for _, forwardDto := range forwardDtoMap {
+		if ForwardDataSizeMap[forwardDto.Id] != nil { //该隧道已经在统计
 			continue
 		}
 
 		//加入到隧道流量统计
-		ChannelDataSizeMap[channel.Id] = &ChannelDataSizeLog{
-			ClientId:   channel.ClientId,
-			InData:     channel.InData,
-			PreInData:  channel.InData,
-			OutData:    channel.OutData,
-			PreOutData: channel.OutData,
+		ForwardDataSizeMap[forwardDto.Id] = &ForwardDataSize{
+			InData:     forwardDto.InData,
+			PreInData:  forwardDto.InData,
+			OutData:    forwardDto.OutData,
+			PreOutData: forwardDto.OutData,
 		}
 	}
 
-	//移除不需要统计的隧道之前,先保存统计信息
-	saveStatistics()
+	//移除不需要统计的对象之前,先保存统计信息
+	save()
 
-	//移除不需要统计的隧道(这些对象可能已经被删除或者禁用)
-	for channelId := range ChannelDataSizeMap {
-		if channelMap[channelId] == nil {
-			delete(ChannelDataSizeMap, channelId)
+	//移除不需要统计的对象(这些对象可能已经被删除或者禁用)
+	for forwardId := range ForwardDataSizeMap {
+		if forwardDtoMap[forwardId] == nil {
+			delete(ForwardDataSizeMap, forwardId)
 		}
 	}
-	Lock.Unlock()
+	lock.Unlock()
 }
 
 // 保存流量记录
-func saveStatistics() {
+func save() {
 	clientMap := make(map[int]*dto.ClientDto)
-	for channelId, dataSize := range ChannelDataSizeMap {
+	for channelId, dataSize := range ForwardDataSizeMap {
 
 		//当前流量(入网)
 		inData := dataSize.InData

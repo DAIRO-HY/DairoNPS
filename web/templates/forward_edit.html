@@ -1,7 +1,8 @@
 ﻿<!DOCTYPE html>
 <html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <th:block th:include="admin/include/css :: header('数据转发编辑/添加')"/>
+    {{template "head" .}}
+    <title>数据转发编辑/添加</title>
     <style>
         #aclIp:focus {
             border: 0;
@@ -10,20 +11,16 @@
     </style>
 </head>
 <body>
-<th:block th:include="admin/include/top-bar :: top-bar('数据转发编辑/添加')"/>
-<iframe th:if="${form.id != null}" class="bg-white border mt-3" th:src="'/admin/data_log?type=2&targetId=' + ${form.id}"
-        style="width: 100%;height: 360px;"></iframe>
-<iframe th:if="${form.id != null}" class="bg-white border mt-3" th:src="'/admin/chart?forwardId=' + ${form.id}"
-        style="width: 100%;height: 200px;"></iframe>
+{{template "top-bar" .}}
 <div class="m-3 p-2 bg-white rounded">
-    <form>
-        <input type="hidden" name="id" th:value="${form.id}">
+    <form action="/forward_list/forward_edit/edit">
+        <input type="hidden" name="Id">
         <div class="row row-cols-1 row-cols-sm-2">
             <div class="col mt-2">
                 <div class="row">
                     <label class="col-4 col-form-label text-end">转发名称</label>
                     <div class="col-8">
-                        <input type="text" class="form-control" name="name" autocomplete="off" th:value="${form.name}">
+                        <input type="text" class="form-control" name="Name" autocomplete="off">
                     </div>
                 </div>
             </div>
@@ -31,8 +28,7 @@
                 <div class="row">
                     <label class="col-4 col-form-label text-end">端口</label>
                     <div class="col-8">
-                        <input type="text" class="form-control" name="port" autocomplete="off"
-                               th:value="${form.port}">
+                        <input type="text" class="form-control" name="Port" autocomplete="off">
                     </div>
                 </div>
             </div>
@@ -40,50 +36,47 @@
                 <div class="row">
                     <label class="col-4 col-form-label text-end">目标端口(ip:端口)</label>
                     <div class="col-8">
-                        <input type="text" class="form-control" name="targetPort" autocomplete="off"
-                               th:value="${form.targetPort}">
+                        <input type="text" class="form-control" name="TargetPort" autocomplete="off">
                     </div>
                 </div>
             </div>
-            <th:block th:if="${form.id != null}">
-                <div class="col mt-2">
-                    <div class="row">
-                        <label class="col-4 col-form-label text-end">入网流量</label>
-                        <div class="col-8">
-                            <input type="text" class="form-control" th:value="${form.inDataTotal}" disabled>
-                        </div>
+            <div class="col mt-2">
+                <div class="row">
+                    <label class="col-4 col-form-label text-end">入网流量</label>
+                    <div class="col-8">
+                        <input type="text" class="form-control" name="InData" disabled>
                     </div>
                 </div>
-                <div class="col mt-2">
-                    <div class="row">
-                        <label class="col-4 col-form-label text-end">出网流量</label>
-                        <div class="col-8">
-                            <input type="text" class="form-control" th:value="${form.outDataTotal}" disabled>
-                        </div>
+            </div>
+            <div class="col mt-2">
+                <div class="row">
+                    <label class="col-4 col-form-label text-end">出网流量</label>
+                    <div class="col-8">
+                        <input type="text" class="form-control" name="OutData" disabled>
                     </div>
                 </div>
-                <div class="col mt-2">
-                    <div class="row">
-                        <label class="col-4 col-form-label text-end">启用状态</label>
-                        <div class="col-8">
-                            <input type="text" class="form-control" th:value="${form.enableState}" disabled>
-                        </div>
+            </div>
+            <div class="col mt-2">
+                <div class="row">
+                    <label class="col-4 col-form-label text-end">启用状态</label>
+                    <div class="col-8">
+                        <input type="text" class="form-control" name="EnableState" disabled>
                     </div>
                 </div>
-                <div class="col mt-2">
-                    <div class="row">
-                        <label class="col-4 col-form-label text-end">创建时间</label>
-                        <div class="col-8">
-                            <input type="text" class="form-control" th:value="${form.createDate}" disabled>
-                        </div>
+            </div>
+            <div class="col mt-2">
+                <div class="row">
+                    <label class="col-4 col-form-label text-end">创建时间</label>
+                    <div class="col-8">
+                        <input type="text" class="form-control" name="Date" disabled>
                     </div>
                 </div>
-            </th:block>
+            </div>
             <div class="col mt-2">
                 <div class="row">
                     <label class="col-4 col-form-label text-end">备注</label>
                     <div class="col-8">
-                        <textarea class="form-control" name="remark">[[${form.remark}]]</textarea>
+                        <textarea class="form-control" name="Remark"></textarea>
                     </div>
                 </div>
             </div>
@@ -112,14 +105,18 @@
                     <div class="col-8 offset-4 small">
                         <section id="aclIpDiv">
                             <div class="d-inline-block">
-                                <span class="border border-secondary rounded-start-pill px-1">{IP}<input name="aclIp" type="hidden" value="{IP}"></span><span
-                                    class="border border-start-0 border-secondary rounded-end-pill px-1 cursor-pointer" style="cursor: pointer;" onclick="$(this).parent().remove();"><i
+                                <span class="border border-secondary rounded-start-pill px-1">{IP}<input name="aclIp"
+                                                                                                         type="hidden"
+                                                                                                         value="{IP}"></span><span
+                                    class="border border-start-0 border-secondary rounded-end-pill px-1 cursor-pointer"
+                                    style="cursor: pointer;" onclick="$(this).parent().remove();"><i
                                     class="bi bi-x"></i></span>
                             </div>
                         </section>
                         <div class="d-inline-block mt-2">
                             <span class="border border-secondary rounded-start-pill ps-2">
-                                <input id="aclIp" style="border: none;border-radius: 0;height: 18px;" placeholder="本地：192.168.1.100" autocomplete="off">
+                                <input id="aclIp" style="border: none;border-radius: 0;height: 18px;"
+                                       placeholder="本地：192.168.1.100" autocomplete="off">
                             </span><span
                                 class="border border-start-0 border-secondary rounded-end-pill px-1"
                                 onclick="onAddAclIPClick()" style="cursor: pointer;"><i class="bi bi-plus"></i></span>
@@ -136,42 +133,51 @@
     </form>
 </div>
 <input id="initAclIp" type="hidden" th:value="${aclIp}">
-<th:block th:include="admin/include/js :: js"/>
 <script th:inline="javascript">
 
     /**
-     * 已经添加ip
-     */
-    const ipAcls = JSON.parse([[${aclIp}]])
+    //  * 已经添加ip
+    //  */
+    // const ipAcls = JSON.parse([[${aclIp}]])
+    //
+    // /**
+    //  * IP地址列表部分的HTML
+    //  */
+    // const aclIpHtml = $("#aclIpDiv").html()
+    // $("#aclIpDiv").empty()
+
+    $(function(){
+
+        // //将现有的ip加入到列表
+        // ipAcls.forEach(item => addIp(item))
+        //
+        // $("[name='aclState']").on("click", () => {
+        //     aclShowState()
+        // })
+        // aclShowState()
+        getInfo()
+    })
 
     /**
-     * IP地址列表部分的HTML
+     * 获取初始数据
      */
-    const aclIpHtml = $("#aclIpDiv").html()
-    $("#aclIpDiv").empty()
-
-    $(()=>{
-
-        //将现有的ip加入到列表
-        ipAcls.forEach(item => addIp(item))
-
-        $("[name='aclState']").on("click",()=>{
-            aclShowState()
-        })
-        aclShowState()
-    })
+    function getInfo(){
+        $.ajaxByData("/forward_list/forward_edit/info")
+            .addAll({
+                id:getParam("id")
+            })
+            .success(data=>{
+            $("form").bindValue(data)
+        }).post()
+    }
 
     /**
      * 表单提交点击事件
      */
     function onSubmitClick() {
-        $.ajax({
-            url: "/admin/forward_list/forward_edit",
-            type: "POST",
-            data: $("form").serialize()
-        }).fail($ajaxFail).done(() => {
+        $("form").ajaxByForm().success(()=>{
             window.location = document.referrer
-        })
+        }).post()
     }
 
     /**
@@ -182,15 +188,15 @@
         addIp(ip)
     }
 
-    function aclShowState(){
-        if($("[name='aclState']:checked").val() === "0"){
+    function aclShowState() {
+        if ($("[name='aclState']:checked").val() === "0") {
             $("#aclIpRow").hide()
-        }else{
+        } else {
             $("#aclIpRow").show()
         }
     }
 
-    function addIp(ip){
+    function addIp(ip) {
         $("#aclIpDiv").append(aclIpHtml.replace(/\{IP\}/g, ip))
     }
 </script>

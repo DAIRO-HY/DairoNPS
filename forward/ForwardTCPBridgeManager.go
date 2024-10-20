@@ -41,7 +41,7 @@ var bridgeListLock sync.Mutex
  * @param proxyTCP 代理服务端Socket
  * @param clientSocket 内网穿透客户端Socket
  */
-func startBridge(forwardDto dto.ForwardDto, proxyTCP net.Conn, targetTCP net.Conn) {
+func startBridge(forwardDto *dto.ForwardDto, proxyTCP net.Conn, targetTCP net.Conn) {
 	bridge := &ForwardBridge{
 		ForwardDto: forwardDto,
 		ProxyTCP:   proxyTCP,

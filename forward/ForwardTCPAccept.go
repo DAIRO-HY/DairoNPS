@@ -15,7 +15,7 @@ type ForwardTCPAccept struct {
 	//代理端口监听服务
 	listen net.Listener
 
-	forwardDto dto.ForwardDto
+	forwardDto *dto.ForwardDto
 
 	///**
 	// * 最后一次统计到入网流量
@@ -58,12 +58,11 @@ func (mine *ForwardTCPAccept) accept() {
 
 		//代理服务端Socket
 		proxyTCP, err := mine.listen.Accept()
-		fmt.Printf("端口:%d 监听到一个连接\n", mine.forwardDto.Port)
 		if err != nil {
-			fmt.Printf("-->端口:%d 监听结束\n", mine.forwardDto.Port)
+			fmt.Printf("-->转发端口:%d 监听结束\n", mine.forwardDto.Port)
 			break
 		}
-
+		fmt.Printf("转发端口:%d 监听到一个连接\n", mine.forwardDto.Port)
 		if !mine.hasAccess(proxyTCP) { //判断是否有访问权限
 			proxyTCP.Close()
 			continue
