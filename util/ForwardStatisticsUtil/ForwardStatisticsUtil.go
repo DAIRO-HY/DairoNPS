@@ -1,9 +1,7 @@
 package ForwardStatisticsUtil
 
 import (
-	"DairoNPS/dao/ChannelDao"
-	"DairoNPS/dao/ChannelDataStatisticsDao"
-	"DairoNPS/dao/ClientDao"
+	"DairoNPS/dao/DateDataSizeDao"
 	"DairoNPS/dao/ForwardDao"
 	"DairoNPS/dao/SystemConfigDao"
 	"DairoNPS/dao/dto"
@@ -12,7 +10,7 @@ import (
 )
 
 // 端口流量总和
-var ForwardDataSizeMap = make(map[int]*ForwardDataSize)
+var forwardDataSizeMap = make(map[int]*ForwardDataSize)
 
 // 统计锁
 var lock sync.Mutex
@@ -32,8 +30,16 @@ func timer() {
 	}
 }
 
+// 通过隧道ID获取一个统计数据
+func Get(forwardId int) *ForwardDataSize {
+	lock.Lock()
+	dataSize := forwardDataSizeMap[forwardId]
+	lock.Unlock()
+	return dataSize
+}
+
 // 加载统计数据
-func InitForwardDataSizeMap() {
+func Init() {
 	lock.Lock()
 	forwardList := ForwardDao.SelectAll()
 
@@ -46,12 +52,12 @@ func InitForwardDataSizeMap() {
 		forwardDtoMap[forwardDto.Id] = forwardDto
 	}
 	for _, forwardDto := range forwardDtoMap {
-		if ForwardDataSizeMap[forwardDto.Id] != nil { //该隧道已经在统计
+		if forwardDataSizeMap[forwardDto.Id] != nil { //该隧道已经在统计
 			continue
 		}
 
 		//加入到隧道流量统计
-		ForwardDataSizeMap[forwardDto.Id] = &ForwardDataSize{
+		forwardDataSizeMap[forwardDto.Id] = &ForwardDataSize{
 			InData:     forwardDto.InData,
 			PreInData:  forwardDto.InData,
 			OutData:    forwardDto.OutData,
@@ -63,9 +69,9 @@ func InitForwardDataSizeMap() {
 	save()
 
 	//移除不需要统计的对象(这些对象可能已经被删除或者禁用)
-	for forwardId := range ForwardDataSizeMap {
+	for forwardId := range forwardDataSizeMap {
 		if forwardDtoMap[forwardId] == nil {
-			delete(ForwardDataSizeMap, forwardId)
+			delete(forwardDataSizeMap, forwardId)
 		}
 	}
 	lock.Unlock()
@@ -73,29 +79,24 @@ func InitForwardDataSizeMap() {
 
 // 保存流量记录
 func save() {
-	clientMap := make(map[int]*dto.ClientDto)
-	for channelId, dataSize := range ForwardDataSizeMap {
+	var systemInData int64 = 0
+	var systemOutData int64 = 0
+	for forwardId, dataSize := range forwardDataSizeMap {
 
 		//当前流量(入网)
 		inData := dataSize.InData
 
 		//上次统计到的流量(入网)
-		preIndata := dataSize.PreInData
-
-		//更新本次统计(入网)
-		dataSize.PreInData = inData
+		preInData := dataSize.PreInData
 
 		//本次统计变更(入网)
-		currentInData := inData - preIndata
+		currentInData := inData - preInData
 
 		//当前流量(出网)
 		outData := dataSize.OutData
 
 		//上次统计到的流量(出网)
 		preOutdata := dataSize.PreOutData
-
-		//更新本次统计(出网)
-		dataSize.PreOutData = outData
 
 		//本次统计变更(出网)
 		currentOutData := outData - preOutdata
@@ -104,35 +105,43 @@ func save() {
 			continue
 		}
 
+		//更新本次统计(入网)
+		dataSize.PreInData = inData
+
+		//更新本次统计(出网)
+		dataSize.PreOutData = outData
+
 		//添加一条统计记录
-		ChannelDataStatisticsDao.Add(channelId, currentInData, currentOutData)
+		DateDataSizeDao.Add(0, forwardId, currentInData, currentOutData)
 
-		//更新隧道出入网流量
-		ChannelDao.SetDataSize(channelId, inData, outData)
+		//更新端口转发出入网流量
+		ForwardDao.SetDataSize(forwardId, inData, outData)
 
-		//统计客户端流量
-		clientDto := clientMap[dataSize.ClientId]
-		if clientDto == nil {
-			clientMap[dataSize.ClientId] = &dto.ClientDto{
-				InData:  currentInData,
-				OutData: currentOutData,
-			}
-		} else {
-			clientDto.InData += currentInData
-			clientDto.OutData += currentOutData
-		}
-	}
-
-	var inData int64 = 0
-	var outData int64 = 0
-
-	//统计客户端入出网流量
-	for clientId, client := range clientMap {
-		inData += client.InData
-		outData += client.OutData
-		ClientDao.SetDataSize(clientId, client.InData, client.OutData)
+		//系统
+		systemInData += currentInData
+		systemOutData += currentOutData
 	}
 
 	//统计系统总流量
-	SystemConfigDao.AddDataSize(inData, outData)
+	SystemConfigDao.AddDataSize(systemInData, systemOutData)
+}
+
+// 获取当前统计流量总和
+func GetTotal(forwardId int) (int64, int64) {
+	var inData int64 = 0
+	var outData int64 = 0
+	lock.Lock()
+	for key, dataSize := range forwardDataSizeMap {
+		if forwardId != 0 { //统计某个隧道
+			if key == forwardId {
+				inData += dataSize.InData
+				outData += dataSize.OutData
+			}
+		} else { //统计所有
+			inData += dataSize.InData
+			outData += dataSize.OutData
+		}
+	}
+	lock.Unlock()
+	return inData, outData
 }

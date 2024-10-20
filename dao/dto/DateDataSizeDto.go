@@ -1,7 +1,7 @@
 package dto
 
-// 隧道流量统计表DTO
-type ChannelDataStatisticsDto struct {
+// 流量统计表DTO
+type DateDataSizeDto struct {
 
 	//隧道id
 	ChannelId int

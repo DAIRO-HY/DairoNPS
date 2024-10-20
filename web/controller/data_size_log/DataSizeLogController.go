@@ -1,7 +1,7 @@
 package client
 
 import (
-	"DairoNPS/dao/ChannelDataStatisticsDao"
+	"DairoNPS/dao/DateDataSizeDao"
 	"DairoNPS/dao/dto"
 	"DairoNPS/web"
 	"DairoNPS/web/controller/data_size_log/form"
@@ -42,16 +42,17 @@ func getDataSize(inForm form.GetDataInForm) form.GetDataOutForm {
 		labelFormat = "2006"
 	}
 
-	label2DataForm := make(map[string]*dto.ChannelDataStatisticsDto)
+	label2DataForm := make(map[string]*dto.DateDataSizeDto)
 
 	//记录某个时间点的最大数据流量
 	var maxDataSize int64 = 0
-	list := ChannelDataStatisticsDao.SelectList(inForm.ClientId, inForm.ChannelId, inForm.StartTime, inForm.EndTime)
-	for _, item := range list { //为每一个时间点去匹配数据
+
+	dataSizeList := DateDataSizeDao.SelectList(inForm.ClientId, inForm.ChannelId, inForm.ForwordId, inForm.StartTime, inForm.EndTime)
+	for _, item := range dataSizeList { //为每一个时间点去匹配数据
 		label := time.Unix(item.Date, 0).Format(labelFormat)
 		dataForm := label2DataForm[label]
 		if dataForm == nil {
-			dataForm = &dto.ChannelDataStatisticsDto{
+			dataForm = &dto.DateDataSizeDto{
 				InData:  item.InData,
 				OutData: item.OutData,
 			}

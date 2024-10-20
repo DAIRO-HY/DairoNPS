@@ -4,7 +4,7 @@ import (
 	"DairoNPS/dao/ChannelDao"
 	"DairoNPS/dao/dto"
 	"DairoNPS/nps/nps_bridge"
-	"DairoNPS/util/StatisticsUtil"
+	"DairoNPS/util/ChannelStatisticsUtil"
 	"fmt"
 	"net"
 	"strconv"
@@ -30,7 +30,7 @@ func GetProxyCount() int {
 func AcceptClient(clientDto *dto.ClientDto) {
 
 	//加载统计数据
-	StatisticsUtil.LoadChannelDataLog()
+	ChannelStatisticsUtil.Init()
 
 	//开启NPS客户端ID下所有的隧道
 	activeList := ChannelDao.SelectActiveByClientId(clientDto.Id)

@@ -3,7 +3,7 @@ package nps_bridge
 import (
 	"DairoNPS/constant/CLSConfig"
 	"DairoNPS/dao/dto"
-	"DairoNPS/util/StatisticsUtil"
+	"DairoNPS/util/ChannelStatisticsUtil"
 	"DairoNPS/util/TcpUtil"
 	"net"
 	"strconv"
@@ -43,15 +43,14 @@ type TCPBridge struct {
 	//val tag = System.currentTimeMillis().toString() + (Math.random() * 1000).toInt()
 
 	//隧道流量统计
-	channelDataSize *StatisticsUtil.ChannelDataSizeLog
+	channelDataSize *ChannelStatisticsUtil.ChannelDataSize
 }
 
 /**
 * 开始桥接传输数据
  */
 func (mine *TCPBridge) start() {
-	channelId := mine.Channel.Id
-	mine.channelDataSize = StatisticsUtil.ChannelDataSizeMap[channelId]
+	mine.channelDataSize = ChannelStatisticsUtil.Get(mine.Channel.Id)
 	go func() {
 
 		//发送目标端口信息

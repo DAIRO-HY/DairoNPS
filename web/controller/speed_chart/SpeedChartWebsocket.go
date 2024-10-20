@@ -1,7 +1,8 @@
 package speed_chart
 
 import (
-	"DairoNPS/util/StatisticsUtil"
+	"DairoNPS/util/ChannelStatisticsUtil"
+	"DairoNPS/util/ForwardStatisticsUtil"
 	"fmt"
 	"github.com/gorilla/websocket"
 	"net/http"
@@ -37,37 +38,40 @@ func currentData(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			break
 		}
-		channelId := 0
 		clientId := 0
+		channelId := 0
+		forwardId := 0
 		idStr := string(idData)
 		id, _ := strconv.ParseInt(idStr[1:], 10, 64)
-		if strings.HasPrefix(idStr, "C") {
+		if strings.HasPrefix(idStr, "C") { //获取客户端ID
 			clientId = int(id)
-		} else if strings.HasPrefix(idStr, "N") {
+		} else if strings.HasPrefix(idStr, "N") { //获取隧道ID
 			channelId = int(id)
+		} else if strings.HasPrefix(idStr, "F") { //获取端口转发ID
+			forwardId = int(id)
 		} else {
 		}
-		var inData int64 = 0
-		var outData int64 = 0
-		StatisticsUtil.Lock.Lock()
-		for cid, dataSize := range StatisticsUtil.ChannelDataSizeMap {
-			if channelId != 0 { //统计某个隧道
-				if cid == channelId {
-					inData += dataSize.InData
-					outData += dataSize.OutData
-				}
-			} else if clientId != 0 { //统计某个客户端
-				if dataSize.ClientId == clientId {
-					inData += dataSize.InData
-					outData += dataSize.OutData
-				}
-			} else { //统计所有
-				inData += dataSize.InData
-				outData += dataSize.OutData
-			}
+		var channelInData int64
+		var channelOutData int64
+		var forwardInData int64
+		var forwardOutData int64
+		if clientId == 0 && channelId == 0 && forwardId == 0 { //统计所有
+
+			//隧道流量总和
+			channelInData, channelOutData = ChannelStatisticsUtil.GetTotal(0, 0)
+
+			//端口转发流量总和
+			forwardInData, forwardOutData = ForwardStatisticsUtil.GetTotal(0)
+		} else if clientId != 0 { //客户端流量总和
+			channelInData, channelOutData = ChannelStatisticsUtil.GetTotal(clientId, 0)
+		} else if channelId != 0 { //隧道流量总和
+			channelInData, channelOutData = ChannelStatisticsUtil.GetTotal(0, channelId)
+		} else if forwardId != 0 { //客户端流量总和
+			forwardInData, forwardOutData = ForwardStatisticsUtil.GetTotal(forwardId)
+		} else {
 		}
-		StatisticsUtil.Lock.Unlock()
-		message := strconv.FormatInt(inData, 10) + ":" + strconv.FormatInt(outData, 10)
+
+		message := strconv.FormatInt(channelInData+forwardInData, 10) + ":" + strconv.FormatInt(channelOutData+forwardOutData, 10)
 
 		// 发送消息
 		err = conn.WriteMessage(websocket.TextMessage, []byte(message))

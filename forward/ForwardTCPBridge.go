@@ -3,8 +3,10 @@ package forward
 import (
 	"DairoNPS/constant/CLSConfig"
 	"DairoNPS/dao/dto"
+	"DairoNPS/util/ForwardStatisticsUtil"
 	"DairoNPS/util/TcpUtil"
 	"net"
+	"sync/atomic"
 )
 
 /**
@@ -30,16 +32,6 @@ type ForwardBridge struct {
 	//var lastSessionTime = System.currentTimeMillis()
 
 	/**
-	 * 本次连接入网总计
-	 */
-	inDataTotal int64
-
-	/**
-	 * 本次连接出网总计
-	 */
-	outDataTotal int64
-
-	/**
 	 * 代理连接入方向是否被关闭
 	 */
 	isProxyReadClosed bool
@@ -48,12 +40,16 @@ type ForwardBridge struct {
 	 * 目标端的du操作关闭标识
 	 */
 	isTargetReadClosed bool
+
+	//隧道流量统计
+	dataSize *ForwardStatisticsUtil.ForwardDataSize
 }
 
 /**
  * 开始传输数据
  */
 func (mine *ForwardBridge) Start() {
+	mine.dataSize = ForwardStatisticsUtil.Get(mine.ForwardDto.Id)
 	go mine.receiveByForwardSendToTarget()
 	go mine.receiveByTargetSendToForward()
 }
@@ -70,7 +66,7 @@ func (mine *ForwardBridge) receiveByForwardSendToTarget() {
 		}
 
 		//原子递增
-		//atomic.AddInt64(&mine.channelDataSize.InData, int64(length))
+		atomic.AddInt64(&mine.dataSize.InData, int64(length))
 
 		//从代理端读取到的数据立即发送目标端
 		err = TcpUtil.WriteAll(mine.TargetTCP, data[:length])
@@ -102,7 +98,7 @@ func (mine *ForwardBridge) receiveByTargetSendToForward() {
 		}
 
 		//原子递增
-		//atomic.AddInt64(&mine.channelDataSize.InData, int64(length))
+		atomic.AddInt64(&mine.dataSize.OutData, int64(length))
 
 		//将读取到的数据立即发送客户端
 		err = TcpUtil.WriteAll(mine.ProxyTCP, data[:length])

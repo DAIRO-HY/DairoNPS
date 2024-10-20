@@ -3,6 +3,7 @@ package forward
 import (
 	"DairoNPS/dao/ForwardDao"
 	"DairoNPS/dao/dto"
+	"DairoNPS/util/ForwardStatisticsUtil"
 	"fmt"
 	"net"
 	"strconv"
@@ -40,6 +41,9 @@ func StartAcceptAll() {
  * @param forwardDto 隧道信息
  */
 func Accept(forwardDto *dto.ForwardDto) {
+
+	//加载统计数据
+	ForwardStatisticsUtil.Init()
 	forwardIdToForwardAcceptLock.Lock()
 	old := forwardIdToForwardAccept[forwardDto.Id]
 	if old != nil { //若该隧道已经在监听,则先停止

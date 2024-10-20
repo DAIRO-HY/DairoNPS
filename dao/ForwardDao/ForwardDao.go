@@ -83,9 +83,9 @@ func SetEnableState(id int, state int) {
 /**
  * 同步入出网流量
  */
-func SetDataLen(dto dto.ForwardDto) {
-	sql := "update forward set inData = ?,outDataTotal=? where id = ?"
-	DBUtil.Exec(sql, dto.InData, dto.OutData, dto.Id)
+func SetDataSize(id int, inData int64, outData int64) {
+	sql := "update forward set inData = ?,outData=? where id = ?"
+	DBUtil.ExecIgnoreError(sql, inData, outData, id)
 }
 
 /**

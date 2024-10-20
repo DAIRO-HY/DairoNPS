@@ -8,6 +8,9 @@ type GetDataInForm struct {
 	//隧道ID
 	ChannelId int
 
+	//端口转发ID
+	ForwordId int
+
 	//入网流量
 	StartTime int64
 

@@ -113,7 +113,7 @@
     $(function () {
         const clientId = getParam("id")
         if (clientId !== "") {//网速统计报表显示
-            showDataSizeChart(clientId)
+            showDataSizeChart(clientId, 0, 0)
             showSpeedChart("C" + clientId)
         }
         init()

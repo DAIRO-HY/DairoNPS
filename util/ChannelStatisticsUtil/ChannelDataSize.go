@@ -1,7 +1,7 @@
-package StatisticsUtil
+package ChannelStatisticsUtil
 
 // 隧道出入王流量
-type ChannelDataSizeLog struct {
+type ChannelDataSize struct {
 
 	//当前隧道所属客户端ID
 	ClientId int

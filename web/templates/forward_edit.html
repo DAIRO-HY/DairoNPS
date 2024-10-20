@@ -12,6 +12,8 @@
 </head>
 <body>
 {{template "top-bar" .}}
+{{template "data_size_chart" .}}
+{{template "speed_chart" .}}
 <div class="m-3 p-2 bg-white rounded">
     <form action="/forward_list/forward_edit/edit">
         <input type="hidden" name="Id">
@@ -136,8 +138,8 @@
 <script th:inline="javascript">
 
     /**
-    //  * 已经添加ip
-    //  */
+     //  * 已经添加ip
+     //  */
     // const ipAcls = JSON.parse([[${aclIp}]])
     //
     // /**
@@ -145,8 +147,7 @@
     //  */
     // const aclIpHtml = $("#aclIpDiv").html()
     // $("#aclIpDiv").empty()
-
-    $(function(){
+    $(function () {
 
         // //将现有的ip加入到列表
         // ipAcls.forEach(item => addIp(item))
@@ -155,27 +156,32 @@
         //     aclShowState()
         // })
         // aclShowState()
+        const forwardId = getParam("id")
+        if (forwardId !== "") {//网速统计报表显示
+            showDataSizeChart(0, 0, forwardId)
+            showSpeedChart("F" + forwardId)
+        }
         getInfo()
     })
 
     /**
      * 获取初始数据
      */
-    function getInfo(){
+    function getInfo() {
         $.ajaxByData("/forward_list/forward_edit/info")
             .addAll({
-                id:getParam("id")
+                id: getParam("id")
             })
-            .success(data=>{
-            $("form").bindValue(data)
-        }).post()
+            .success(data => {
+                $("form").bindValue(data)
+            }).post()
     }
 
     /**
      * 表单提交点击事件
      */
     function onSubmitClick() {
-        $("form").ajaxByForm().success(()=>{
+        $("form").ajaxByForm().success(() => {
             window.location = document.referrer
         }).post()
     }
