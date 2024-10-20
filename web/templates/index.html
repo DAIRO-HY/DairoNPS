@@ -54,15 +54,59 @@
         </div>
         <div class="col text-center p-2">
             <div class="bg-white border rounded">
-                <div class="py-2">数据转发服务数</div>
-                <div class="border-top fs-2" id="forwardCount">
+                <div class="py-2">端口转发代理</div>
+                <div class="border-top fs-2" id="ForwardCount">
                 </div>
             </div>
         </div>
         <div class="col text-center p-2">
             <div class="bg-white border rounded">
-                <div class="py-2">数据转发连接数</div>
-                <div class="border-top fs-2" id="forwardBridgeCount">
+                <div class="py-2">端口转发桥接</div>
+                <div class="border-top fs-2" id="ForwardBridgeCount">
+                </div>
+            </div>
+        </div>
+        <div class="col text-center p-2">
+            <div class="bg-white border rounded">
+                <div class="py-2">协程数</div>
+                <div class="border-top fs-2" id="NumGoroutine">
+                </div>
+            </div>
+        </div>
+        <div class="col text-center p-2">
+            <div class="bg-white border rounded">
+                <div class="py-2">内存分配</div>
+                <div class="border-top fs-2" id="Memory">
+                </div>
+            </div>
+        </div>
+        <div class="col text-center p-2">
+            <div class="bg-white border rounded">
+                <div class="py-2">系统内存占用</div>
+                <div class="border-top fs-2" id="SystemMemory">
+                </div>
+            </div>
+        </div>
+        <div class="col text-center p-2">
+            <div class="bg-white border rounded">
+                <div class="py-2">堆内存分配</div>
+                <div class="border-top fs-2" id="HeapAlloc">
+                </div>
+            </div>
+        </div>
+        <div class="col text-center p-2">
+            <div class="bg-white border rounded">
+                <div class="py-2">堆内存系统占用</div>
+                <div class="border-top fs-2" id="HeapSys">
+                </div>
+            </div>
+        </div>
+        <div class="col text-center p-2">
+            <div class="bg-white border rounded">
+                <div class="py-2">垃圾回收次数</div>
+                <div class="border-top fs-2" >
+                    <span id="NumGC"></span>
+                    <button class="btn btn-link" onclick="onGCClick()">立即回收</button>
                 </div>
             </div>
         </div>
@@ -104,6 +148,13 @@
         for (let key in data) {
             $("#" + key).text(data[key])
         }
+    }
+
+    /**
+     * 垃圾回收
+     */
+    function onGCClick(){
+        $.ajaxByData("/index/gc").post()
     }
 
 </script>

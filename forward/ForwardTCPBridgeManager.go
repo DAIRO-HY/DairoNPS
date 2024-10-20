@@ -4,6 +4,7 @@ import (
 	"DairoNPS/dao/dto"
 	"net"
 	"sync"
+	"time"
 )
 
 /**
@@ -14,20 +15,34 @@ import (
  * 当前正在通信的会话
  */
 var bridgeList = make(map[*ForwardBridge]bool)
-var bridgeListLock sync.Mutex
+var bridgeLock sync.Mutex
 
-/**
- * 当前桥接数量
- */
-//val bridgeCount: Int
-//    get() = this.bridgeList.count()
+// 端口转发当前桥接数量
+func GetBridgeCount() int {
+	count := 0
+	bridgeLock.Lock()
+	count = len(bridgeList)
+	bridgeLock.Unlock()
+	return count
+}
+
+// 获取当前桥接列表
+func GetBridgeList() []ForwardBridge {
+	var list []ForwardBridge
+	bridgeLock.Lock()
+	for item := range bridgeList {
+		list = append(list, *item)
+	}
+	bridgeLock.Unlock()
+	return list
+}
 
 /**
  * 获取当前桥接列表
  */
 //suspend fun getBridgeList(): List<ForwardBridge> {
 //    var result: List<ForwardBridge>? = null
-//    this.bridgeListLock.synchronized {
+//    this.bridgeLock.synchronized {
 //        result = this.bridgeList.map {
 //            it
 //        }
@@ -46,10 +61,11 @@ func startBridge(forwardDto *dto.ForwardDto, proxyTCP net.Conn, targetTCP net.Co
 		ForwardDto: forwardDto,
 		ProxyTCP:   proxyTCP,
 		TargetTCP:  targetTCP,
+		CreateTime: time.Now().Unix(),
 	}
-	bridgeListLock.Lock()
+	bridgeLock.Lock()
 	bridgeList[bridge] = true
-	bridgeListLock.Unlock()
+	bridgeLock.Unlock()
 	bridge.Start()
 }
 
@@ -57,9 +73,9 @@ func startBridge(forwardDto *dto.ForwardDto, proxyTCP net.Conn, targetTCP net.Co
  * 移除会话
  */
 func removeBridge(bridge *ForwardBridge) {
-	bridgeListLock.Lock()
+	bridgeLock.Lock()
 	delete(bridgeList, bridge)
-	bridgeListLock.Unlock()
+	bridgeLock.Unlock()
 }
 
 /**
@@ -68,13 +84,13 @@ func removeBridge(bridge *ForwardBridge) {
 func shutdownBridge(forwardId int) {
 	closeList := []*ForwardBridge{}
 
-	bridgeListLock.Lock()
+	bridgeLock.Lock()
 	for item := range bridgeList {
 		if item.ForwardDto.Id == forwardId {
 			closeList = append(closeList, item)
 		}
 	}
-	bridgeListLock.Unlock()
+	bridgeLock.Unlock()
 	for _, item := range closeList {
 		item.shutdown()
 	}

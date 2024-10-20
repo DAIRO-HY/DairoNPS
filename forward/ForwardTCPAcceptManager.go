@@ -17,12 +17,21 @@ import (
 /**
  * 数据转发id对应的端口监听
  */
-var forwardIdToForwardAccept = make(map[int]*ForwardTCPAccept)
+var forwardAcceptMap = make(map[int]*ForwardTCPAccept)
 
 /**
- * forwardIdToForwardAccept操作互斥锁
+ * forwardAcceptMap操作互斥锁
  */
-var forwardIdToForwardAcceptLock sync.Mutex
+var forwardAcceptLock sync.Mutex
+
+// 端口转发代理端口数量
+func GetAcceptCount() int {
+	count := 0
+	forwardAcceptLock.Lock()
+	count = len(forwardAcceptMap)
+	forwardAcceptLock.Unlock()
+	return count
+}
 
 /**
  * 开启端口监听
@@ -44,8 +53,8 @@ func Accept(forwardDto *dto.ForwardDto) {
 
 	//加载统计数据
 	ForwardStatisticsUtil.Init()
-	forwardIdToForwardAcceptLock.Lock()
-	old := forwardIdToForwardAccept[forwardDto.Id]
+	forwardAcceptLock.Lock()
+	old := forwardAcceptMap[forwardDto.Id]
 	if old != nil { //若该隧道已经在监听,则先停止
 		old.shutdown()
 	}
@@ -53,7 +62,7 @@ func Accept(forwardDto *dto.ForwardDto) {
 	listen, err := net.Listen("tcp", ":"+strconv.Itoa(forwardDto.Port))
 	if err != nil {
 		fmt.Printf("转发端口:%d 监听失败。err:%p\n", forwardDto.Port, err)
-		forwardIdToForwardAcceptLock.Unlock()
+		forwardAcceptLock.Unlock()
 		return
 	}
 	fmt.Printf("转发端口:%d 监听开始", forwardDto.Port)
@@ -62,28 +71,28 @@ func Accept(forwardDto *dto.ForwardDto) {
 		listen:     listen,
 	}
 
-	forwardIdToForwardAccept[forwardDto.Id] = tcpAccept
+	forwardAcceptMap[forwardDto.Id] = tcpAccept
 
 	//开启监听
 	go tcpAccept.accept()
-	forwardIdToForwardAcceptLock.Unlock()
+	forwardAcceptLock.Unlock()
 }
 
 /**
  * 移除隧道监听列表
  */
 func removeAccept(forwardId int) {
-	forwardIdToForwardAcceptLock.Lock()
-	tcpAccept := forwardIdToForwardAccept[forwardId]
+	forwardAcceptLock.Lock()
+	tcpAccept := forwardAcceptMap[forwardId]
 	if tcpAccept == nil {
-		forwardIdToForwardAcceptLock.Unlock()
+		forwardAcceptLock.Unlock()
 		return
 	}
-	delete(forwardIdToForwardAccept, forwardId)
+	delete(forwardAcceptMap, forwardId)
 
 	////关闭隧道的时候保存流量
 	//ForwardDao.setDataLen(proxy.forwardDto)
-	forwardIdToForwardAcceptLock.Unlock()
+	forwardAcceptLock.Unlock()
 }
 
 /**
@@ -91,9 +100,9 @@ func removeAccept(forwardId int) {
  * @param forwardId 隧道id
  */
 func CloseAccept(forwardId int) {
-	forwardIdToForwardAcceptLock.Lock()
-	tcpAccept := forwardIdToForwardAccept[forwardId]
-	forwardIdToForwardAcceptLock.Unlock()
+	forwardAcceptLock.Lock()
+	tcpAccept := forwardAcceptMap[forwardId]
+	forwardAcceptLock.Unlock()
 	if tcpAccept != nil {
 		tcpAccept.shutdown()
 	}

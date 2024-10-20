@@ -5,7 +5,6 @@ import (
 	"DairoNPS/nps/nps_client"
 	"DairoNPS/nps/nps_pool"
 	"DairoNPS/web"
-
 	//初始化Controller
 	_ "DairoNPS/web/controller/bridge_list"
 	_ "DairoNPS/web/controller/channel"
@@ -26,6 +25,9 @@ func init() {
 var list = make([]int, 0)
 
 func main() {
+
+	// 日志关闭，输出到 /dev/null（ioutil.Discard）
+	//log.SetOutput(ioutil.Discard)
 
 	//启动web管理
 	go web.Start()

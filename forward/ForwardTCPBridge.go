@@ -26,11 +26,6 @@ type ForwardBridge struct {
 	//目标端的TCP
 	TargetTCP net.Conn
 
-	///**
-	// * 最后一次读取到数据的时间,用来判断Socket是否存活
-	// */
-	//var lastSessionTime = System.currentTimeMillis()
-
 	/**
 	 * 代理连接入方向是否被关闭
 	 */
@@ -43,6 +38,9 @@ type ForwardBridge struct {
 
 	//隧道流量统计
 	dataSize *ForwardStatisticsUtil.ForwardDataSize
+
+	// 创建时间
+	CreateTime int64
 }
 
 /**

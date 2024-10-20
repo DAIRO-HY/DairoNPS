@@ -2,6 +2,7 @@ package bridge_list
 
 import (
 	"DairoNPS/dao/ClientDao"
+	"DairoNPS/forward"
 	"DairoNPS/nps/nps_bridge"
 	"DairoNPS/web"
 	"DairoNPS/web/controller/bridge_list/form"
@@ -31,8 +32,10 @@ func loadData(search form.BridgeInForm) []form.BridgeOutForm {
 
 	//当前时间戳
 	nowTime := time.Now().Unix()
-	bridgeList := nps_bridge.GetBridgeList()
-	for _, it := range bridgeList {
+
+	//隧道桥接列表统计------------------------------------------------------------START
+	channelBridgeList := nps_bridge.GetBridgeList()
+	for _, it := range channelBridgeList {
 		if search.ClientId != 0 && search.ClientId != it.ClientId {
 			continue
 		}
@@ -59,5 +62,31 @@ func loadData(search form.BridgeInForm) []form.BridgeOutForm {
 			Ip: ip,
 		})
 	}
+	//隧道桥接列表统计------------------------------------------------------------END
+
+	//端口转发桥接列表统计------------------------------------------------------------START
+	forwardBridgeList := forward.GetBridgeList()
+	for _, it := range forwardBridgeList {
+		remoteAddr := it.ProxyTCP.RemoteAddr().String()
+		ip := strings.Split(remoteAddr, ":")[0]
+		outFormList = append(outFormList, form.BridgeOutForm{
+
+			// 客户端名
+			ClientName: "端口转发",
+
+			// 隧道名
+			ChannelName: it.ForwardDto.Name,
+
+			// 隧道模式
+			Mode: "TCP",
+
+			// 在线时间
+			OnlineTime: strconv.FormatInt(nowTime-it.CreateTime, 10) + "秒",
+
+			// 用户端ip
+			Ip: ip,
+		})
+	}
+	//隧道桥接列表统计------------------------------------------------------------END
 	return outFormList
 }
