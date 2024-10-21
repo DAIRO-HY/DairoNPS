@@ -94,15 +94,6 @@ func (mine *TCPBridge) receiveByProxySendToClient() {
 			break
 		}
 
-		////TODO:每次都计时可能影响性能
-		//mine.lastSessionTime = time.Now().UnixNano() / int64(time.Millisecond) //标记最后一次读取到数据的时间
-
-		//入网统计
-		//mine.inDataTotal = mine.inDataTotal + int64(length)
-		//bridge.Channel.InDataTotal = bridge.Channel.InDataTotal + length
-		//bridge.Client.InDataTotal = bridge.Client.InDataTotal + length
-		//CLSConfig.systemConfig.InDataTotal = CLSConfig.systemConfig.InDataTotal + length
-
 		//原子递增
 		atomic.AddInt64(&mine.channelDataSize.InData, int64(length))
 

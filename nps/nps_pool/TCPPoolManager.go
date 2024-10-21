@@ -21,7 +21,9 @@ var poolLock sync.Mutex
 func GetPoolCount() int {
 	count := 0
 	poolLock.Lock()
-	count = len(poolMap)
+	for _, pools := range poolMap {
+		count += len(*pools)
+	}
 	poolLock.Unlock()
 	return count
 }

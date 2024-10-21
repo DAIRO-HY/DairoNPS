@@ -32,28 +32,26 @@ type ClientSession struct {
  */
 var sendLock sync.Mutex
 
-/**
- * 开始
- */
+// 开始会话
 func (mine *ClientSession) Start() {
-	finallyFunc := func() {
-		time.Sleep(1 * time.Second)
-		mine.Close()
-		removeSession(mine)
-	}
+	mine.sendServerInfoAndReceive()
+	//time.Sleep(1 * time.Second)
+	mine.Close()
+	removeSession(mine)
+}
+
+// 发送服务器端的信息
+func (mine *ClientSession) sendServerInfoAndReceive() {
 
 	//设置长连接
 	mine.tcp.SetReadDeadline(time.Time{})
 	if mine.sendClientId() != nil {
-		finallyFunc()
 		return
 	}
 	if mine.sendClientSecurityKey() != nil {
-		finallyFunc()
 		return
 	}
 	mine.receive()
-	finallyFunc()
 }
 
 // 将客户端id返回给客户端
@@ -94,7 +92,7 @@ func (mine *ClientSession) handle(flag byte) error {
 		log.Println("-->接收到客户端的心跳数据")
 
 		//记录与客户端最后一次心跳时间戳
-		mine.lastHeartBeatTime = time.Now().UnixNano() / int64(time.Millisecond)
+		mine.lastHeartBeatTime = time.Now().UnixMilli()
 		return mine.Send([]byte{HeaderUtil.MAIN_HEART_BEAT})
 	default:
 		return errors.New("未知的Flag")
@@ -138,7 +136,7 @@ func (mine *ClientSession) Close() {
 
 // 客户端是否在线监测
 func (mine *ClientSession) IsOnline() bool {
-	now := time.Now().UnixNano() / int64(time.Millisecond)
+	now := time.Now().UnixMilli()
 
 	//在指定时间内没有收到客户端心跳,则视为离线
 	if now-mine.lastHeartBeatTime > CLSConfig.HEART_TIME*2 {

@@ -52,7 +52,7 @@ func SetDataSize(id int, inAdd int64, outAdd int64) {
  * 设置客户端ip地址信息
  */
 func SetClientInfo(dto dto.ClientDto) {
-	lastLoginDate := time.Now().UnixNano() / int64(time.Millisecond)
+	lastLoginDate := time.Now().UnixMilli()
 	sql :=
 		"update client set ip = ?, version=?, lastLoginDate = ? where id = ?"
 	DBUtil.ExecIgnoreError(sql, dto.Ip, dto.Version, lastLoginDate, dto.Id)
