@@ -3,7 +3,7 @@
 #删除上次编译文件
 rm DairoNPS.zip
 rm -rf DairoNPS-main
-rm /app/DairoNPS/datadairo-nps
+rm /app/DairoNPS/dairo-nps-linux-amd64
 
 curl -L -o DairoNPS.zip https://github.com/DAIRO-HY/DairoNPS/archive/refs/heads/main.zip
 unzip DairoNPS.zip
