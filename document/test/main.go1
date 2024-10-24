@@ -1,0 +1,79 @@
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"net"
+	"runtime"
+	"time"
+)
+
+func main() {
+	runtime.GOMAXPROCS(11)
+	listener,err := net.Listen("tcp",":4354")
+	if err != nil{
+		fmt.Println("监听服务开启失败:",err)
+		return
+	}
+	fmt.Println("监听服务开始")
+
+	go timer()
+	defer listener.Close()
+	for{
+		conn,err := listener.Accept()
+		if err != nil{
+			fmt.Println("监听失败:",err)
+			continue
+		}
+		//fmt.Println("接收到一个客户端连接:",conn.RemoteAddr())
+		go handleConn(conn)
+	}
+}
+
+var count = 0
+var failCount = 0
+
+///处理连接
+func handleConn(conn net.Conn){
+	defer func(conn net.Conn) {
+		err := conn.Close()
+		if err != nil {
+			
+		}
+	}(conn)
+
+	reader := bufio.NewReader(conn)
+	for{
+		//message,err := reader.ReadString('\n')
+		_,err := reader.ReadString('\n')
+		count++
+		if err != nil{
+			failCount++
+			//fmt.Println("读取数据发生了错误")
+			break
+		}
+		//fmt.Println("从客户端读取到数据:",message)
+	}
+}
+
+func timer()  {
+	for{
+		fmt.Println(fmt.Sprintf("-------------------------------------"))
+		fmt.Println(fmt.Sprintf("消息数:%d  失败数:%d",count,failCount))
+		var m runtime.MemStats
+
+		runtime.GC()
+		runtime.ReadMemStats(&m)
+		fmt.Printf("当前分配的内存 = %v MiB\n", bToMb(m.Alloc))             // 当前分配的内存 = X MiB
+		fmt.Printf("总分配的内存 = %v MiB\n", bToMb(m.TotalAlloc))   // 总分配的内存 = X MiB
+		fmt.Printf("系统分配的内存 = %v MiB\n", bToMb(m.Sys))                 // 系统分配的内存 = X MiB
+		fmt.Printf("垃圾回收次数 = %v\n", m.NumGC)                        // 垃圾回收次数 = X
+		fmt.Printf("当前运行的 goroutine 数量 = %v\n", runtime.NumGoroutine())  // 当前运行的 goroutine 数量 = X
+		fmt.Println("当前使用的系统线程数:", runtime.NumCgoCall())
+
+		time.Sleep(5 * time.Second) // 休眠1秒
+	}
+}
+func bToMb(b uint64) uint64 {
+	return b / 1024 / 1024
+}

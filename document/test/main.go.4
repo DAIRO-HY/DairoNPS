@@ -1,0 +1,15 @@
+package main
+
+import "fmt"
+
+type MyStruct struct {
+	i int
+}
+
+func main() {
+	myMap := []*MyStruct{&MyStruct{i: 1}, &MyStruct{i: 2}, &MyStruct{i: 3}}
+
+	dasd := myMap[1]
+	dasd.i = 10
+	fmt.Printf("dasd.i = %d\n", myMap[1].i)
+}

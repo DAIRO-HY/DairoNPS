@@ -1,0 +1,145 @@
+package main
+
+import (
+	"fmt"
+	"strings"
+	"sync"
+	"time"
+)
+
+var lock sync.Mutex
+
+func main() {
+	//targetCout := 100000000
+	targetCout := 10000000
+	testList(targetCout)
+	fmt.Println("----------------------------------------------")
+	testListLock(targetCout)
+	fmt.Println("----------------------------------------------")
+	testMap(targetCout)
+	fmt.Println("----------------------------------------------")
+	strJoin(targetCout)
+}
+
+func testList(targetCout int) {
+	var list []int
+	time1 := time.Now().UnixNano() / int64(time.Millisecond)
+	for i := 0; i < targetCout; i++ {
+		list = append(list, i)
+	}
+	time2 := time.Now().UnixNano() / int64(time.Millisecond)
+	for i := 0; i < targetCout; i++ {
+		value := list[targetCout-1]
+		if value == -1 {
+			fmt.Println(value)
+		}
+	}
+	time3 := time.Now().UnixNano() / int64(time.Millisecond)
+	for i := targetCout - 1; i >= 0; i-- {
+		list = append(list[:i], list[i+1:]...)
+	}
+	//for len(list) > 0 {
+	//	for i := 0; i < len(list); i++ {
+	//		if i == len(list)-1 {
+	//			list = append(list[:i], list[i+1:]...)
+	//			break
+	//		}
+	//	}
+	//}
+	time4 := time.Now().UnixNano() / int64(time.Millisecond)
+
+	fmt.Printf("List添加%d条数据耗时:%d\n", targetCout, time2-time1)
+	fmt.Printf("List读取%d次数据耗时:%d\n", targetCout, time3-time2)
+	fmt.Printf("List移除%d条数据耗时:%d\n", targetCout, time4-time3)
+	fmt.Printf("List剩余数据数:%d 总共耗时:%d\n", len(list), time4-time1)
+}
+
+func testListLock(targetCout int) {
+	var list []int
+	time1 := time.Now().UnixNano() / int64(time.Millisecond)
+	for i := 0; i < targetCout; i++ {
+		lock.Lock()
+		list = append(list, i)
+		lock.Unlock()
+	}
+	time2 := time.Now().UnixNano() / int64(time.Millisecond)
+	for i := 0; i < targetCout; i++ {
+		lock.Lock()
+		value := list[targetCout-1]
+		if value == -1 {
+			fmt.Println(value)
+		}
+		lock.Unlock()
+	}
+	time3 := time.Now().UnixNano() / int64(time.Millisecond)
+	for i := targetCout - 1; i >= 0; i-- {
+		lock.Lock()
+		list = append(list[:i], list[i+1:]...)
+		lock.Unlock()
+	}
+	//for len(list) > 0 {
+	//	lock.Lock()
+	//	for i := 0; i < len(list); i++ {
+	//		if i == len(list)-1 {
+	//			list = append(list[:i], list[i+1:]...)
+	//			break
+	//		}
+	//	}
+	//	lock.Unlock()
+	//}
+	time4 := time.Now().UnixNano() / int64(time.Millisecond)
+
+	fmt.Printf("锁-List添加%d条数据耗时:%d\n", targetCout, time2-time1)
+	fmt.Printf("锁-List读取%d次数据耗时:%d\n", targetCout, time3-time2)
+	fmt.Printf("锁-List移除%d条数据耗时:%d\n", targetCout, time4-time3)
+	fmt.Printf("锁-List剩余数据数:%d 总共耗时:%d\n", len(list), time4-time1)
+}
+
+func testMap(targetCout int) {
+	mymap := make(map[int]int)
+	time1 := time.Now().UnixNano() / int64(time.Millisecond)
+	for i := 0; i < targetCout; i++ {
+		mymap[i] = i
+	}
+	time2 := time.Now().UnixNano() / int64(time.Millisecond)
+	for i := 0; i < targetCout; i++ {
+		value := mymap[targetCout-1]
+		if value == -1 {
+			fmt.Println(value)
+		}
+	}
+	time3 := time.Now().UnixNano() / int64(time.Millisecond)
+	for i := targetCout - 1; i >= 0; i-- {
+		delete(mymap, i)
+	}
+	time4 := time.Now().UnixNano() / int64(time.Millisecond)
+
+	fmt.Printf("MAP添加%d条数据耗时:%d\n", targetCout, time2-time1)
+	fmt.Printf("MAP读取%d次数据耗时:%d\n", targetCout, time3-time2)
+	fmt.Printf("MAP移除%d条数据耗时:%d\n", targetCout, time4-time3)
+	fmt.Printf("MAP剩余数据数:%d 总共耗时:%d\n", len(mymap), time4-time1)
+}
+
+func strJoin(targetCout int) {
+	value := ""
+	time1 := time.Now().UnixNano() / int64(time.Millisecond)
+	for i := 0; i < targetCout; i++ {
+		value = "1" + "2"
+	}
+	time2 := time.Now().UnixNano() / int64(time.Millisecond)
+	for i := 0; i < targetCout; i++ {
+		value = strings.Join([]string{"1", "2"}, "")
+	}
+	time3 := time.Now().UnixNano() / int64(time.Millisecond)
+	for i := 0; i < targetCout; i++ {
+		value = fmt.Sprintf("%s%s", "1", "2")
+	}
+	time4 := time.Now().UnixNano() / int64(time.Millisecond)
+
+	fmt.Printf("%d次使用+拼接耗时:%d\n", targetCout, time2-time1)
+	fmt.Printf("%d次使用join拼接据耗时:%d\n", targetCout, time3-time2)
+	fmt.Printf("%d次使用fmt拼接耗时:%d\n", targetCout, time4-time3)
+	if value == "1" {
+		fmt.Println(value)
+	}
+}

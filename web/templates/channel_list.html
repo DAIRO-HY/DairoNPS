@@ -1,0 +1,135 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    {{template "head" .}}
+    <title>隧道列表</title>
+</head>
+<body>
+{{template "top-bar" .}}
+<div class="m-3 p-2 bg-white rounded">
+    <form onchange="onSearchSubmit()" action="/channel_list/list" method="get">
+        <div class="row row-cols-sm-2 row-cols-md-3 row-cols-lg-4">
+            <div class="col">
+                <div class="row">
+                    <label class="col-sm-4 col-form-label text-end">客户端</label>
+                    <div class="col-sm-8">
+                        <select class="form-select" name="clientId">
+                            <option value="">全部</option>
+                            <option th:each="item:${clients}" th:value="${item.id}" th:text="${item.name}"
+                                    th:selected="${item.id == search.clientId}"></option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="row">
+                    <label class="col-sm-4 col-form-label text-end">隧道模式</label>
+                    <div class="col-sm-8">
+                        <select class="form-select" name="type">
+                            <option value="">全部</option>
+                            <option value="1" th:selected="${search.type == 1}">TCP</option>
+                            <option value="2" th:selected="${search.type == 2}">UDP</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<div class="m-0">
+    <div id="list" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-0">
+
+    </div>
+</div>
+<th:block th:include="admin/include/js :: js"/>
+<script>
+    $(() => {
+
+        //客户端ID
+        const clientId = getParam("clientId")
+        if (clientId.length > 0) {
+            addNavBtn("添加", () => {
+                window.location.href = "/channel_list/channel_edit?clientId=" + clientId
+            });
+        }
+        init()
+    });
+
+    /**
+     * 初始化数据
+     */
+    function init() {
+
+        //客户端ID
+        const clientId = getParam("clientId")
+        $.ajaxByData("/channel_list/list?clientId=" + clientId).success(data => {
+            fillData(data)
+            console.log(data)
+        }).post()
+    }
+
+    /**
+     * 填充数据
+     */
+    function fillData(data) {
+        const $list = $("#list")
+        data.forEach(item => {
+            $list.append(`
+                <div class="col px-0 pb-3 px-3">
+                    <div class="bg-white rounded p-2 position-relative">
+                        <div style="position: absolute;top:0;right:8px;font-size: 40px;color: #0000001c;">
+
+                            <!--是否加密-->
+                            <i class="bi ${item.SecurityState === 1 ? "bi-lock-fill" : "bi-unlock-fill"}"></i>
+                        </div>
+                        <div class="text-center fs-5"><span>${item.Name}</span></div>
+                        <div>客户端:<span>${item.ClientName}</span></div>
+                        <div>模式:<span>${item.Mode}</span></div>
+                        <div>端口:<span>${item.ServerPort}</span> -> <span>${item.TargetPort}</span></div>
+                        <div>入网:<span>${item.InData}</span> &nbsp;&nbsp;出网<span>${item.OutData}</span></div>
+                        <div class="text-end">
+                            <button class="btn btn-sm btn-outline-danger" onclick="onSetStateClick(${item.Id})">
+                                <i class="bi ${item.EnableState === 1 ? "bi-pause-fill" : "bi-play-fill"}"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="onDeleteClick(${item.Id})">
+                                <i class="bi bi-trash3"></i></button>
+                            <a class="btn btn-sm btn-outline-primary"
+                               href="/channel_list/channel_edit?clientId=${item.ClientId}&id=${item.Id}"><i
+                                    class="bi bi-pencil-square"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `)
+        })
+    }
+
+    function onSearchSubmit() {
+        $("form").submit()
+    }
+
+    /**
+     * 删除点击事件
+     * @param id
+     */
+    function onDeleteClick(id) {
+        if (!confirm("确定删除?")) {
+            return
+        }
+        $.ajaxByData("/channel_list/delete?id=" + id).success(() => {
+            history.go(0)
+        }).post()
+    }
+
+    /**
+     * 修改可用状态
+     * @param id
+     */
+    function onSetStateClick(id) {
+        $.ajaxByData("/channel_list/set_state?id=" + id).success(() => {
+            history.go(0)
+        }).post()
+    }
+</script>
+</body>
+</html>

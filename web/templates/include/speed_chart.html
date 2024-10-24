@@ -1,0 +1,222 @@
+﻿{{define "speed_chart"}}
+<div id="speedChatDiv" class="px-3 mt-3" style="width: 100%;height: 200px;display: none;">
+    <canvas id="speedChartCanvas" class="bg-white rounded" style="width: 100%;height: 100%;">
+    </canvas>
+</div>
+<script>
+
+    /**
+     * 曲线图X坐标长度
+     */
+    const SPEED_CHART_COUNT = 30;
+
+    /**
+     * 上次计算时间
+     */
+    let preComputeTime = -1
+
+    /**
+     * 上一次入网流量总和
+     */
+    let preInDataTotal = -1
+
+    /**
+     * 上一次出网流量总和
+     */
+    let preOutDataTotal = -1
+
+    /**
+     * 入网网速
+     */
+    const inDataSpeed = Array(SPEED_CHART_COUNT).fill(NaN)
+
+    /**
+     * 出网网速
+     */
+    const outDataSpeed = Array(SPEED_CHART_COUNT).fill(NaN)
+
+    /**
+     * 网速报表
+     */
+    let speedChart = null
+    function showSpeedChart(id = "A") {
+        let ws = new WebSocket(`ws://${location.host}/ws/speed_chart`);
+        ws.onopen = function () {
+            $("#speedChatDiv").show()
+            initSpeedChart()
+            ws.send(id)
+        };
+
+        ws.onmessage = function (event) {
+            const datas = event.data.split(":")
+            computeSpeed(parseInt(datas[0]), parseInt(datas[1]))
+
+            //每隔一段时间去取新的数据
+            setTimeout(function () {
+                ws.send(id)
+            }, 1000)
+        };
+    }
+
+    /**
+     * 曲线图初始化
+     */
+    function initSpeedChart() {
+        const data = {
+            labels: Array(SPEED_CHART_COUNT).fill(""),
+            datasets: [
+                {
+                    label: '入网网速',
+                    data: Array(SPEED_CHART_COUNT).fill(NaN),
+                    pointRadius:1,//小圆点大小
+                    borderWidth:2,//线粗细
+                    borderColor: "#22ff00",
+                    fill: false,
+                    // cubicInterpolationMode: 'monotone',
+                    tension: 0.4//线条贝塞尔曲线的张力，0：代表折线   1：代表非常圆滑
+                }, {
+                    label: '出网网速',
+                    data: Array(SPEED_CHART_COUNT).fill(NaN),
+                    pointRadius:1,//小圆点大小
+                    borderWidth:2,//线粗细
+                    borderColor: "#ff0000",
+                    fill: false,
+                    tension: 0.4//线条贝塞尔曲线的张力，0：代表折线   1：代表非常圆滑
+                }
+            ]
+        };
+
+        const config = {
+            type: 'line',
+            data: data,
+            options: {
+                animation: false,//禁用动画
+                // animation: {//禁用动画
+                //     duration: 0
+                // },
+                responsive: true,
+                maintainAspectRatio: false,//默认值true,要设置图标高度,必须设置为false
+                plugins: {
+                    // title: {
+                    //     display: true,
+                    //     text: '网速'
+                    // },
+                },
+                interaction: {
+                    intersect: false,
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        title: {
+                            display: true
+                        }
+                    },
+                    y: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: '网速(MB/S)'
+                        },
+                        suggestedMin: 0,
+                        //suggestedMax: 200
+                    }
+                }
+            },
+        };
+        const ctx = document.getElementById('speedChartCanvas')
+        speedChart = new Chart(ctx, config);
+    }
+
+    /**
+     * 计算速度
+     * @param inDataTotal
+     * @param outDataTotal
+     */
+    function computeSpeed(inDataTotal, outDataTotal) {
+
+        //本次计算时间
+        const currentTime = new Date().getTime()
+        if (preComputeTime === -1) {
+            preComputeTime = currentTime
+            preInDataTotal = inDataTotal
+            preOutDataTotal = outDataTotal
+            return
+        }
+
+        //距离上次统计时间差
+        const time = currentTime - preComputeTime
+
+        //距上次统计入网流量差
+        const cInData = inDataTotal - preInDataTotal
+
+        //距上次统计出网流量差
+        const cOutData = outDataTotal - preOutDataTotal
+
+        //以兆为单位
+        const inSpeed = cInData / time * 1000
+        inDataSpeed.push(inSpeed)
+        inDataSpeed.splice(0, 1)
+
+        //以兆为单位
+        const outSpeed = cOutData / time * 1000
+        outDataSpeed.push(outSpeed)
+        outDataSpeed.splice(0, 1)
+
+        preComputeTime = currentTime
+        preInDataTotal = inDataTotal
+        preOutDataTotal = outDataTotal
+
+        //更新报表视图
+        updateSpeedChartData()
+    }
+
+    /**
+     * 设置报表数据
+     */
+    function updateSpeedChartData() {
+        let maxSpeed = 0
+        inDataSpeed.forEach((it) => {
+            if (isNaN(it)) return
+            maxSpeed = Math.max(maxSpeed, it)
+        })
+        outDataSpeed.forEach((it) => {
+            if (isNaN(it)) return
+            maxSpeed = Math.max(maxSpeed, it)
+        })
+
+        //倍率
+        let rate = 1
+        if (maxSpeed >= 1024 * 1024) {
+            rate = 1024 * 1024
+            speedChart.options.scales.y.title.text = "MB/S"
+        } else if (maxSpeed >= 1024) {
+            rate = 1024
+            speedChart.options.scales.y.title.text = "KB/S"
+        } else {
+            speedChart.options.scales.y.title.text = "B/S"
+        }
+
+        //入网网速
+        const inSpeedData = inDataSpeed.map((it) => {
+            if (isNaN(it)) {
+                return NaN
+            } else {
+                return (it / rate).toFixed(2)
+            }
+        })
+
+        //出网网速
+        const outSpeedData = outDataSpeed.map((it) => {
+            if (isNaN(it)) {
+                return NaN
+            } else {
+                return (it / rate).toFixed(2)
+            }
+        })
+        speedChart.data.datasets[0].data = inSpeedData //入网网速
+        speedChart.data.datasets[1].data = outSpeedData //出网网速
+        speedChart.update();
+    }
+</script>
+{{end}}

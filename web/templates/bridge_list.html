@@ -1,0 +1,97 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    {{template "head" .}}
+    <title>桥接列表</title>
+</head>
+<body>
+{{template "top-bar" .}}
+<div class="m-3 p-2 bg-white rounded">
+    <form onchange="loadData()" action="/bridge_list/load_data">
+        <div class="row row-cols-sm-2 row-cols-md-3 row-cols-lg-4">
+            <div class="col">
+                <div class="row">
+                    <label class="col-sm-4 col-form-label text-end">客户端</label>
+                    <div class="col-sm-8">
+                        <select class="form-select" name="clientId" dropdown-tag="client">
+                            <option value="">全部</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="row">
+                    <label class="col-sm-4 col-form-label text-end">隧道</label>
+                    <div class="col-sm-8">
+                        <select class="form-select" name="channelId" dropdown-tag="channel">
+                            <option value="">全部</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="col" style="display: none">
+                <div class="row">
+                    <label class="col-sm-4 col-form-label text-end">隧道模式</label>
+                    <div class="col-sm-8">
+                        <select class="form-select" name="type">
+                            <option value="">全部</option>
+                            <option value="1">TCP</option>
+                            <option value="2">UDP</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <button type="button" class="btn btn-primary" onclick="loadData();">查询</button>
+            </div>
+        </div>
+    </form>
+</div>
+<div class="m-3 p-2 bg-white rounded">
+    <table class="table table-hover">
+        <thead>
+        <tr>
+            <th>客户端</th>
+            <th>隧道名(端口转发名)</th>
+            <th>隧道模式</th>
+            <th>用户端IP</th>
+            <th>连接时间</th>
+        </tr>
+        </thead>
+        <tbody id="tbody">
+
+        </tbody>
+    </table>
+</div>
+<script>
+    $(function () {
+        loadData()
+    });
+
+    /**
+     * 修改可用状态
+     */
+    function loadData() {
+        $("#tbody").empty()
+        $("form").ajaxByForm("/bridge_list/load_data").success(data => {
+            fillData(data)
+        }).post()
+    }
+
+    function fillData(data) {
+        console.log(data)
+        const $tbody = $("#tbody")
+        data.forEach(item=>{
+            $tbody.append(`
+                <tr>
+                    <td>${item.ClientName}</td>
+                    <td>${item.ChannelName}</td>
+                    <td>${item.Mode}</td>
+                    <td>${item.Ip}</td>
+                    <td>${item.OnlineTime}</td>
+                </tr>`)
+        })
+    }
+</script>
+</body>
+</html>

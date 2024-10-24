@@ -1,0 +1,210 @@
+﻿{{define "data_size_chart"}}
+<div id="dataSizeChartDiv" class="px-3 mt-3" style="display: none;">
+    <div class="bg-white rounded">
+        <div id="dataSizeDateDiv" class="p-2 d-flex">
+            <input id="dataSizeChartDateStart" class="form-control" type="datetime-local" style="width: 170px;">
+            <div class="p-2">～</div>
+            <input id="dataSizeChartDateEnd" class="form-control" type="datetime-local" style="width: 170px;">
+            <button class="btn btn-outline-primary ms-2" onclick="onDataSizeChartDateRangeClick('1h')">1小时</button>
+            <button class="btn btn-outline-primary ms-2" onclick="onDataSizeChartDateRangeClick('1d')">1天</button>
+            <button class="btn btn-outline-primary ms-2" onclick="onDataSizeChartDateRangeClick('today')">今天</button>
+            <button class="btn btn-outline-primary ms-2" onclick="onDataSizeChartDateRangeClick('7d')">7天</button>
+            <button class="btn btn-outline-primary ms-2" onclick="onDataSizeChartDateRangeClick('1m')">1个月</button>
+            <button class="btn btn-outline-primary ms-2" onclick="onDataSizeChartDateRangeClick('month')">本月</button>
+            <button class="btn btn-outline-primary ms-2" onclick="onDataSizeChartDateRangeClick('1y')">1年</button>
+            <button class="btn btn-outline-primary ms-2" onclick="onDataSizeChartDateRangeClick('year')">今年</button>
+        </div>
+        <div style="width: 100%;height: 300px;">
+            <canvas id="dataSizeLog"></canvas>
+        </div>
+    </div>
+</div>
+<script>
+
+    /**
+     * 流量报表
+     */
+    let dataSizeChart = null
+
+    /**
+     * 数据流量统计报表目标客户端ID
+     */
+    let dataSizeChartClientId = 0
+
+    /**
+     * 数据流量统计报表目标隧道ID
+     */
+    let dataSizeChartChannelId = 0
+
+    /**
+     * 数据流量统计报表目标端口转发ID
+     */
+    let dataSizeChartForwardlId = 0
+
+    /**
+     * 显示数据流量统计报表
+     * @param clientId 客户端ID
+     * @param channelId 隧道ID
+     * @param forwardId 端口转发ID
+     */
+    function showDataSizeChart(clientId = 0, channelId = 0, forwardId = 0) {
+        dataSizeChartClientId = clientId
+        dataSizeChartChannelId = channelId
+        dataSizeChartForwardlId = forwardId
+        onDataSizeChartDateRangeClick("1m")
+    }
+
+
+    /**
+     * 统计时间点击事件
+     * @param tag
+     */
+    function onDataSizeChartDateRangeClick(tag) {
+        const dataSizeChartDateEnd = document.getElementById("dataSizeChartDateEnd")
+        const dataSizeChartDateStart = document.getElementById("dataSizeChartDateStart")
+        const date = new Date()
+        dataSizeChartDateEnd.value = date.format("yyyy-MM-ddThh:mm")
+        switch (tag) {
+            case "1h":
+                date.setHours(date.getHours() - 1)
+                dataSizeChartDateStart.value = date.format("yyyy-MM-ddThh:mm")
+                break;
+            case "1d":
+                date.setDate(date.getDate() - 1)
+                dataSizeChartDateStart.value = date.format("yyyy-MM-ddThh:mm")
+                break;
+            case "today":
+                dataSizeChartDateStart.value = date.format("yyyy-MM-ddT00:00")
+                break;
+            case "7d":
+                date.setDate(date.getDate() - 7)
+                dataSizeChartDateStart.value = date.format("yyyy-MM-ddThh:mm")
+                break;
+            case "1m":
+                date.setMonth(date.getMonth() - 1)
+                dataSizeChartDateStart.value = date.format("yyyy-MM-ddThh:mm")
+                break;
+            case "month":
+                dataSizeChartDateStart.value = date.format("yyyy-MM-01T00:00")
+                break;
+            case "3m":
+                date.setMonth(date.getMonth() - 3)
+                dataSizeChartDateStart.value = date.format("yyyy-MM-ddThh:mm")
+                break;
+            case "6m":
+                date.setMonth(date.getMonth() - 6)
+                dataSizeChartDateStart.value = date.format("yyyy-MM-ddThh:mm")
+                break;
+            case "1y":
+                date.setFullYear(date.getFullYear() - 1)
+                dataSizeChartDateStart.value = date.format("yyyy-MM-ddThh:mm")
+                break;
+            case "year":
+                dataSizeChartDateStart.value = date.format("yyyy-01-01T00:00")
+                break;
+        }
+
+        //开始时间
+        const startTime = new Date(dataSizeChartDateStart.value).getTime() / 1000
+
+        //结束时间
+        const endTime = new Date(dataSizeChartDateEnd.value).getTime() / 1000
+        getDataSizeLog(startTime, endTime)
+    }
+
+    /**
+     * 获取数据
+     */
+    function getDataSizeLog(start, end) {
+        $.ajaxByData("/data_size/get_data_size")
+            .addAll({
+                ClientId: dataSizeChartClientId,
+                ChannelId: dataSizeChartChannelId,
+                ForwardlId: dataSizeChartForwardlId,
+                StartTime: start,
+                EndTime: end,
+            })
+            .success(data => {
+                initDataSizeChart(data.Lables, data.InDatas, data.OutDatas, data.Unit)
+            }).post()
+    }
+
+    /**
+     * 曲线图初始化
+     */
+    function initDataSizeChart(labels, inDataList, outDataList, unit) {
+        if (dataSizeChart != null) {
+            dataSizeChart.data.labels = labels
+            dataSizeChart.data.datasets[0].data = inDataList //入网
+            dataSizeChart.data.datasets[1].data = outDataList //出网
+            dataSizeChart.update();
+            return
+        }
+        $("#dataSizeChartDiv").show()
+        const data = {
+            labels: labels,
+            datasets: [
+                {
+                    label: '入网网速',
+                    data: inDataList,
+                    pointRadius:1,//小圆点大小
+                    borderWidth:2,//线粗细
+                    borderColor: "#22ff00",
+                    fill: false,
+                    // cubicInterpolationMode: 'monotone',
+                    tension: 0.4
+                }, {
+                    label: '出网网速',
+                    data: outDataList,
+                    pointRadius:1,//小圆点大小
+                    borderWidth:2,//线粗细
+                    borderColor: "#ff0000",
+                    fill: false,
+                    tension: 0.4
+                }
+            ]
+        };
+
+        const config = {
+            type: 'line',
+            data: data,
+            options: {
+                animation: false,//禁用动画
+                // animation: {//禁用动画
+                //     duration: 0
+                // },
+                responsive: true,
+                maintainAspectRatio: false,//默认值true,要设置图标高度,必须设置为false
+                plugins: {
+                    // title: {
+                    //     display: true,
+                    //     text: '网速'
+                    // },
+                },
+                interaction: {
+                    intersect: false,
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        title: {
+                            display: true
+                        }
+                    },
+                    y: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: unit
+                        },
+                        suggestedMin: 0,
+                        //suggestedMax: 200
+                    }
+                }
+            },
+        };
+        dataSizeChart = new Chart(document.getElementById('dataSizeLog'), config);
+    }
+
+</script>
+{{end}}

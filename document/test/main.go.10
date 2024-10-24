@@ -1,0 +1,60 @@
+package main
+
+import (
+	"DairoNPS/client/ClientSessionManager"
+	"DairoNPS/dao/ChannelDao"
+	"DairoNPS/dao/ClientDao"
+	"DairoNPS/dao/dto"
+	"DairoNPS/pool/TCPPoolManager"
+	_ "embed"
+	"fmt"
+	_ "github.com/mattn/go-sqlite3"
+)
+
+func main() {
+	fmt.Println("-------->START")
+	//initInterface()
+	//SecurityUtil.Init()
+	//NPSDB.Init()
+	//addTestData()
+	//ClientAcceptManager.Start()
+}
+
+// 初始化共享接口
+func initInterface() {
+	TCPPoolManager.Csmi = &ClientSessionManager.ClientSessionManager{}
+}
+
+func addTestData() {
+	clientDto := dto.ClientDto{
+		Name:   "test",
+		Key:    "njeHds*fs4tfsd",
+		Remark: "6t7uyghjbmnlkkj",
+	}
+	ClientDao.Add(&clientDto)
+
+	channel := dto.ChannelDto{
+		//客户端id
+		ClientId: clientDto.Id,
+
+		//隧道名
+		Name: "TCP测试隧道1",
+
+		//隧道模式, 1:TCP  2:UDP
+		Mode:        1,
+		EnableState: 1,
+
+		//服务端端口
+		ServerPort: 19090,
+
+		//目标端口(ip:端口)
+		TargetPort: "127.0.0.1:19091",
+
+		//是否加密传输
+		SecurityState: 0,
+
+		//一些备注信息,错误信息等
+		Remark: "",
+	}
+	ChannelDao.Add(channel)
+}

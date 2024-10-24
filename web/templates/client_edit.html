@@ -1,0 +1,139 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    {{template "head" .}}
+    <title>客户端编辑</title>
+</head>
+<body>
+{{template "top-bar" .}}
+{{template "data_size_chart" .}}
+{{template "speed_chart" .}}
+<div class="m-3 p-2 bg-white rounded">
+    <form action="/client_list/client_edit/edit">
+        <input type="hidden" id="Id" name="Id">
+        <div class="row row-cols-1 row-cols-sm-2">
+            <div class="col mt-2">
+                <div class="row">
+                    <label class="col-4 col-form-label text-end">名称</label>
+                    <div class="col-8">
+                        <input type="text" class="form-control" name="Name" autocomplete="off">
+                    </div>
+                </div>
+            </div>
+            <div class="col mt-2">
+                <div class="row">
+                    <label class="col-4 col-form-label text-end">认证秘钥</label>
+                    <div class="col-8">
+                        <input type="text" class="form-control" name="Key" autocomplete="off">
+                    </div>
+                </div>
+            </div>
+            <div class="col mt-2">
+                <div class="row">
+                    <label class="col-4 col-form-label text-end">客户端版本</label>
+                    <div class="col-8">
+                        <input type="text" class="form-control" name="Version" disabled>
+                    </div>
+                </div>
+            </div>
+            <div class="col mt-2">
+                <div class="row">
+                    <label class="col-4 col-form-label text-end">客户端IP</label>
+                    <div class="col-8">
+                        <input type="text" class="form-control" name="Ip" disabled>
+                    </div>
+                </div>
+            </div>
+            <div class="col mt-2">
+                <div class="row">
+                    <label class="col-4 col-form-label text-end">入网流量</label>
+                    <div class="col-8">
+                        <input type="text" class="form-control" name="InData" disabled>
+                    </div>
+                </div>
+            </div>
+            <div class="col mt-2">
+                <div class="row">
+                    <label class="col-4 col-form-label text-end">出网流量</label>
+                    <div class="col-8">
+                        <input type="text" class="form-control" name="OutData" disabled>
+                    </div>
+                </div>
+            </div>
+            <div class="col mt-2">
+                <div class="row">
+                    <label class="col-4 col-form-label text-end">在线状态</label>
+                    <div class="col-8">
+                        <input type="text" class="form-control" name="OnlineState" disabled>
+                    </div>
+                </div>
+            </div>
+            <div class="col mt-2">
+                <div class="row">
+                    <label class="col-4 col-form-label text-end">启用状态</label>
+                    <div class="col-8">
+                        <input type="text" class="form-control" name="EnableState" disabled>
+                    </div>
+                </div>
+            </div>
+            <div class="col mt-2">
+                <div class="row">
+                    <label class="col-4 col-form-label text-end">最后登录时间</label>
+                    <div class="col-8">
+                        <input type="text" class="form-control" name="LastLoginDate" disabled>
+                    </div>
+                </div>
+            </div>
+            <div class="col mt-2">
+                <div class="row">
+                    <label class="col-4 col-form-label text-end">创建时间</label>
+                    <div class="col-8">
+                        <input type="text" class="form-control" name="Date" disabled>
+                    </div>
+                </div>
+            </div>
+            <div class="col mt-2">
+                <div class="row">
+                    <label class="col-4 col-form-label text-end">备注</label>
+                    <div class="col-8">
+                        <textarea class="form-control" name="Remark"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="mt-3">
+            <div class="text-end">
+                <button type="button" class="btn btn-primary" onclick="onSubmitClick()">提交</button>
+            </div>
+        </div>
+    </form>
+</div>
+<script>
+
+    $(function () {
+        const clientId = getParam("id")
+        if (clientId !== "") {//网速统计报表显示
+            showDataSizeChart(clientId, 0, 0)
+            showSpeedChart("C" + clientId)
+        }
+        init()
+    })
+
+    function init() {
+        const id = getParam("id")
+        $.ajaxByData("/client_list/client_edit/info?id=" + id).success(data => {
+            $("form").bindValue(data)
+        }).post()
+    }
+
+    /**
+     * 表单提交点击事件
+     */
+    function onSubmitClick() {
+        $("form").ajaxByForm().success(() => {
+            window.location = document.referrer
+        }).post()
+    }
+</script>
+</body>
+</html>

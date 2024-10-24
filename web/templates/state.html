@@ -1,0 +1,61 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:include="admin/include/css :: header('运行状态')"/>
+</head>
+<body>
+<th:block th:include="admin/include/top-bar :: top-bar"/>
+<div class="container-fluid p0">
+    <div class="nav-left">
+        <th:block th:include="admin/include/left_item :: left-item"/>
+    </div>
+    <div class="content-body">
+        <div class="panel panel-default m5">
+            <div class="panel-heading p0">
+                <div class="panel-head-title">运行状态</div>
+            </div>
+            <div class="panel-body user-panel" style="min-height: initial">
+                <div>
+                    <a class="btn btn-success" href="/admin/state/open_web_server" th:if="${!webServerIsRuning}" >开启WebServer模拟器</a>
+                    <a class="btn btn-info" href="/admin/state/open_client_socket_connection" th:if="${!clientSocketConnectionIsRuning}">开启客户端连接工具</a>
+                </div>
+                <div class="row mt10">
+                    <div class="col-md-2">
+                        <div class="alert alert-success" role="alert">
+                            WebServer运行状态:[[${webServerIsRuning ? '正在运行' : '未运行'}]]
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="alert alert-success" role="alert">
+                            客户端连接工具运行状态:[[${clientSocketConnectionIsRuning ? '正在运行' : '未运行'}]]
+                        </div>
+                    </div>
+
+                    <div class="col-md-2">
+                        <div class="alert alert-info" role="alert">
+                            缓存的连接数:[[${cacheClientSocketCount}]]
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="alert alert-info" role="alert">
+                            正在发送数据的连接数:[[${sendingDataSocketCount}]]
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="alert alert-info" role="alert">
+                            WebServer端口:[[${webServerPort}]]
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="alert alert-info" role="alert">
+                            客户端连接端口:[[${socketClientPort}]]
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<th:block th:include="admin/include/js :: js"/>
+</body>
+</html>

@@ -1,0 +1,21 @@
+package main
+
+import "fmt"
+
+func main() {
+	mamap := make(map[int]int)
+	go func() {
+		for {
+			mamap[1] = 1
+			delete(mamap, 1)
+		}
+	}()
+	for {
+		if len(mamap) == 100 {
+			fmt.Println(len(mamap))
+		}
+		//if mamap[1] == 100 {
+		//	fmt.Println(len(mamap))
+		//}
+	}
+}

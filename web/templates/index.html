@@ -1,0 +1,162 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    {{template "head" .}}
+    <title>首页</title>
+</head>
+<body>
+{{template "top-bar" .}}
+<div class="m-3 p-2">
+    <div class="row row-cols-xl-6 row-cols-lg-5 row-cols-md-4 row-cols-sm-3 row-cols-2 text-muted">
+        <div class="col text-center p-2">
+            <div class="bg-white border rounded">
+                <div class="py-2">入网流量</div>
+                <div class="border-top fs-2" id="InDataTotal">
+                </div>
+            </div>
+        </div>
+        <div class="col text-center p-2">
+            <div class="bg-white border rounded">
+                <div class="py-2">出网流量</div>
+                <div class="border-top fs-2" id="OutDataTotal">
+                </div>
+            </div>
+        </div>
+        <div class="col text-center p-2">
+            <div class="bg-white border rounded">
+                <div class="py-2">在线客服端</div>
+                <div class="border-top fs-2" id="OnlineClientCount">
+                </div>
+            </div>
+        </div>
+        <div class="col text-center p-2">
+            <div class="bg-white border rounded">
+                <div class="py-2">正在监听隧道</div>
+                <div class="border-top fs-2" id="ProxyCount">
+                </div>
+            </div>
+        </div>
+        <div class="col text-center p-2">
+            <div class="bg-white border rounded">
+                <div class="py-2">TCP连接数/连接池</div>
+                <div class="border-top fs-2" id="">
+                    <span id="TcpBridgeCount"></span>/<span id="TcpPoolCount"></span>
+                </div>
+            </div>
+        </div>
+        <div class="col text-center p-2">
+            <div class="bg-white border rounded">
+                <div class="py-2">UDP连接数/连接池</div>
+                <div class="border-top fs-2">
+                    <span id="udpSessionCount"></span>/<span id="udpPoolCount"></span>
+                </div>
+            </div>
+        </div>
+        <div class="col text-center p-2">
+            <div class="bg-white border rounded">
+                <div class="py-2">端口转发代理</div>
+                <div class="border-top fs-2" id="ForwardCount">
+                </div>
+            </div>
+        </div>
+        <div class="col text-center p-2">
+            <div class="bg-white border rounded">
+                <div class="py-2">端口转发桥接</div>
+                <div class="border-top fs-2" id="ForwardBridgeCount">
+                </div>
+            </div>
+        </div>
+        <div class="col text-center p-2">
+            <div class="bg-white border rounded">
+                <div class="py-2">协程数</div>
+                <div class="border-top fs-2" id="NumGoroutine">
+                </div>
+            </div>
+        </div>
+        <div class="col text-center p-2">
+            <div class="bg-white border rounded">
+                <div class="py-2">内存分配</div>
+                <div class="border-top fs-2" id="Memory">
+                </div>
+            </div>
+        </div>
+        <div class="col text-center p-2">
+            <div class="bg-white border rounded">
+                <div class="py-2">系统内存占用</div>
+                <div class="border-top fs-2" id="SystemMemory">
+                </div>
+            </div>
+        </div>
+        <div class="col text-center p-2">
+            <div class="bg-white border rounded">
+                <div class="py-2">堆内存分配</div>
+                <div class="border-top fs-2" id="HeapAlloc">
+                </div>
+            </div>
+        </div>
+        <div class="col text-center p-2">
+            <div class="bg-white border rounded">
+                <div class="py-2">堆内存系统占用</div>
+                <div class="border-top fs-2" id="HeapSys">
+                </div>
+            </div>
+        </div>
+        <div class="col text-center p-2">
+            <div class="bg-white border rounded">
+                <div class="py-2">垃圾回收次数</div>
+                <div class="border-top fs-2" >
+                    <span id="NumGC"></span>
+                    <button class="btn btn-link" onclick="onGCClick()">立即回收</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{template "data_size_chart" .}}
+{{template "speed_chart" .}}
+<script>
+    $(function () {
+        initGetDataWebsocket()
+        showDataSizeChart()
+        showSpeedChart()
+    })
+
+    /**
+     * 加载数据
+     */
+    function initGetDataWebsocket() {
+        let ws = new WebSocket(`ws://${location.host}/index/data`);
+        ws.onopen = function () {
+            ws.send("0")
+        };
+
+        ws.onmessage = function (event) {
+            const data = JSON.parse(event.data)
+            fillData(data)
+
+            //每隔一段时间去取新的数据
+            setTimeout(function () {
+                ws.send("0")
+            }, 1000)
+        };
+    }
+
+    /**
+     * 填充数据
+     */
+    function fillData(data) {
+        for (let key in data) {
+            $("#" + key).text(data[key])
+        }
+    }
+
+    /**
+     * 垃圾回收
+     */
+    function onGCClick(){
+        $.ajaxByData("/index/gc").post()
+    }
+
+</script>
+</body>
+</html>

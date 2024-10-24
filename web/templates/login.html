@@ -1,0 +1,43 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    {{template "head" .}}
+    <title>管理员登录</title>
+</head>
+<body class="bg-login">
+<form action="/login/do_login">
+    <div class="text-center d-table" style="width: 100vw;height: 100vh;">
+        <div class="d-table-cell align-middle">
+            <div class="d-inline-block border rounded bg-white p-3" style="width: 300px;">
+                <span class="fs-4">管理员登录</span>
+                <input name="Name" class="form-control mt-3" type="text" placeholder="用户名" autocomplete="off"
+                       required>
+                <input name="Pwd" class="form-control mt-3" type="password" placeholder="密码" autocomplete="off"
+                       required>
+                <button type="button" onclick="onLoginClick()" class="btn btn-primary w-100 mt-4">登录</button>
+                <div class="text-end mt-2"><a class="text-muted small" href="javascript:void(0);"
+                                              onclick="onForgetClick();">忘记密码</a></div>
+            </div>
+        </div>
+    </div>
+</form>
+<script>
+
+    /**
+     * 登录按钮点击事件
+     */
+    function onLoginClick() {
+        $("form").ajaxByForm().success(() => {
+            location.href = "/index"
+        }).post()
+    }
+
+    /**
+     * 忘记密码点击事件
+     */
+    function onForgetClick() {
+        alert("请重启程序，并重新配置登陆密码。")
+    }
+</script>
+</body>
+</html>

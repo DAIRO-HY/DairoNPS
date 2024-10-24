@@ -1,0 +1,85 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    {{template "head" .}}
+    <title>端口转发</title>
+</head>
+<body>
+{{template "top-bar" .}}
+<div class="mx-0 mt-3">
+    <div id="listDiv" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-0">
+    </div>
+</div>
+<script>
+    $(function () {
+        addNavBtn("添加", () => {
+            window.location.href = "/forward_list/forward_edit"
+        })
+        getList()
+    });
+
+    function getList() {
+        $.ajaxByData("/forward_list/get_list").success(data => {
+            fillData(data)
+        }).post()
+    }
+
+    /**
+     * 填充数据
+     * @param data
+     */
+    function fillData(data) {
+        const $listDiv = $("#listDiv")
+        data.forEach(item => {
+            $listDiv.append(`
+            <div class="col px-0 pb-3 px-3">
+                <div class="bg-white rounded p-2 position-relative">
+                    <div class="text-center fs-5">${item.Name}</div>
+                    <div>端口:<span>${item.Port}</span> -> <span>${item.TargetPort}</span></div>
+                    <div>入网:<span>${item.InData}</span> &nbsp;&nbsp;出网<span>${item.OutData}</span></div>
+                    <div class="text-end">
+                        <button class="btn btn-sm btn-outline-danger" onclick="onSetStateClick(${item.Id})">
+                            <i class="bi ${item.EnableState === 1 ? "bi-pause-fill" : "bi-play-fill"}"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="onDeleteClick(${item.Id})">
+                            <i class="bi bi-trash3"></i>
+                        </button>
+                        <a class="btn btn-sm btn-outline-primary" href="/forward_list/forward_edit?id=${item.Id}">
+                           <i class="bi bi-pencil-square"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+          `)
+        })
+    }
+
+    function onSearchSubmit() {
+        $("form").submit()
+    }
+
+    /**
+     * 删除点击事件
+     * @param id
+     */
+    function onDeleteClick(id) {
+        if (!confirm("确定删除?")) {
+            return
+        }
+        $.ajaxByData("/forward_list/delete?id=" + id).success(() => {
+            history.go(0)
+        }).post()
+    }
+
+    /**
+     * 修改可用状态
+     * @param id
+     */
+    function onSetStateClick(id) {
+        $.ajaxByData("/forward_list/set_state?id=" + id).success(() => {
+            history.go(0)
+        }).post()
+    }
+</script>
+</body>
+</html>

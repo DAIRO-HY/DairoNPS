@@ -1,0 +1,78 @@
+﻿{{define "top-bar"}}
+<nav class="navbar navbar-expand-sm bg-primary" data-bs-theme="dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">DAIRO-NPS</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" href="/index">首页</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/client_list">客户端</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/forward_list">端口转发</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/bridge_list">桥接列表</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">关于</a>
+                </li>
+            </ul>
+            <!--<a class="btn btn-link" href="/set"><i class="bi bi-gear"></i>&nbsp;设置</a>-->
+            <a class="btn btn-link" href="javascript:void(0);" onclick="onLogoutClick()"><i class="bi bi-box-arrow-right"></i>&nbsp;退出</a>
+        </div>
+    </div>
+</nav>
+<div class="bg-white mt-3 px-2 mx-3 row g-0 rounded" style="line-height: 50px">
+    <div class="col-6 fs-5" id="bar-title"></div>
+    <div class="col-6 text-end" id="navBtnDiv">
+    </div>
+</div>
+<script>
+
+    // 显示标题
+    document.getElementById("bar-title").innerText = document.title
+    function initTopBar() {
+        if ($(".navbar").length === 0) {
+            return;
+        }
+
+        //得到当前url路劲部分
+        const pathname = window.location.pathname;
+        const navLinkList = $(".nav-link")
+        for (let i = 0; i < navLinkList.length; i++) {
+            const href = navLinkList[i].getAttribute("href")
+            if (pathname.startWith(href)) {
+                $(navLinkList[i]).addClass("active")
+                break;
+            }
+        }
+    }
+
+    /**
+     * 在顶部导航栏添加按钮
+     * @param title
+     * @param event
+     */
+    function addNavBtn(title, event) {
+        const btn = $('<button class="btn btn-primary">' + title + '</button>')
+        btn.on("click", event);
+        $("#navBtnDiv").append(btn)
+    }
+
+    /**
+     * 退出登录点击事件
+     */
+    function onLogoutClick() {
+        $.ajaxByData("/login/login_out").success(()=>{
+            location.href = "/login"
+        }).post()
+    }
+</script>
+{{end}}

@@ -1,0 +1,210 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    {{template "head" .}}
+    <title>数据转发编辑/添加</title>
+    <style>
+        #aclIp:focus {
+            border: 0;
+            outline: none;
+        }
+    </style>
+</head>
+<body>
+{{template "top-bar" .}}
+{{template "data_size_chart" .}}
+{{template "speed_chart" .}}
+<div class="m-3 p-2 bg-white rounded">
+    <form action="/forward_list/forward_edit/edit">
+        <input type="hidden" name="Id">
+        <div class="row row-cols-1 row-cols-sm-2">
+            <div class="col mt-2">
+                <div class="row">
+                    <label class="col-4 col-form-label text-end">转发名称</label>
+                    <div class="col-8">
+                        <input type="text" class="form-control" name="Name" autocomplete="off">
+                    </div>
+                </div>
+            </div>
+            <div class="col mt-2">
+                <div class="row">
+                    <label class="col-4 col-form-label text-end">端口</label>
+                    <div class="col-8">
+                        <input type="text" class="form-control" name="Port" autocomplete="off">
+                    </div>
+                </div>
+            </div>
+            <div class="col mt-2">
+                <div class="row">
+                    <label class="col-4 col-form-label text-end">目标端口(ip:端口)</label>
+                    <div class="col-8">
+                        <input type="text" class="form-control" name="TargetPort" autocomplete="off">
+                    </div>
+                </div>
+            </div>
+            <div class="col mt-2">
+                <div class="row">
+                    <label class="col-4 col-form-label text-end">入网流量</label>
+                    <div class="col-8">
+                        <input type="text" class="form-control" name="InData" disabled>
+                    </div>
+                </div>
+            </div>
+            <div class="col mt-2">
+                <div class="row">
+                    <label class="col-4 col-form-label text-end">出网流量</label>
+                    <div class="col-8">
+                        <input type="text" class="form-control" name="OutData" disabled>
+                    </div>
+                </div>
+            </div>
+            <div class="col mt-2">
+                <div class="row">
+                    <label class="col-4 col-form-label text-end">启用状态</label>
+                    <div class="col-8">
+                        <input type="text" class="form-control" name="EnableState" disabled>
+                    </div>
+                </div>
+            </div>
+            <div class="col mt-2">
+                <div class="row">
+                    <label class="col-4 col-form-label text-end">创建时间</label>
+                    <div class="col-8">
+                        <input type="text" class="form-control" name="Date" disabled>
+                    </div>
+                </div>
+            </div>
+            <div class="col mt-2">
+                <div class="row">
+                    <label class="col-4 col-form-label text-end">备注</label>
+                    <div class="col-8">
+                        <textarea class="form-control" name="Remark"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="col mt-2">
+                <div class="row">
+                    <label class="col-4 col-form-label text-end">访问控制</label>
+                    <div class="col-8 pt-2">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="aclState"
+                                   value="0" th:checked="${form.aclState == 0}" id="aclState0">
+                            <label class="form-check-label" for="aclState0">关闭</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="aclState"
+                                   value="1" th:checked="${form.aclState == 1}" id="aclState1">
+                            <label class="form-check-label" for="aclState1">白名单模式</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="aclState"
+                                   value="2" th:checked="${form.aclState == 2}" id="aclState2">
+                            <label class="form-check-label" for="aclState2">黑名单模式</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="row" id="aclIpRow">
+                    <div class="col-8 offset-4 small">
+                        <section id="aclIpDiv">
+                            <div class="d-inline-block">
+                                <span class="border border-secondary rounded-start-pill px-1">{IP}<input name="aclIp"
+                                                                                                         type="hidden"
+                                                                                                         value="{IP}"></span><span
+                                    class="border border-start-0 border-secondary rounded-end-pill px-1 cursor-pointer"
+                                    style="cursor: pointer;" onclick="$(this).parent().remove();"><i
+                                    class="bi bi-x"></i></span>
+                            </div>
+                        </section>
+                        <div class="d-inline-block mt-2">
+                            <span class="border border-secondary rounded-start-pill ps-2">
+                                <input id="aclIp" style="border: none;border-radius: 0;height: 18px;"
+                                       placeholder="本地：192.168.1.100" autocomplete="off">
+                            </span><span
+                                class="border border-start-0 border-secondary rounded-end-pill px-1"
+                                onclick="onAddAclIPClick()" style="cursor: pointer;"><i class="bi bi-plus"></i></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div>
+            <div class="text-end mt-3">
+                <button type="button" class="btn btn-primary" onclick="onSubmitClick()">提交</button>
+            </div>
+        </div>
+    </form>
+</div>
+<input id="initAclIp" type="hidden" th:value="${aclIp}">
+<script th:inline="javascript">
+
+    /**
+     //  * 已经添加ip
+     //  */
+    // const ipAcls = JSON.parse([[${aclIp}]])
+    //
+    // /**
+    //  * IP地址列表部分的HTML
+    //  */
+    // const aclIpHtml = $("#aclIpDiv").html()
+    // $("#aclIpDiv").empty()
+    $(function () {
+
+        // //将现有的ip加入到列表
+        // ipAcls.forEach(item => addIp(item))
+        //
+        // $("[name='aclState']").on("click", () => {
+        //     aclShowState()
+        // })
+        // aclShowState()
+        const forwardId = getParam("id")
+        if (forwardId !== "") {//网速统计报表显示
+            showDataSizeChart(0, 0, forwardId)
+            showSpeedChart("F" + forwardId)
+        }
+        getInfo()
+    })
+
+    /**
+     * 获取初始数据
+     */
+    function getInfo() {
+        $.ajaxByData("/forward_list/forward_edit/info")
+            .addAll({
+                id: getParam("id")
+            })
+            .success(data => {
+                $("form").bindValue(data)
+            }).post()
+    }
+
+    /**
+     * 表单提交点击事件
+     */
+    function onSubmitClick() {
+        $("form").ajaxByForm().success(() => {
+            window.location = document.referrer
+        }).post()
+    }
+
+    /**
+     * 添加IP地址点击事件
+     */
+    function onAddAclIPClick() {
+        const ip = $("#aclIp").val()
+        addIp(ip)
+    }
+
+    function aclShowState() {
+        if ($("[name='aclState']:checked").val() === "0") {
+            $("#aclIpRow").hide()
+        } else {
+            $("#aclIpRow").show()
+        }
+    }
+
+    function addIp(ip) {
+        $("#aclIpDiv").append(aclIpHtml.replace(/\{IP\}/g, ip))
+    }
+</script>
+</body>
+</html>
