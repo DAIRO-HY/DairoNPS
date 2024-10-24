@@ -1,11 +1,17 @@
-version: '3'
+version: '3.1'
 services:
-  dairo-nps-build:
-    build: .
+  dairo-nps:
+    image: dairopapa/dairo-nps:1.0.0
+#    build: .
     restart: always
-    container_name: dairo-nps-build
-    privileged: true
-    tty: true
-    volumes:
-      - ./data:/app/DairoNPS
+    container_name: dairo-nps
+    network_mode: host
 
+    environment:
+      #时区,解决时间不一致的bug
+      TZ: Asia/Shanghai
+
+      #解决控制台输出中文乱码
+      LANG: C.UTF-8
+    volumes:
+      - ./data:/app/data

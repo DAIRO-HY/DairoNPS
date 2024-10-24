@@ -20,5 +20,5 @@ Cargo.lock
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 .idea/
 /data/
-/document/docker/data/
+/document/docker-build/data/
 /build/
