@@ -69,7 +69,7 @@ func MakeBridge(client *dto.ClientDto, channel *dto.ChannelDto, proxySocket net.
 	bridgeLock.Lock()
 	bridgeMap[bridge] = true
 	bridgeLock.Unlock()
-	bridge.start()
+	go bridge.start()
 }
 
 // 关闭客户端所有正在通信的连接

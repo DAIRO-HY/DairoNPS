@@ -6,7 +6,7 @@ import (
 	"DairoNPS/util/ChannelStatisticsUtil"
 	"DairoNPS/util/SecurityUtil"
 	"DairoNPS/util/TcpUtil"
-	"log"
+	"fmt"
 	"net"
 	"strconv"
 	"sync/atomic"
@@ -49,13 +49,11 @@ type TCPBridge struct {
  */
 func (mine *TCPBridge) start() {
 	mine.channelDataSize = ChannelStatisticsUtil.Get(mine.Channel.Id)
-	go func() {
 
-		//发送目标端口信息
-		mine.sendHeaderToClient()
-		mine.receiveByProxySendToClient()
-	}()
-	go mine.receiveByClientSendToProxy()
+	//发送目标端口信息
+	mine.sendHeaderToClient()
+	go mine.receiveByProxySendToClient()
+	mine.receiveByClientSendToProxy()
 }
 
 /**
@@ -75,9 +73,10 @@ func (mine *TCPBridge) sendHeaderToClient() {
 	data = append(data, headerData...)
 	err := TcpUtil.WriteAll(mine.ClientSocket, data)
 	if err != nil {
-		log.Println("-->往客户端发送头部失败")
+		fmt.Println("-->往客户端发送头部失败")
 		mine.ClientSocket.Close()
 	}
+	fmt.Println("-->往客户端发送头部成功")
 }
 
 /**

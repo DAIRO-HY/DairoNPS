@@ -4,6 +4,7 @@ import (
 	"DairoNPS/constant/NPSConstant"
 	"DairoNPS/nps/nps_client/ClientSessionManagerInterface"
 	"DairoNPS/nps/nps_client/HeaderUtil"
+	"fmt"
 	"log"
 	"net"
 	"strconv"
@@ -117,6 +118,7 @@ func get(clientID int) net.Conn {
 		//	continue
 		//}
 		resultTcp = pool.PoolTCP
+		fmt.Printf("-->当前连接池已经创建时间：%d秒\n", (time.Now().UnixMilli()-pool.CreateTime)/1000)
 		break
 	}
 	poolLock.Unlock()
