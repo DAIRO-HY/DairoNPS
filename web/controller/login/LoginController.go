@@ -2,10 +2,15 @@ package login
 
 import (
 	"DairoNPS/constant/NPSConstant"
+	"DairoNPS/extension/String"
 	"DairoNPS/web"
 	"DairoNPS/web/controller"
 	"DairoNPS/web/controller/login/form"
+	"DairoNPS/web/login_state"
+	"math/rand/v2"
 	"net/http"
+	"strconv"
+	"time"
 )
 
 // 记录密码错误次数
@@ -18,7 +23,7 @@ func init() {
 }
 
 // 登录API
-func doLogin(inForm form.LoginForm) any {
+func doLogin(writer http.ResponseWriter, request *http.Request, inForm form.LoginForm) any {
 	if loginErrorCount > 10 {
 		return &controller.BusinessException{
 			Message: "用户名或密码错误次数超过限制，请重启程序再试。",
@@ -35,13 +40,27 @@ func doLogin(inForm form.LoginForm) any {
 		}
 	}
 	loginErrorCount = 0
-	NPSConstant.IsLogin = true
+
+	timeRand := time.Now().UnixMilli() + int64(rand.IntN(900000)+100000)
+	timeRandStr := strconv.FormatInt(timeRand, 10)
+	token := String.ToMd5(timeRandStr)
+	tokenCookie := &http.Cookie{
+		Name:    login_state.COOKIE_TOKEN,
+		Value:   token,
+		Path:    "/",
+		Expires: time.Now().AddDate(100, 0, 0), //100年以后过期
+		MaxAge:  100 * 365 * 24 * 60 * 60,
+		//HttpOnly: true,
+	}
+	http.SetCookie(writer, tokenCookie)
+	
+	login_state.Login(token)
 	return nil
 }
 
 // 退出登录
 func logout() {
-	NPSConstant.IsLogin = false
+	login_state.LoginOut()
 }
 
 // 表单验证

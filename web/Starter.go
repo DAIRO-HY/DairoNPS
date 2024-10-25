@@ -2,6 +2,7 @@ package web
 
 import (
 	"DairoNPS/constant/NPSConstant"
+	"DairoNPS/web/login_state"
 	"embed"
 	"encoding/json"
 	"html/template"
@@ -69,6 +70,17 @@ func htmlHandler(writer http.ResponseWriter, request *http.Request) {
 func ApiHandler(controller any) func(writer http.ResponseWriter, request *http.Request) {
 	return func(writer http.ResponseWriter, request *http.Request) {
 
+		// 设置 Content-Type 头部信息
+		writer.Header().Set("Content-Type", "text/plain;charset=UTF-8")
+		if !login_state.IsLogin(request) { //如果当前未登录
+			path := request.URL.Path
+			if !strings.HasPrefix(path, "/login/") { //非登录API，返回错误
+				writer.WriteHeader(http.StatusInternalServerError) // 设置状态码
+				writer.Write([]byte(`{"Code":5,"Message":"未登录。"}`))
+				return
+			}
+		}
+
 		// 获取函数的反射值
 		fn := reflect.ValueOf(controller)
 
@@ -103,9 +115,6 @@ func ApiHandler(controller any) func(writer http.ResponseWriter, request *http.R
 		if body == nil {
 			return
 		}
-
-		// 设置 Content-Type 头部信息
-		writer.Header().Set("Content-Type", "text/plain;charset=UTF-8")
 
 		switch returnBody := body.(type) {
 		case string:
@@ -197,6 +206,6 @@ func Start() {
 	port := NPSConstant.WebPort
 
 	// 启动服务器
-	log.Printf("Server starting at :%s\n", port)
+	log.Printf("WEB管理后台端口 :%s\n", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }

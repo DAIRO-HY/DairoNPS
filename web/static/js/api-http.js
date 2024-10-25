@@ -156,7 +156,7 @@ class ApiHttp {
                     return
                 }
                 if (data.Code === 5) {
-                    window.location.href = "/app/login"
+                    window.location.href = "/login"
                     return
                 }
                 if (data.Code === 2) {//单项目检查错误

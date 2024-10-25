@@ -79,9 +79,6 @@ const ADD_POOL_COUNT = 3
  */
 const CLOSE_UDP_POOL_FLAG = "CLOSE"
 
-// 标记是否管理员登录状态
-var IsLogin bool
-
 // 管理员用户名
 var LoginName = "admin"
 
