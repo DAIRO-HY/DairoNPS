@@ -104,11 +104,17 @@ func get(clientID int) net.Conn {
 	var resultTcp net.Conn = nil
 	for len(*poolList) > 0 {
 
+		////取最后一次添加到连接池的连接
+		//pool := (*poolList)[len(*poolList)-1]
+		//
+		////移除最后一个元素
+		//*poolList = (*poolList)[:len(*poolList)-1]
+
 		//取最后一次添加到连接池的连接
-		pool := (*poolList)[len(*poolList)-1]
+		pool := (*poolList)[0]
 
 		//移除最后一个元素
-		*poolList = (*poolList)[:len(*poolList)-1]
+		*poolList = (*poolList)[1:]
 
 		//试探性发送一个数据，检测连接是否已经失效
 		//TODO:客户端还未支持
