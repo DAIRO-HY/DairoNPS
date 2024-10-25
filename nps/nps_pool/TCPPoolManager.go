@@ -11,11 +11,17 @@ import (
 	"time"
 )
 
+var Csmi ClientSessionManagerInterface.ClientSessionManagerInterface
+
 /**
  * 客户端连接池
  */
 var poolMap = make(map[int]*[]*TCPPool)
 var poolLock sync.Mutex
+
+func init() {
+	go TimeoutCheck()
+}
 
 // 当前连接池数量
 func GetPoolCount() int {
@@ -44,10 +50,8 @@ func InitEmptyPoolByClient(clientID int) {
 	poolLock.Unlock()
 }
 
-/**
- * 添加TCP连接池
- * @param clientSocket tcp连接
- */
+// 添加TCP连接池
+// clientSocket tcp连接
 func Add(clientSocket net.Conn) {
 
 	//从头部信息中得到客户端id
@@ -76,7 +80,7 @@ func Add(clientSocket net.Conn) {
 	pool := &TCPPool{
 		CreateTime: time.Now().UnixMilli(),
 		ClientID:   clientId,
-		Socket:     clientSocket,
+		PoolTCP:    clientSocket,
 	}
 	*poolList = append(*poolList, pool)
 	log.Printf("客户端ID：%d 当前连接数为：%d", clientId, len(*poolList))
@@ -107,12 +111,12 @@ func get(clientID int) net.Conn {
 
 		//试探性发送一个数据，检测连接是否已经失效
 		//TODO:客户端还未支持
-		//_, err := pool.Socket.Write([]uint8{0})
+		//_, err := pool.PoolTCP.Write([]uint8{0})
 		//if err != nil {
 		//	pool.Shutdown()
 		//	continue
 		//}
-		resultTcp = pool.Socket
+		resultTcp = pool.PoolTCP
 		break
 	}
 	poolLock.Unlock()
@@ -158,8 +162,6 @@ func poolRequest(clientId int, count int) {
 	}
 }
 
-var Csmi ClientSessionManagerInterface.ClientSessionManagerInterface
-
 /**
  * 移除某个客户端所有的连接池
  * @param clientID 客户端ID
@@ -167,24 +169,36 @@ var Csmi ClientSessionManagerInterface.ClientSessionManagerInterface
 func ShutdownByClient(clientID int) {
 	poolLock.Lock()
 	poolList := poolMap[clientID]
-	poolLock.Unlock()
-	for _, it := range *poolList {
-		it.Shutdown()
+	for _, it := range *poolList { //挨个关闭连接
+		it.PoolTCP.Close()
 	}
-	poolLock.Lock()
 	*poolList = []*TCPPool{}
 	poolLock.Unlock()
 }
 
-/**
- * 从连接池列表中移除
- */
-func timeOutRemove(clientID int, pool TCPPool) {
-	//val poolList = this.poolMap[clientID] as ClientPoolList
-	//poolList.synchronized {
-	//    poolList.remove(pool)
-	//}
-	//if(poolList.isEmpty()){//连接池被掏空,则申请一个连接池备用
-	//    this.poolRequest(clientID, 1)
-	//}
+// 超时连接池整理
+func TimeoutCheck() {
+	for {
+		time.Sleep(NPSConstant.RECYLE_POOL_TIME_OUT * time.Millisecond)
+
+		//当前时间戳秒
+		now := time.Now().UnixMilli()
+		poolLock.Lock()
+		for clientId, pools := range poolMap { //遍历所有客户端的连接池
+			poolList := *pools
+			poolSize := len(poolList)
+			for i := poolSize - 1; i > -1; i-- {
+				pool := (*pools)[i]
+				if now-pool.CreateTime > NPSConstant.RECYLE_POOL_TIME_OUT { //连接池超过指定时间
+					pool.PoolTCP.Close()
+					poolList = poolList[0:i]
+				}
+			}
+			if len(poolList) == 0 { //如果连接池被清空，则请求创建一个新的连接池
+				Csmi.SendTCPPoolRequest(clientId, 1)
+			}
+			*pools = poolList
+		}
+		poolLock.Unlock()
+	}
 }

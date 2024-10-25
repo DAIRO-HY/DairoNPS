@@ -5,20 +5,17 @@ import (
 	"strconv"
 )
 
-/**
- * WEB管理端口
- */
+// WEB管理端口
 var WebPort = "1780"
 
-/**
- * 服务端监听TCP端口,客户端通过此端口进行连接
- */
+// 服务端监听TCP端口,客户端通过此端口进行连接
 var TcpPort = "1781"
 
-/**
- * 服务端监听UDP端口,客户端通过此端口进行连接
- */
+// 服务端监听UDP端口,客户端通过此端口进行连接
 var CLIENT_TO_SERVER_UDP_PORT = 1782
+
+// 数据统计时间间隔（秒）
+const STATISTICS_DATA_SIZE_TIMER = 60
 
 /**
  * 因为UDP的不确定性,服务端无法检测存活状态,所以
@@ -27,11 +24,8 @@ var CLIENT_TO_SERVER_UDP_PORT = 1782
 //const val RECYLE_UDP_TIME = 1 * 10 * 1000L
 const RECYLE_UDP_TIME = 1 * 60 * 1000
 
-/**
- * 每个一段时间回收长时间不用的连接池
- */
-//const val RECYLE_POOL_TIME = 1 * 10 * 1000L
-const RECYLE_POOL_TIME = 1 * 60 * 1000
+// 每隔一段时间回收长时间不用的连接池（毫秒）
+const RECYLE_POOL_TIME_OUT = 1 * 60 * 1000
 
 /**
  * 桥接连接会话超时

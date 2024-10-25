@@ -1,6 +1,7 @@
 package ForwardStatisticsUtil
 
 import (
+	"DairoNPS/constant/NPSConstant"
 	"DairoNPS/dao/DateDataSizeDao"
 	"DairoNPS/dao/ForwardDao"
 	"DairoNPS/dao/SystemConfigDao"
@@ -23,7 +24,7 @@ func init() {
 // 计时统计
 func timer() {
 	for {
-		time.Sleep(10 * time.Second)
+		time.Sleep(NPSConstant.STATISTICS_DATA_SIZE_TIMER * time.Second)
 		lock.Lock()
 		save()
 		lock.Unlock()

@@ -1,6 +1,7 @@
 package ChannelStatisticsUtil
 
 import (
+	"DairoNPS/constant/NPSConstant"
 	"DairoNPS/dao/ChannelDao"
 	"DairoNPS/dao/ClientDao"
 	"DairoNPS/dao/DateDataSizeDao"
@@ -24,7 +25,7 @@ func init() {
 // 计时统计
 func timer() {
 	for {
-		time.Sleep(10 * time.Second)
+		time.Sleep(NPSConstant.STATISTICS_DATA_SIZE_TIMER * time.Second)
 		lock.Lock()
 		saveStatistics()
 		lock.Unlock()
