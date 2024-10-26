@@ -4,7 +4,8 @@ RUN mkdir /app
 WORKDIR /app
 
 #下载程序
-ADD https://github.com/DAIRO-HY/DairoNPS/releases/download/1.0.0/dairo-nps-linux-amd64 /app
+#ADD https://github.com/DAIRO-HY/DairoNPS/releases/download/1.0.0/dairo-nps-linux-amd64 /app
+COPY dairo-nps-linux-amd64 /app
 
 #授权可执行
 RUN chmod +x dairo-nps-linux-amd64
