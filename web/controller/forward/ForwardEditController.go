@@ -26,16 +26,16 @@ func Info(inForm form.ForwardInfoInputForm) form.ForwardEditForm {
 	if inForm.Id != 0 {
 		forwardDto := ForwardDao.SelectOne(inForm.Id)
 		return form.ForwardEditForm{
-			Id:           forwardDto.Id,
-			Name:         forwardDto.Name,
-			Remark:       forwardDto.Remark,
-			Port:         forwardDto.Port,
-			TargetPort:   forwardDto.TargetPort,
-			CreateDate:   Date.FormatByTimespan(forwardDto.Date),
-			EnableState:  Bool.Is(forwardDto.EnableState == 0, "关闭", "开启"),
-			InDataTotal:  Number.ToDataSize(forwardDto.InData),
-			OutDataTotal: Number.ToDataSize(forwardDto.OutData),
-			AclState:     forwardDto.AclState,
+			Id:          forwardDto.Id,
+			Name:        forwardDto.Name,
+			Remark:      forwardDto.Remark,
+			Port:        forwardDto.Port,
+			TargetPort:  forwardDto.TargetPort,
+			Date:        Date.FormatByTimespan(forwardDto.Date),
+			EnableState: Bool.Is(forwardDto.EnableState == 0, "关闭", "开启"),
+			InData:      Number.ToDataSize(forwardDto.InData),
+			OutData:     Number.ToDataSize(forwardDto.OutData),
+			AclState:    forwardDto.AclState,
 		}
 	}
 	return form.ForwardEditForm{}

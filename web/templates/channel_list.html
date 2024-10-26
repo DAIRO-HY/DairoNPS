@@ -87,6 +87,7 @@
                         <div>模式:<span>${item.Mode}</span></div>
                         <div>端口:<span>${item.ServerPort}</span> -> <span>${item.TargetPort}</span></div>
                         <div>入网:<span>${item.InData}</span> &nbsp;&nbsp;出网<span>${item.OutData}</span></div>
+                        <div class="text-danger" style="${item.Error === "" ? "display: none":""}">${item.Error}</div>
                         <div class="text-end">
                             <button class="btn btn-sm btn-outline-danger" onclick="onSetStateClick(${item.Id})">
                                 <i class="bi ${item.EnableState === 1 ? "bi-pause-fill" : "bi-play-fill"}"></i>

@@ -6,6 +6,7 @@ import (
 	"DairoNPS/dao/dto"
 	"DairoNPS/nps/nps_client/HeaderUtil"
 	"DairoNPS/nps/nps_pool"
+	"DairoNPS/util/LogUtil"
 	"DairoNPS/util/TcpUtil"
 	"fmt"
 	"log"
@@ -17,22 +18,22 @@ import (
 // Accept 监听客户端连接
 func Accept() {
 	listen, err := net.Listen("tcp", ":"+NPSConstant.TcpPort)
-	defer listen.Close()
 	if err != nil {
-		println("启动失败，请参考错误信息。")
-		log.Fatalf("%q\n", err)
+		LogUtil.Error(fmt.Sprintf("监听客户端监听失败，请参考错误信息。err:%q", err))
+		log.Fatal(err)
 	}
-
-	fmt.Printf("端口:%s监听成功。\n", NPSConstant.TcpPort)
+	defer listen.Close()
+	LogUtil.Info(fmt.Sprintf("端口:%s监听成功。\n", NPSConstant.TcpPort))
 	for {
-		fmt.Println("-->监听客户端连接")
+		LogUtil.Debug(fmt.Sprintf("监听客户端连接,端口:%s监听成功。", NPSConstant.TcpPort))
 
 		//等待客户端连接
 		tcp, err := listen.Accept()
 		if err != nil {
-			log.Fatalf("%q\n", err)
+			LogUtil.Error(fmt.Sprintf("监听客户端结束,端口:%s", NPSConstant.TcpPort))
+			log.Fatal(err)
 		}
-		fmt.Println("-->接收到客户端连接请求")
+		LogUtil.Debug(fmt.Sprintf("接收到客户端连接请求,端口:%s监听成功。", NPSConstant.TcpPort))
 		go handleAccept(tcp)
 	}
 }
@@ -46,13 +47,10 @@ func handleAccept(tcp net.Conn) {
 	//读取连接的第一个数据,设置超时,避免恶意连接
 	tcp.SetReadDeadline(time.Now().Add(3 * time.Second))
 
-	//TODO:开发用
-	tcp.SetReadDeadline(time.Now().Add(300 * time.Second))
-
 	//读取第一个标记字节,通过该自己判断该连接类型
 	flagData, err := TcpUtil.ReadNByte(tcp, 1)
 	if err != nil {
-		log.Println("-->从客户端读取数据超时")
+		LogUtil.Error(fmt.Sprintf("从客户端读取标识失败,可能来自一个非法客户端,IP:%s,err:%q", tcp.RemoteAddr().String(), err))
 
 		//没必要继续执行，直接关闭客户端连接
 		tcp.Close()
@@ -72,13 +70,13 @@ func handleAccept(tcp net.Conn) {
 }
 
 // 验证客户端回话
-func validateSession(clientSocket net.Conn) {
+func validateSession(tcp net.Conn) {
 
 	//得到头部数据
-	header, err := HeaderUtil.GetHeader(clientSocket)
+	header, err := HeaderUtil.GetHeader(tcp)
 	if err != nil {
-		log.Printf("-->读取头部数据长度时发生了错误,err:%q\n", err)
-		clientSocket.Close()
+		LogUtil.Error(fmt.Sprintf("从客户端读取头部数据失败,IP:%s,err:%q", tcp.RemoteAddr().String(), err))
+		tcp.Close()
 		return
 	}
 	headers := strings.Split(header, "|")
@@ -87,18 +85,18 @@ func validateSession(clientSocket net.Conn) {
 	key := headers[0]
 	client := ClientDao.SelectByKey(key)
 	if client == nil {
-		log.Printf("-->客户端：%s不存在\n", key)
-		clientSocket.Close()
+		LogUtil.Error(fmt.Sprintf("客户端：%s不存在,IP:%s", key, tcp.RemoteAddr().String()))
+		tcp.Close()
 		return
 	}
 	if client.EnableState == 0 {
-		log.Printf("-->客户端：%s的客户端已被停止服务\n", key)
-		clientSocket.Close()
+		LogUtil.Error(fmt.Sprintf("客户端：%s已被停止服务,IP:%s", key, tcp.RemoteAddr().String()))
+		tcp.Close()
 		return
 	}
 
 	//设置客户端登录信息-------------------------------------------------------------------------------START
-	remoteAddr := clientSocket.RemoteAddr().String()
+	remoteAddr := tcp.RemoteAddr().String()
 
 	//客户端ip
 	ip := strings.Split(remoteAddr, ":")[0]
@@ -113,5 +111,5 @@ func validateSession(clientSocket net.Conn) {
 	ClientDao.SetClientInfo(loginClientDto)
 	//设置客户端登录信息-------------------------------------------------------------------------------END
 
-	holdOnClient(client, clientSocket)
+	holdOnClient(client, tcp)
 }

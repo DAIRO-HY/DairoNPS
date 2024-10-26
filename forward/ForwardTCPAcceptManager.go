@@ -4,6 +4,7 @@ import (
 	"DairoNPS/dao/ForwardDao"
 	"DairoNPS/dao/dto"
 	"DairoNPS/util/ForwardStatisticsUtil"
+	"DairoNPS/util/LogUtil"
 	"fmt"
 	"net"
 	"strconv"
@@ -23,6 +24,10 @@ var forwardAcceptMap = make(map[int]*ForwardTCPAccept)
  * forwardAcceptMap操作互斥锁
  */
 var forwardAcceptLock sync.Mutex
+
+func init() {
+	ForwardDao.ClearError()
+}
 
 // 端口转发代理端口数量
 func GetAcceptCount() int {
@@ -61,11 +66,14 @@ func Accept(forwardDto *dto.ForwardDto) {
 
 	listen, err := net.Listen("tcp", ":"+strconv.Itoa(forwardDto.Port))
 	if err != nil {
-		fmt.Printf("转发端口:%d 监听失败。err:%p\n", forwardDto.Port, err)
+		errMsg := fmt.Sprintf("转发端口:%d 监听失败。err:%q\n", forwardDto.Port, err)
+		ForwardDao.SetError(forwardDto.Id, &errMsg)
+		LogUtil.Debug(errMsg)
 		forwardAcceptLock.Unlock()
 		return
 	}
-	fmt.Printf("转发端口:%d 监听开始", forwardDto.Port)
+	ForwardDao.SetError(forwardDto.Id, nil)
+	LogUtil.Info(fmt.Sprintf("转发端口:%d 监听开始", forwardDto.Port))
 	tcpAccept := &ForwardTCPAccept{
 		forwardDto: forwardDto,
 		listen:     listen,

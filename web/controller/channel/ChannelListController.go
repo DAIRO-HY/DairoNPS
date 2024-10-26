@@ -61,6 +61,7 @@ func List(inForm ListInForm) any {
 			InData:        Number.ToDataSize(it.InData),
 			OutData:       Number.ToDataSize(it.OutData),
 			SecurityState: it.SecurityState,
+			Error:         it.Error,
 		}
 	}
 	return outFormList

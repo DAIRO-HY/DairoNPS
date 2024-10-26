@@ -5,6 +5,7 @@ import (
 	"DairoNPS/forward"
 	"DairoNPS/nps/nps_client"
 	"DairoNPS/nps/nps_pool"
+	"DairoNPS/util/LogUtil"
 	"DairoNPS/web"
 	"fmt"
 	"os"
@@ -51,6 +52,11 @@ func main() {
 
 // 解析参数
 func parseArgs() {
+	fmt.Println("------------------------------------------------------------------------")
+	for _, it := range os.Args {
+		fmt.Println(it)
+	}
+	fmt.Println("------------------------------------------------------------------------")
 	for _, it := range os.Args {
 		paramArr := strings.Split(it, ":")
 		switch paramArr[0] {
@@ -62,6 +68,20 @@ func parseArgs() {
 			NPSConstant.WebPort = paramArr[1]
 		case "-tcp-port":
 			NPSConstant.TcpPort = paramArr[1]
+		case "-log-type": //日志输出方式
+			switch paramArr[1] {
+			case "0":
+				LogUtil.LogOutType = LogUtil.LOG_OUT_TYPE_NO
+			case "1":
+				LogUtil.LogOutType = LogUtil.LOG_OUT_TYPE_CONSOLE
+			case "2":
+				LogUtil.LogOutType = LogUtil.LOG_OUT_TYPE_FILE
+			}
+		case "-log-level": //日志输出级别
+			levels := strings.Split(paramArr[1], ",")
+			for _, level := range levels {
+				LogUtil.LogLevel[level] = true
+			}
 		}
 	}
 	fmt.Printf("程序启动成功，管理员：%s 密码：%s\n", NPSConstant.LoginName, NPSConstant.LoginPwd)

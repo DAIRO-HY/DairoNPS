@@ -1,6 +1,7 @@
 package DBUtil
 
 import (
+	"DairoNPS/util/LogUtil"
 	"database/sql"
 	"fmt"
 	_ "github.com/mattn/go-sqlite3"
@@ -42,7 +43,7 @@ func Exec(query string, args ...any) (int64, error) {
 func InsertIgnoreError(query string, args ...any) int64 {
 	count, err := Insert(query, args...)
 	if err != nil {
-		log.Printf("%q: %s\n", err, query)
+		LogUtil.Error(fmt.Sprintf("添加数据失败:%s  err:%q\n", query, err))
 		return -1
 	}
 	return count
@@ -142,7 +143,7 @@ func SelectToListMap(query string, args ...any) []map[string]string {
 
 	rows, err := db.Query(query, args...)
 	if err != nil {
-		log.Printf("%q: %s\n", err, query)
+		LogUtil.Error(fmt.Sprintf("查询数据失败:%s: err:%q", query, err))
 		return nil
 	}
 	defer rows.Close()
@@ -169,7 +170,7 @@ func SelectToListMap(query string, args ...any) []map[string]string {
 
 		// 将当前行的数据扫描到valuePtrs中
 		if err := rows.Scan(valuePtrs...); err != nil {
-			log.Printf("%q: %s\n", err, query)
+			LogUtil.Error(fmt.Sprintf("数据扫描失败:%s: err:%q", query, err))
 			return nil
 		}
 
@@ -190,7 +191,8 @@ func SelectToListMap(query string, args ...any) []map[string]string {
 func GetDb() *sql.DB {
 	db, err := sql.Open("sqlite3", DB_PATH)
 	if err != nil {
-		log.Printf("%q: %s\n", err)
+		LogUtil.Error(fmt.Sprintf("打开数据库失败 err:%q", err))
+		log.Fatal(err)
 		return nil
 	}
 	return db

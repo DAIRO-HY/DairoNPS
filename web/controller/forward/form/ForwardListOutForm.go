@@ -25,4 +25,7 @@ type ForwardListOutForm struct {
 
 	// 启用状态 1:开启  0:停止
 	EnableState int
+
+	//错误信息
+	Error string
 }

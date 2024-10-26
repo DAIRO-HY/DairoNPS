@@ -104,3 +104,15 @@ func SetRemark(id int, remark string) {
 	sql := "update forward set remark = ? where id = ?"
 	DBUtil.Exec(sql, remark, id)
 }
+
+// 设置错误信息
+func SetError(id int, error *string) {
+	sql := "update forward set error = ? where id = ?"
+	DBUtil.ExecIgnoreError(sql, error, id)
+}
+
+// 清空错误信息
+func ClearError() {
+	sql := "update forward set error = null"
+	DBUtil.ExecIgnoreError(sql)
+}

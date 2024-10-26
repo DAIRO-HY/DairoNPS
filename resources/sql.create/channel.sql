@@ -13,5 +13,6 @@ CREATE TABLE channel
     securityState INTEGER     NOT NULL DEFAULT 0,                              -- 是否加密传输
     aclState      INTEGER     NOT NULL DEFAULT 0,                              -- 黑白名单开启状态 0:关闭 1:白名单 2:黑名单
     date          BIGINT      NOT NULL DEFAULT (strftime('%s', 'now') * 1000), -- 创建时间
-    remark        TEXT                                                         -- 一些备注信息,错误信息等
+    remark        TEXT,                                                        -- 一些备注信息,错误信息等
+    error         TEXT                                                         -- 错误信息
 );

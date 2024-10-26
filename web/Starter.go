@@ -2,9 +2,11 @@ package web
 
 import (
 	"DairoNPS/constant/NPSConstant"
+	"DairoNPS/util/LogUtil"
 	"DairoNPS/web/login_state"
 	"embed"
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -206,6 +208,11 @@ func Start() {
 	port := NPSConstant.WebPort
 
 	// 启动服务器
-	log.Printf("WEB管理后台端口 :%s\n", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	LogUtil.Info(fmt.Sprintf("WEB管理后台端口 :%s", port))
+	err := http.ListenAndServe(":"+port, nil)
+	if err != nil {
+		LogUtil.Error(fmt.Sprintf("WEB管理后台启动失败 :%q", err))
+		log.Fatal(err)
+	}
+	fmt.Printf("WEB管理后台端口 :%s\n", port)
 }

@@ -32,4 +32,7 @@ type ForwardDto struct {
 
 	//一些备注信息,错误信息等
 	Remark string
+
+	//错误信息
+	Error string
 }

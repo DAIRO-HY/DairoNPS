@@ -2,14 +2,16 @@ package DBUtil
 
 import (
 	"DairoNPS/resources"
+	"DairoNPS/util/LogUtil"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strconv"
 )
 
 // VERSION 数据库版本号
-const VERSION = 1
+const VERSION = 2
 
 func init() {
 	_, err := os.Stat(DB_PATH)
@@ -19,7 +21,8 @@ func init() {
 		// 创建多层目录
 		err := os.MkdirAll(filepath.Dir(DB_PATH), 0700)
 		if err != nil {
-			fmt.Println("创建文件夹失败:", err)
+			LogUtil.Error(fmt.Sprintf("创建文件夹[%s]失败 err:%q", DB_PATH, err))
+			log.Fatal(err)
 			return
 		}
 	}
@@ -39,6 +42,12 @@ func upgrade() {
 
 		//第一次创建数据库时往系统配置表插入一条数据
 		ExecIgnoreError("insert into system_config(inData, outData) values (0, 0);")
+	}
+	if version > 0 {
+		if version < 2 { //添加error字段
+			ExecIgnoreError("alter table channel add error TEXT;")
+			ExecIgnoreError("alter table forward add error TEXT;")
+		}
 	}
 
 	//设置数据库版本号

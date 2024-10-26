@@ -38,4 +38,7 @@ type ChannelListForm struct {
 
 	// 是否加密传输
 	SecurityState int
+
+	//错误信息
+	Error string
 }

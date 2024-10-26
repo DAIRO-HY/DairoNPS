@@ -30,6 +30,7 @@ func GetList() []form.ForwardListOutForm {
 			EnableState: it.EnableState,
 			InData:      Number.ToDataSize(it.InData),
 			OutData:     Number.ToDataSize(it.OutData),
+			Error:       it.Error,
 		}
 	}
 	return outFormList

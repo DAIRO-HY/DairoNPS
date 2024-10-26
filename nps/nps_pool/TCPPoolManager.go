@@ -4,8 +4,8 @@ import (
 	"DairoNPS/constant/NPSConstant"
 	"DairoNPS/nps/nps_client/ClientSessionManagerInterface"
 	"DairoNPS/nps/nps_client/HeaderUtil"
+	"DairoNPS/util/LogUtil"
 	"fmt"
-	"log"
 	"net"
 	"strconv"
 	"sync"
@@ -84,7 +84,6 @@ func Add(clientSocket net.Conn) {
 		PoolTCP:    clientSocket,
 	}
 	*poolList = append(*poolList, pool)
-	log.Printf("客户端ID：%d 当前连接数为：%d", clientId, len(*poolList))
 	poolLock.Unlock()
 }
 
@@ -104,27 +103,20 @@ func get(clientID int) net.Conn {
 	var resultTcp net.Conn = nil
 	for len(*poolList) > 0 {
 
-		////取最后一次添加到连接池的连接
-		//pool := (*poolList)[len(*poolList)-1]
-		//
-		////移除最后一个元素
-		//*poolList = (*poolList)[:len(*poolList)-1]
-
 		//取最后一次添加到连接池的连接
-		pool := (*poolList)[0]
+		pool := (*poolList)[len(*poolList)-1]
 
 		//移除最后一个元素
-		*poolList = (*poolList)[1:]
+		*poolList = (*poolList)[:len(*poolList)-1]
+		//
+		////取最后一次添加到连接池的连接
+		//pool := (*poolList)[0]
+		//
+		////移除最后一个元素
+		//*poolList = (*poolList)[1:]
 
-		//试探性发送一个数据，检测连接是否已经失效
-		//TODO:客户端还未支持
-		//_, err := pool.PoolTCP.Write([]uint8{0})
-		//if err != nil {
-		//	pool.Shutdown()
-		//	continue
-		//}
 		resultTcp = pool.PoolTCP
-		fmt.Printf("-->当前连接池已经创建时间：%d秒\n", (time.Now().UnixMilli()-pool.CreateTime)/1000)
+		LogUtil.Debug(fmt.Sprintf("客户端ID:%d 当前连接池已经创建时间：%d秒\n", clientID, (time.Now().UnixMilli()-pool.CreateTime)/1000))
 		break
 	}
 	poolLock.Unlock()

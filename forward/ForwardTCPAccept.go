@@ -2,6 +2,7 @@ package forward
 
 import (
 	"DairoNPS/dao/dto"
+	"DairoNPS/util/LogUtil"
 	"fmt"
 	"net"
 	"strings"
@@ -59,10 +60,9 @@ func (mine *ForwardTCPAccept) accept() {
 		//代理服务端Socket
 		proxyTCP, err := mine.listen.Accept()
 		if err != nil {
-			fmt.Printf("-->转发端口:%d 监听结束\n", mine.forwardDto.Port)
+			LogUtil.Info(fmt.Sprintf("转发端口:%d 监听结束\n", mine.forwardDto.Port))
 			break
 		}
-		fmt.Printf("转发端口:%d 监听到一个连接\n", mine.forwardDto.Port)
 		if !mine.hasAccess(proxyTCP) { //判断是否有访问权限
 			proxyTCP.Close()
 			continue
@@ -76,7 +76,7 @@ func (mine *ForwardTCPAccept) accept() {
 		targetTCP, err := net.Dial("tcp", targetIpAndPort)
 		if err != nil {
 			proxyTCP.Close()
-			fmt.Printf("连接服务端:%s失败\n", targetIpAndPort)
+			LogUtil.Debug(fmt.Sprintf("转发端口:%d 连接失败\n", mine.forwardDto.Port))
 			break
 		}
 
@@ -84,7 +84,7 @@ func (mine *ForwardTCPAccept) accept() {
 		startBridge(mine.forwardDto, proxyTCP, targetTCP)
 	}
 	mine.listen.Close()
-	println("-->代理服务端口:${forwardDto.port}监听结束")
+	LogUtil.Debug(fmt.Sprintf("转发端口:%d 监听结束\n", mine.forwardDto.Port))
 	mine.isFinished = true
 }
 

@@ -4,10 +4,11 @@ import (
 	"DairoNPS/constant/NPSConstant"
 	"DairoNPS/dao/dto"
 	"DairoNPS/nps/nps_client/HeaderUtil"
+	"DairoNPS/util/LogUtil"
 	"DairoNPS/util/SecurityUtil"
 	"DairoNPS/util/TcpUtil"
 	"errors"
-	"log"
+	"fmt"
 	"net"
 	"strconv"
 	"sync"
@@ -72,12 +73,14 @@ func (mine *ClientSession) receive() {
 	for {
 		flagData, err := TcpUtil.ReadNByte(mine.tcp, 1)
 		if err != nil {
-			log.Printf("-->接收客户端数据标识出错。 err:%q\n", err)
+			LogUtil.Error(fmt.Sprintf("接收客户端数据标识出错。 err:%q", err))
 			break
 		}
 		flag := flagData[0]
-		if mine.handle(flag) != nil {
-			log.Printf("-->处理客户端数据失败。err:%q\n", err)
+
+		err = mine.handle(flag)
+		if err != nil {
+			LogUtil.Error(fmt.Sprintf("处理客户端数据失败。 err:%q", err))
 			break
 		}
 	}
@@ -89,13 +92,13 @@ func (mine *ClientSession) receive() {
 func (mine *ClientSession) handle(flag uint8) error {
 	switch flag {
 	case HeaderUtil.MAIN_HEART_BEAT:
-		log.Println("-->接收到客户端的心跳数据")
+		//log.Println("-->接收到客户端的心跳数据")
 
 		//记录与客户端最后一次心跳时间戳
 		mine.lastHeartBeatTime = time.Now().UnixMilli()
 		return mine.Send([]uint8{HeaderUtil.MAIN_HEART_BEAT})
 	default:
-		return errors.New("未知的Flag")
+		return errors.New(fmt.Sprintf("未知的Flag:%d", flag))
 	}
 }
 

@@ -158,3 +158,15 @@ func SetEnableState(id int, state int) {
 	sql := "update channel set enableState = ? where id = ?"
 	DBUtil.ExecIgnoreError(sql, state, id)
 }
+
+// 设置错误信息
+func SetError(id int, error *string) {
+	sql := "update channel set error = ? where id = ?"
+	DBUtil.ExecIgnoreError(sql, error, id)
+}
+
+// 清空错误信息
+func ClearError() {
+	sql := "update channel set error = null"
+	DBUtil.ExecIgnoreError(sql)
+}

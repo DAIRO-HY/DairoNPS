@@ -5,6 +5,7 @@ import (
 	"DairoNPS/dao/dto"
 	"DairoNPS/nps/nps_bridge"
 	"DairoNPS/util/ChannelStatisticsUtil"
+	"DairoNPS/util/LogUtil"
 	"fmt"
 	"net"
 	"strconv"
@@ -16,6 +17,10 @@ var proxyAcceptMap = make(map[int]*ProxyAccept)
 
 // proxyAcceptMap操作互斥锁
 var proxyAcceptLock sync.Mutex
+
+func init() {
+	ChannelDao.ClearError()
+}
 
 // 隧道代理端口数量
 func GetProxyCount() int {
@@ -48,11 +53,14 @@ func acceptChannel(client *dto.ClientDto, channel *dto.ChannelDto) {
 	}
 	listener, err := net.Listen("tcp", ":"+strconv.Itoa(channel.ServerPort))
 	if err != nil {
-		fmt.Printf("端口:%d 监听失败。err:%p\n", channel.ServerPort, err)
+		errMsg := fmt.Sprintf("端口:%d 监听失败。err:%q\n", channel.ServerPort, err)
+		ChannelDao.SetError(channel.Id, &errMsg)
+		LogUtil.Error(errMsg)
 		proxyAcceptLock.Unlock()
 		return
 	}
-	fmt.Printf("端口:%d 监听开始\n", channel.ServerPort)
+	ChannelDao.SetError(channel.Id, nil)
+	LogUtil.Info(fmt.Sprintf("端口:%d 监听开始\n", channel.ServerPort))
 	proxyAccept := &ProxyAccept{
 		Client:  client,
 		Channel: channel,
