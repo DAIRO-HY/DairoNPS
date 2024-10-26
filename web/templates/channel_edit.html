@@ -3,12 +3,6 @@
 <head>
     {{template "head" .}}
     <title>隧道编辑/添加</title>
-    <style>
-        #aclIp:focus {
-            border: 0;
-            outline: none;
-        }
-    </style>
 </head>
 <body>
 {{template "top-bar" .}}
@@ -125,50 +119,6 @@
                     </div>
                 </div>
             </div>
-            <div class="col mt-2">
-                <div class="row">
-                    <label class="col-4 col-form-label text-end">访问控制</label>
-                    <div class="col-8 pt-2">
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="AclState"
-                                   value="0" id="aclState0">
-                            <label class="form-check-label" for="aclState0">关闭</label>
-                        </div>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="AclState"
-                                   value="1" id="aclState1">
-                            <label class="form-check-label" for="aclState1">白名单模式</label>
-                        </div>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="AclState"
-                                   value="2" id="aclState2">
-                            <label class="form-check-label" for="aclState2">黑名单模式</label>
-                        </div>
-                    </div>
-                </div>
-                <div class="row" id="aclIpRow">
-                    <div class="col-8 offset-4 small">
-                        <section id="aclIpDiv">
-                            <div class="d-inline-block">
-                                <span class="border border-secondary rounded-start-pill px-1">{IP}<input name="aclIp"
-                                                                                                         type="hidden"
-                                                                                                         value="{IP}"></span><span
-                                    class="border border-start-0 border-secondary rounded-end-pill px-1 cursor-pointer"
-                                    style="cursor: pointer;" onclick="$(this).parent().remove();"><i
-                                    class="bi bi-x"></i></span>
-                            </div>
-                        </section>
-                        <div class="d-inline-block mt-2">
-                            <span class="border border-secondary rounded-start-pill ps-2">
-                                <input id="aclIp" style="border: none;border-radius: 0;height: 18px;"
-                                       placeholder="本地：192.168.1.100" autocomplete="off">
-                            </span><span
-                                class="border border-start-0 border-secondary rounded-end-pill px-1"
-                                onclick="onAddAclIPClick()" style="cursor: pointer;"><i class="bi bi-plus"></i></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
         <div>
             <div class="text-end mt-3">
@@ -179,18 +129,6 @@
 </div>
 <input id="initAclIp" type="hidden" th:value="${aclIp}">
 <script th:inline="javascript">
-
-    /**
-     * 已经添加ip
-     */
-    // const ipAcls = JSON.parse([[${aclIp}]])
-
-    // /**
-    //  * IP地址列表部分的HTML
-    //  */
-    // const aclIpHtml = $("#aclIpDiv").html()
-    // $("#aclIpDiv").empty()
-
     $(function () {
         const channelId = getParam("id")
         if (channelId !== "") {//网速统计报表显示
@@ -200,14 +138,6 @@
 
         //初始化数据
         init()
-
-        // //将现有的ip加入到列表
-        // ipAcls.forEach(item => addIp(item))
-        //
-        // $("[name='aclState']").on("click", () => {
-        //     aclShowState()
-        // })
-        // aclShowState()
     })
 
     /**
@@ -233,26 +163,6 @@
             window.location = document.referrer
         }).post()
     }
-
-    /**
-     * 添加IP地址点击事件
-     */
-    // function onAddAclIPClick() {
-    //     const ip = $("#aclIp").val()
-    //     addIp(ip)
-    // }
-
-    // function aclShowState() {
-    //     if ($("[name='aclState']:checked").val() === "0") {
-    //         $("#aclIpRow").hide()
-    //     } else {
-    //         $("#aclIpRow").show()
-    //     }
-    // }
-    //
-    // function addIp(ip) {
-    //     $("#aclIpDiv").append(aclIpHtml.replace(/\{IP\}/g, ip))
-    // }
 </script>
 </body>
 </html>

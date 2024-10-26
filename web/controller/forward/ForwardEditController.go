@@ -67,50 +67,6 @@ func Edit(inForm form.ForwardEditForm) any {
 		forwardTcp.Accept(newDto)
 	}
 	return nil
-
-	//	//判断是否IP地址的正则表达式
-	//	val ipRegex = """^(([01]?\d{1,2}|2[0-4]\d|25[0-5])\.){3}([01]?\d{1,2}|2[0-4]\d|25[0-5])$""".toRegex()
-	//	val aclDtoList = form.aclIp.map{
-	//	val aclDto = ForwardAclDto()
-	//	if (it.contains(":")){
-	//	it.split(":").also{
-	//	aclDto.remark = it[0]
-	//	aclDto.ip = it[1]
-	//}
-	//} else{
-	//	aclDto.ip = it
-	//}
-	//	aclDto
-	//}.filter{
-	//	if (it.ip!!.isEmpty()){
-	//	return @filter false
-	//}
-	//	ipRegex.matches(it.ip!!)
-	//}.distinctBy{it.ip}
-	//
-	//	//添加黑白名单
-	//	ForwardAclDao.add(dto.id!!, aclDtoList)
-	//
-	//	GlobalScope.launch(Dispatchers.IO){
-	//
-	//	//关闭隧道之后再打开
-	//	//                CLServer.closeByChannel(dto.id!!)
-	//	//                CLServer.start(dto.id!!)
-	//
-	//	ForwardServer.close(dto.id!!)
-	//	ForwardServer.start(dto.id!!)
-	//}
-	//}
-	//catch(e: Exception) {
-	//	e.message ?: throw
-	//	e
-	//	if (e.message!!.contains("UNIQUE constraint failed: forward.server_port")) {
-	//		throw
-	//		BusinessException("服务端口已被占用")
-	//	}
-	//	throw
-	//	e
-	//}
 }
 
 /**

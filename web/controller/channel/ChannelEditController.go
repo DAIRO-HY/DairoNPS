@@ -52,10 +52,6 @@ func Info(inForm EditInForm) any {
 			OutData:       Number.ToDataSize(channelDto.OutData),
 			SecurityState: channelDto.SecurityState,
 		}
-
-		//val aclDtoList = ChannelAclDao.selectByChannelId(id)
-		//val aclIp = aclDtoList.map{it.remark + ":" + it.ip}.toTypedArray()
-		//request.setAttribute("aclIp", ObjectMapper().writeValueAsString(aclIp))
 	}
 	outForm.ClientId = inForm.ClientId
 	outForm.ClientName = client.Name
@@ -91,36 +87,6 @@ func Edit(form form.ChannelEditForm) any {
 	} else { //更新时
 		ChannelDao.Update(channel)
 	}
-
-	////判断是否IP地址的正则表达式
-	//val ipRegex = """^(([01]?\d{1,2}|2[0-4]\d|25[0-5])\.){3}([01]?\d{1,2}|2[0-4]\d|25[0-5])$""".toRegex()
-	//val aclDtoList = form.aclIp.map {
-	//    val aclDto = ChannelAclDto()
-	//    if (it.contains(":")) {
-	//        it.split(":").also {
-	//            aclDto.remark = it[0]
-	//            aclDto.ip = it[1]
-	//        }
-	//    } else {
-	//        aclDto.ip = it
-	//    }
-	//    aclDto
-	//}.filter {
-	//    if (it.ip!!.isEmpty()) {
-	//        return@filter false
-	//    }
-	//    ipRegex.matches(it.ip!!)
-	//}.distinctBy { it.ip }
-	//
-	////添加黑白名单
-	//ChannelAclDao.add(dto.id!!, aclDtoList)
-	//
-	//GlobalScope.launch(Dispatchers.IO) {
-	//}
-	//}
-
-	//关闭正在通信的UDP连接
-	//UDPBridgeManager.closeByChannel(channelId)
 
 	//关闭代理监听
 	nps_channel_proxy.ShutdownByChannel(channel.Id)
