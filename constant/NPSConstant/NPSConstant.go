@@ -25,7 +25,7 @@ const STATISTICS_DATA_SIZE_TIMER = 60
 const RECYLE_UDP_TIME = 1 * 60 * 1000
 
 // 每隔一段时间回收长时间不用的连接池（毫秒）
-const RECYLE_POOL_TIME_OUT = 5 * 60 * 1000
+const RECYLE_POOL_TIME_OUT = 3 * 60 * 1000
 
 /**
  * 桥接连接会话超时

@@ -13,10 +13,8 @@
                 <div class="row">
                     <label class="col-sm-4 col-form-label text-end">客户端</label>
                     <div class="col-sm-8">
-                        <select class="form-select" name="clientId">
+                        <select class="form-select" id="clientId" dropdown-tag="client">
                             <option value="">全部</option>
-                            <option th:each="item:${clients}" th:value="${item.id}" th:text="${item.name}"
-                                    th:selected="${item.id == search.clientId}"></option>
                         </select>
                     </div>
                 </div>
@@ -25,10 +23,10 @@
                 <div class="row">
                     <label class="col-sm-4 col-form-label text-end">隧道模式</label>
                     <div class="col-sm-8">
-                        <select class="form-select" name="type">
+                        <select class="form-select" id="mode">
                             <option value="">全部</option>
-                            <option value="1" th:selected="${search.type == 1}">TCP</option>
-                            <option value="2" th:selected="${search.type == 2}">UDP</option>
+                            <option value="1">TCP</option>
+                            <option value="2">UDP</option>
                         </select>
                     </div>
                 </div>
@@ -87,7 +85,7 @@
                         <div>模式:<span>${item.Mode}</span></div>
                         <div>端口:<span>${item.ServerPort}</span> -> <span>${item.TargetPort}</span></div>
                         <div>入网:<span>${item.InData}</span> &nbsp;&nbsp;出网<span>${item.OutData}</span></div>
-                        <div class="text-danger" style="${item.Error === "" ? "display: none":""}">${item.Error}</div>
+                        <div class="text-danger" style="${item.Error === "" ? "display: none" : ""}">${item.Error}</div>
                         <div class="text-end">
                             <button class="btn btn-sm btn-outline-danger" onclick="onSetStateClick(${item.Id})">
                                 <i class="bi ${item.EnableState === 1 ? "bi-pause-fill" : "bi-play-fill"}"></i>
@@ -106,7 +104,7 @@
     }
 
     function onSearchSubmit() {
-        $("form").submit()
+        // $("form").submit()
     }
 
     /**
