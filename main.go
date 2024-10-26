@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-
 	//初始化Controller
 	_ "DairoNPS/web/controller/bridge_list"
 	_ "DairoNPS/web/controller/channel"

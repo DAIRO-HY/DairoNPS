@@ -18,10 +18,6 @@ var proxyAcceptMap = make(map[int]*ProxyAccept)
 // proxyAcceptMap操作互斥锁
 var proxyAcceptLock sync.Mutex
 
-func init() {
-	ChannelDao.ClearError()
-}
-
 // 隧道代理端口数量
 func GetProxyCount() int {
 	count := 0

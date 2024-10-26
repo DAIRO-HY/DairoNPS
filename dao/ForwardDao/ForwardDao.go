@@ -5,7 +5,9 @@ import (
 	"DairoNPS/util/DBUtil"
 )
 
-//数据转发操作
+func init() {
+	ClearError()
+}
 
 /**
  * 添加一条隧道

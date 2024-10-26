@@ -6,6 +6,13 @@ import (
 	"time"
 )
 
+func init() {
+
+	//指定删除时间戳
+	deleteBeforceTime := time.Now().AddDate(-2, 0, 0).Unix()
+	DBUtil.ExecIgnoreError("delete from date_data_size where date < ?", deleteBeforceTime)
+}
+
 /**
  * 添加一条统计
  * @param 隧道id

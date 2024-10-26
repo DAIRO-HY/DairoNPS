@@ -25,10 +25,6 @@ var forwardAcceptMap = make(map[int]*ForwardTCPAccept)
  */
 var forwardAcceptLock sync.Mutex
 
-func init() {
-	ForwardDao.ClearError()
-}
-
 // 端口转发代理端口数量
 func GetAcceptCount() int {
 	count := 0

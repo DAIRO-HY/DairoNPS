@@ -7,6 +7,10 @@ import (
 	"strconv"
 )
 
+func init() {
+	ClearError()
+}
+
 /**
  * 添加一条隧道
  */
