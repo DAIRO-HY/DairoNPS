@@ -134,6 +134,7 @@
      */
     function initDataSizeChart(labels, inDataList, outDataList, unit) {
         if (dataSizeChart != null) {
+            dataSizeChart.options.scales.y.title.text = unit
             dataSizeChart.data.labels = labels
             dataSizeChart.data.datasets[0].data = inDataList //入网
             dataSizeChart.data.datasets[1].data = outDataList //出网
