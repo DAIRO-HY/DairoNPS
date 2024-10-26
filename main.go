@@ -62,7 +62,9 @@ func parseArgs() {
 		case "-login-name":
 			NPSConstant.LoginName = paramArr[1]
 		case "-login-pwd":
-			NPSConstant.LoginPwd = paramArr[1]
+			if len(paramArr[1]) > 0 {
+				NPSConstant.LoginPwd = paramArr[1]
+			}
 		case "-web-port":
 			NPSConstant.WebPort = paramArr[1]
 		case "-tcp-port":
