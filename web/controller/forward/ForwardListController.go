@@ -1,6 +1,7 @@
 package forward
 
 import (
+	"DairoNPS/dao/DateDataSizeDao"
 	"DairoNPS/dao/ForwardDao"
 	"DairoNPS/extension/Number"
 	"DairoNPS/forward"
@@ -41,6 +42,7 @@ func Delete(inForm form.ForwardDeleteInputForm) {
 
 	//关闭隧道之后再打开
 	forward.CloseAccept(inForm.Id)
+	DateDataSizeDao.DeleteByForward(inForm.Id)
 	ForwardDao.Delete(inForm.Id)
 }
 

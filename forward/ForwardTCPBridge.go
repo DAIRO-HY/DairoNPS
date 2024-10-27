@@ -7,6 +7,7 @@ import (
 	"DairoNPS/util/TcpUtil"
 	"net"
 	"sync/atomic"
+	"time"
 )
 
 /**
@@ -17,30 +18,29 @@ import (
  */
 type ForwardBridge struct {
 
-	//转发明细
+	// 转发明细
 	ForwardDto *dto.ForwardDto
 
-	//转发代理端的TCP
+	// 转发代理端的TCP
 	ProxyTCP net.Conn
 
-	//目标端的TCP
+	// 目标端的TCP
 	TargetTCP net.Conn
 
-	/**
-	 * 代理连接入方向是否被关闭
-	 */
+	// 代理连接入方向是否被关闭
 	isProxyReadClosed bool
 
-	/**
-	 * 目标端的du操作关闭标识
-	 */
+	// 目标端的du操作关闭标识
 	isTargetReadClosed bool
 
 	//隧道流量统计
 	dataSize *ForwardStatisticsUtil.ForwardDataSize
 
-	// 创建时间
+	// 创建时间(毫秒)
 	CreateTime int64
+
+	// 记录最后通信时间(毫秒)
+	LastRWTime int64
 }
 
 /**
@@ -71,6 +71,9 @@ func (mine *ForwardBridge) receiveByForwardSendToTarget() {
 		if err != nil {
 			break
 		}
+
+		//记录最后通信时间
+		mine.LastRWTime = time.Now().UnixMilli()
 	}
 
 	//关闭代理端的读操作
@@ -103,6 +106,9 @@ func (mine *ForwardBridge) receiveByTargetSendToForward() {
 		if err != nil {
 			break
 		}
+
+		//记录最后通信时间
+		mine.LastRWTime = time.Now().UnixMilli()
 	}
 
 	//关闭目标端的读操作

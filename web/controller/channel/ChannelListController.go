@@ -3,6 +3,7 @@ package channel
 import (
 	"DairoNPS/dao/ChannelDao"
 	"DairoNPS/dao/ClientDao"
+	"DairoNPS/dao/DateDataSizeDao"
 	"DairoNPS/extension/Bool"
 	"DairoNPS/extension/Number"
 	"DairoNPS/nps/nps_channel_proxy"
@@ -73,11 +74,12 @@ type DeleteForm struct {
 }
 
 // 通过id删除一个隧道
-func Delete(form DeleteForm) {
+func Delete(inForm DeleteForm) {
 
 	//关闭代理监听
-	nps_channel_proxy.ShutdownByChannel(form.Id)
-	ChannelDao.Delete(form.Id)
+	nps_channel_proxy.ShutdownByChannel(inForm.Id)
+	DateDataSizeDao.DeleteByChannelId(inForm.Id)
+	ChannelDao.Delete(inForm.Id)
 }
 
 // 删除的表单
@@ -86,16 +88,16 @@ type SetStateForm struct {
 }
 
 // 修改可用状态
-func setState(form SetStateForm) {
-	channel := ChannelDao.SelectOne(form.Id)
+func setState(inForm SetStateForm) {
+	channel := ChannelDao.SelectOne(inForm.Id)
 	if channel.EnableState == 0 {
-		ChannelDao.SetEnableState(form.Id, 1)
+		ChannelDao.SetEnableState(inForm.Id, 1)
 		clientDto := ClientDao.SelectOne(channel.ClientId)
 		if nps_client.IsOnline(clientDto.Id) {
 			nps_channel_proxy.AcceptClient(clientDto) //重新开启监听该客户端
 		}
 	} else {
-		ChannelDao.SetEnableState(form.Id, 0)
+		ChannelDao.SetEnableState(inForm.Id, 0)
 
 		//关闭代理监听
 		nps_channel_proxy.ShutdownByChannel(channel.Id)

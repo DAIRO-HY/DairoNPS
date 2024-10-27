@@ -61,7 +61,7 @@ func startBridge(forwardDto *dto.ForwardDto, proxyTCP net.Conn, targetTCP net.Co
 		ForwardDto: forwardDto,
 		ProxyTCP:   proxyTCP,
 		TargetTCP:  targetTCP,
-		CreateTime: time.Now().Unix(),
+		CreateTime: time.Now().UnixMilli(),
 	}
 	bridgeLock.Lock()
 	bridgeList[bridge] = true

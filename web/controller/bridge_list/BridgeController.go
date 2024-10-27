@@ -2,6 +2,7 @@ package bridge_list
 
 import (
 	"DairoNPS/dao/ClientDao"
+	"DairoNPS/extension/Number"
 	"DairoNPS/forward"
 	"DairoNPS/nps/nps_bridge"
 	"DairoNPS/web"
@@ -31,7 +32,7 @@ func loadData(search form.BridgeInForm) []form.BridgeOutForm {
 	outFormList := []form.BridgeOutForm{}
 
 	//当前时间戳
-	nowTime := time.Now().Unix()
+	nowTime := time.Now().UnixMilli()
 
 	//隧道桥接列表统计------------------------------------------------------------START
 	channelBridgeList := nps_bridge.GetBridgeList()
@@ -55,8 +56,11 @@ func loadData(search form.BridgeInForm) []form.BridgeOutForm {
 			// 隧道模式
 			Mode: "TCP",
 
+			// 创建时间
+			CreateTime: Number.ToTimeFormat((nowTime - it.CreateTime) / 1000),
+
 			// 在线时间
-			OnlineTime: strconv.FormatInt(nowTime-it.CreateTime/1000, 10) + "秒",
+			LastRWTime: Number.ToTimeFormat((nowTime - it.LastRWTime) / 1000),
 
 			// 用户端ip
 			Ip: ip,
@@ -80,8 +84,11 @@ func loadData(search form.BridgeInForm) []form.BridgeOutForm {
 			// 隧道模式
 			Mode: "TCP",
 
+			// 创建时间
+			CreateTime: strconv.FormatInt((nowTime-it.CreateTime)/1000, 10) + "秒",
+
 			// 在线时间
-			OnlineTime: strconv.FormatInt(nowTime-it.CreateTime, 10) + "秒",
+			LastRWTime: strconv.FormatInt((nowTime-it.LastRWTime)/1000, 10) + "秒",
 
 			// 用户端ip
 			Ip: ip,

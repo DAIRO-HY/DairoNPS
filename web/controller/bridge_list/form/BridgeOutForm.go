@@ -11,15 +11,12 @@ type BridgeOutForm struct {
 	// 隧道模式
 	Mode string
 
+	//创建时间
+	CreateTime string
+
 	// 在线时间
-	OnlineTime string
+	LastRWTime string
 
 	// 客户端ip
 	Ip string
-
-	// 入网流量
-	InDataTotal string
-
-	// 出网流量
-	OutDataTotal string
 }

@@ -3,6 +3,7 @@ package client
 import (
 	"DairoNPS/dao/ChannelDao"
 	"DairoNPS/dao/ClientDao"
+	"DairoNPS/dao/DateDataSizeDao"
 	"DairoNPS/extension/Number"
 	"DairoNPS/nps/nps_client"
 	"DairoNPS/web"
@@ -44,12 +45,13 @@ type DeleteForm struct {
 }
 
 // 通过id删除一个客户端
-func Delete(form DeleteForm) {
+func Delete(inForm DeleteForm) {
 
 	//关闭代理监听
-	nps_client.Shutdown(form.Id)
-	ClientDao.Delete(form.Id)
-	ChannelDao.DeleteByClient(form.Id)
+	nps_client.Shutdown(inForm.Id)
+	DateDataSizeDao.DeleteByClientId(inForm.Id)
+	ClientDao.Delete(inForm.Id)
+	ChannelDao.DeleteByClient(inForm.Id)
 }
 
 // 修改可用状态
@@ -58,12 +60,12 @@ type SetStateForm struct {
 }
 
 // 修改可用状态
-func SetState(form SetStateForm) {
-	clientDto := ClientDao.SelectOne(form.Id)
+func SetState(inForm SetStateForm) {
+	clientDto := ClientDao.SelectOne(inForm.Id)
 	if clientDto.EnableState == 0 {
-		ClientDao.SetEnableState(form.Id, 1)
+		ClientDao.SetEnableState(inForm.Id, 1)
 	} else {
-		ClientDao.SetEnableState(form.Id, 0)
-		nps_client.Shutdown(form.Id)
+		ClientDao.SetEnableState(inForm.Id, 0)
+		nps_client.Shutdown(inForm.Id)
 	}
 }

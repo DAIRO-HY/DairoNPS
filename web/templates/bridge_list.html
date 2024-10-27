@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<html lang="zh-CN">
 <head>
     {{template "head" .}}
     <title>桥接列表</title>
@@ -56,6 +56,7 @@
             <th>隧道模式</th>
             <th>用户端IP</th>
             <th>连接时间</th>
+            <th>空闲时间</th>
         </tr>
         </thead>
         <tbody id="tbody">
@@ -79,7 +80,6 @@
     }
 
     function fillData(data) {
-        console.log(data)
         const $tbody = $("#tbody")
         data.forEach(item=>{
             $tbody.append(`
@@ -88,7 +88,8 @@
                     <td>${item.ChannelName}</td>
                     <td>${item.Mode}</td>
                     <td>${item.Ip}</td>
-                    <td>${item.OnlineTime}</td>
+                    <td>${item.CreateTime}</td>
+                    <td>${item.LastRWTime}</td>
                 </tr>`)
         })
     }

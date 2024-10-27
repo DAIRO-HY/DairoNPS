@@ -31,7 +31,7 @@ fi
 if [ -f $exec_file ]; then
     rm $exec_file
 fi
-CGO_ENABLED=1 go build -o $exec_file
+CGO_ENABLED=1 go build -ldflags="-s -w" -o $exec_file
 
 if [ ! -e $exec_file ]; then
     echo "编译失败"

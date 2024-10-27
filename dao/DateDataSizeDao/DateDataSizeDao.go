@@ -60,3 +60,21 @@ func SelectList(
 		return nil
 	}
 }
+
+// 通过隧道ID删除
+func DeleteByChannelId(channelId int) {
+	sql := "delete from date_data_size where channelId = ?"
+	DBUtil.ExecIgnoreError(sql, channelId)
+}
+
+// 通过转发ID删除
+func DeleteByForward(forwardId int) {
+	sql := "delete from date_data_size where forwardId = ?"
+	DBUtil.ExecIgnoreError(sql, forwardId)
+}
+
+// 通过客户端ID删除
+func DeleteByClientId(clientId int) {
+	sql := "delete from date_data_size where channelId in (select id from channel where clientId = ?)"
+	DBUtil.ExecIgnoreError(sql, clientId)
+}

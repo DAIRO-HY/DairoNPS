@@ -31,10 +31,10 @@ type TCPBridge struct {
 	// 与客户端的TCP链接
 	ClientTCP net.Conn
 
-	// 创建时间
+	// 创建时间(毫秒)
 	CreateTime int64
 
-	// 记录最后通信时间
+	// 记录最后通信时间(毫秒)
 	LastRWTime int64
 
 	//代理连接入方向是否被关闭
@@ -94,9 +94,6 @@ func (mine *TCPBridge) receiveByProxySendToClient() {
 
 		//原子递增
 		atomic.AddInt64(&mine.channelDataSize.InData, int64(length))
-
-		// 记录最后通信时间
-		mine.LastRWTime = time.Now().UnixMilli()
 		if mine.Channel.SecurityState == 1 { //加密数据
 			SecurityUtil.Mapping(data, length)
 		}
@@ -106,6 +103,9 @@ func (mine *TCPBridge) receiveByProxySendToClient() {
 		if err != nil {
 			break
 		}
+
+		//记录最后通信时间
+		mine.LastRWTime = time.Now().UnixMilli()
 	}
 
 	//关闭客户端的输出流
@@ -130,9 +130,6 @@ func (mine *TCPBridge) receiveByClientSendToProxy() {
 
 		//出网统计 原子递增
 		atomic.AddInt64(&mine.channelDataSize.OutData, int64(length))
-
-		// 记录最后通信时间
-		mine.LastRWTime = time.Now().UnixMilli()
 		if mine.Channel.SecurityState == 1 { //加密数据
 			SecurityUtil.Mapping(data, length)
 		}
@@ -142,6 +139,9 @@ func (mine *TCPBridge) receiveByClientSendToProxy() {
 		if err != nil {
 			break
 		}
+
+		//记录最后通信时间
+		mine.LastRWTime = time.Now().UnixMilli()
 	}
 
 	//关闭客户端的输出流
