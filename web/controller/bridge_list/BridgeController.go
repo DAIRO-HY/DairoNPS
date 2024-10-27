@@ -8,7 +8,6 @@ import (
 	"DairoNPS/web"
 	"DairoNPS/web/controller/bridge_list/form"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -85,10 +84,10 @@ func loadData(search form.BridgeInForm) []form.BridgeOutForm {
 			Mode: "TCP",
 
 			// 创建时间
-			CreateTime: strconv.FormatInt((nowTime-it.CreateTime)/1000, 10) + "秒",
+			CreateTime: Number.ToTimeFormat((nowTime - it.CreateTime) / 1000),
 
 			// 在线时间
-			LastRWTime: strconv.FormatInt((nowTime-it.LastRWTime)/1000, 10) + "秒",
+			LastRWTime: Number.ToTimeFormat((nowTime - it.LastRWTime) / 1000),
 
 			// 用户端ip
 			Ip: ip,
