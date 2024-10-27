@@ -7,7 +7,10 @@ github_token=$GITHUB_TOKEN
 docker_user=$DOCKER_USER
 docker_pwd=$DOCKER_PWD
 
-repo="DAIRO-HY/DairoNPS"
+#项目名
+projectName="DairoNPS"
+
+repo="DAIRO-HY/$projectName"
 branch="release"
 
 #最终编译好的二进制文件
@@ -15,13 +18,13 @@ exec_name=dairo-nps-linux-amd64
 exec_file="./$exec_name"
 
 #--------------------------------------获取代码-----------------------------------------
-if [ -d "DairoNPS" ]; then
-    cd DairoNPS
+if [ -d $projectName ]; then
+    cd $projectName
     git pull
 else
     CLONE_URL="https://${github_token}@github.com/${repo}.git"
     git clone --branch $branch $CLONE_URL
-    cd DairoNPS
+    cd $projectName
 fi
 
 #---------------------------------------编译-----------------------------------------

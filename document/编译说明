@@ -1,1 +1,0 @@
-1、由于使用了sqlite插件，编译时需要指定参数CGO_ENABLED=1

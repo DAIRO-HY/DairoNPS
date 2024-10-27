@@ -56,12 +56,12 @@ func GetBridgeList() []TCPBridge {
  */
 func MakeBridge(client *dto.ClientDto, channel *dto.ChannelDto, proxySocket net.Conn, clientSocket net.Conn) {
 	bridge := &TCPBridge{
-		Channel:      channel,
-		ClientId:     client.Id,
-		ProxySocket:  proxySocket,
-		ClientSocket: clientSocket,
-		CreateTime:   time.Now().UnixMilli(),
-		LastRWTime:   time.Now().UnixMilli(),
+		Channel:    channel,
+		ClientId:   client.Id,
+		ProxyTCP:   proxySocket,
+		ClientTCP:  clientSocket,
+		CreateTime: time.Now().UnixMilli(),
+		LastRWTime: time.Now().UnixMilli(),
 	}
 	//this.BridgeListLock.synchronized {
 	//    this.BridgeList.add(bridge)

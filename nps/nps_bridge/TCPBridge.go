@@ -16,18 +16,20 @@ import (
 
 type RemoveBridgeFunc func(bridge *TCPBridge)
 
-/**
- * TCP桥接管理
- * @param client 客户端DTO
- * @param channel 隧道信息
- * @param proxySocket TCP代理服务端Socket
- * @param clientSocket 内网穿透客户端Socket
- */
+// TCPBridge TCP桥接信息
 type TCPBridge struct {
-	ClientId     int
-	Channel      *dto.ChannelDto
-	ProxySocket  net.Conn
-	ClientSocket net.Conn
+
+	// 客户端ID
+	ClientId int
+
+	// 当前隧道
+	Channel *dto.ChannelDto
+
+	// 隧道代理端TCP链接
+	ProxyTCP net.Conn
+
+	// 与客户端的TCP链接
+	ClientTCP net.Conn
 
 	// 创建时间
 	CreateTime int64
@@ -72,10 +74,10 @@ func (mine *TCPBridge) sendHeaderToClient() {
 
 	//写入数据
 	data = append(data, headerData...)
-	err := TcpUtil.WriteAll(mine.ClientSocket, data)
+	err := TcpUtil.WriteAll(mine.ClientTCP, data)
 	if err != nil {
 		LogUtil.Error(fmt.Sprintf("往客户端发送头部失败 err:%q", err))
-		mine.ClientSocket.Close()
+		mine.ClientTCP.Close()
 	}
 }
 
@@ -85,7 +87,7 @@ func (mine *TCPBridge) sendHeaderToClient() {
 func (mine *TCPBridge) receiveByProxySendToClient() {
 	data := make([]uint8, NPSConstant.READ_CACHE_SIZE)
 	for {
-		length, err := mine.ProxySocket.Read(data)
+		length, err := mine.ProxyTCP.Read(data)
 		if err != nil {
 			break
 		}
@@ -100,17 +102,17 @@ func (mine *TCPBridge) receiveByProxySendToClient() {
 		}
 
 		//将读取到的数据立即发送客户端
-		err = TcpUtil.WriteAll(mine.ClientSocket, data[:length])
+		err = TcpUtil.WriteAll(mine.ClientTCP, data[:length])
 		if err != nil {
 			break
 		}
 	}
 
 	//关闭客户端的输出流
-	mine.ClientSocket.(*net.TCPConn).CloseWrite()
+	mine.ClientTCP.(*net.TCPConn).CloseWrite()
 
 	//关闭代理端的输入流
-	mine.ProxySocket.(*net.TCPConn).CloseRead()
+	mine.ProxyTCP.(*net.TCPConn).CloseRead()
 
 	//标记代理连接读操作已经关闭
 	mine.proxyInIsClosed = true
@@ -121,7 +123,7 @@ func (mine *TCPBridge) receiveByProxySendToClient() {
 func (mine *TCPBridge) receiveByClientSendToProxy() {
 	data := make([]uint8, NPSConstant.READ_CACHE_SIZE)
 	for {
-		length, err := mine.ClientSocket.Read(data)
+		length, err := mine.ClientTCP.Read(data)
 		if err != nil {
 			break
 		}
@@ -136,17 +138,17 @@ func (mine *TCPBridge) receiveByClientSendToProxy() {
 		}
 
 		//将读取到的数据立即发送客户端
-		err = TcpUtil.WriteAll(mine.ProxySocket, data[:length])
+		err = TcpUtil.WriteAll(mine.ProxyTCP, data[:length])
 		if err != nil {
 			break
 		}
 	}
 
 	//关闭客户端的输出流
-	mine.ProxySocket.(*net.TCPConn).CloseWrite()
+	mine.ProxyTCP.(*net.TCPConn).CloseWrite()
 
 	//关闭代理端的输入流
-	mine.ClientSocket.(*net.TCPConn).CloseRead()
+	mine.ClientTCP.(*net.TCPConn).CloseRead()
 
 	//标记客户端读操作已经关闭
 	mine.clientInIsClosed = true
@@ -158,8 +160,8 @@ func (mine *TCPBridge) receiveByClientSendToProxy() {
  */
 func (mine *TCPBridge) recycle() {
 	if mine.proxyInIsClosed && mine.clientInIsClosed {
-		mine.ClientSocket.Close()
-		mine.ProxySocket.Close()
+		mine.ClientTCP.Close()
+		mine.ProxyTCP.Close()
 		removeBridge(mine)
 	}
 }
@@ -168,6 +170,6 @@ func (mine *TCPBridge) recycle() {
 * 关闭连接
  */
 func (mine *TCPBridge) shutdown() {
-	mine.ClientSocket.Close()
-	mine.ProxySocket.Close()
+	mine.ClientTCP.Close()
+	mine.ProxyTCP.Close()
 }

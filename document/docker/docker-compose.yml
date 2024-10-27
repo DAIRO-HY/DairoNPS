@@ -9,7 +9,7 @@ services:
 
     environment:
       #时区,解决时间不一致的bug
-      TZ: Asia/Shanghai
+      #TZ: Asia/Shanghai
 
       #解决控制台输出中文乱码
       LANG: C.UTF-8
@@ -32,4 +32,7 @@ services:
       #日志级别
       NPS_LOG_LEVEL: error
     volumes:
+      #使用宿主机时区,解决时区不一致的问题
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
       - ./data:/app/data

@@ -42,7 +42,7 @@ func loadData(search form.BridgeInForm) []form.BridgeOutForm {
 		if search.ChannelId != 0 && search.ChannelId != it.Channel.Id {
 			continue
 		}
-		remoteAddr := it.ProxySocket.RemoteAddr().String()
+		remoteAddr := it.ProxyTCP.RemoteAddr().String()
 		ip := strings.Split(remoteAddr, ":")[0]
 		outFormList = append(outFormList, form.BridgeOutForm{
 
