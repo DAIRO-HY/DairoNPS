@@ -39,7 +39,7 @@
     /**
      * 数据流量统计报表目标端口转发ID
      */
-    let dataSizeChartForwardlId = 0
+    let dataSizeChartForwardId = 0
 
     /**
      * 显示数据流量统计报表
@@ -50,7 +50,7 @@
     function showDataSizeChart(clientId = 0, channelId = 0, forwardId = 0) {
         dataSizeChartClientId = clientId
         dataSizeChartChannelId = channelId
-        dataSizeChartForwardlId = forwardId
+        dataSizeChartForwardId = forwardId
         onDataSizeChartDateRangeClick("1m")
     }
 
@@ -120,7 +120,7 @@
             .addAll({
                 ClientId: dataSizeChartClientId,
                 ChannelId: dataSizeChartChannelId,
-                ForwardlId: dataSizeChartForwardlId,
+                ForwardId: dataSizeChartForwardId,
                 StartTime: start,
                 EndTime: end,
             })
