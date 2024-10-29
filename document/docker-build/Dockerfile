@@ -27,7 +27,9 @@ RUN rm go1.23.1.linux-amd64.tar.gz
 
 # 追加到PATH环境变量
 ENV PATH="/opt/go/bin:${PATH}"
-WORKDIR /home/ubuntu
+
+
+WORKDIR /home
 COPY build-linux.sh build-linux.sh
 RUN chmod +x build-linux.sh
 
