@@ -77,7 +77,7 @@ func (mine *ForwardTCPAccept) accept() {
 		if err != nil {
 			proxyTCP.Close()
 			LogUtil.Debug(fmt.Sprintf("转发端口:%d 连接失败\n", mine.forwardDto.Port))
-			break
+			continue
 		}
 
 		//开始桥接
