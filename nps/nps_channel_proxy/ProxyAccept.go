@@ -36,13 +36,6 @@ type ProxyAccept struct {
 }
 
 /**
- * 访问控制的IP地址
- */
-//private val aclIpSet = ChannelAclDao.selectByChannelId(channel.id!!).map {
-//    it.ip!!
-//}.toSet()
-
-/**
  * 等待客户端连接
  */
 func (mine *ProxyAccept) accept() {
@@ -56,11 +49,6 @@ func (mine *ProxyAccept) accept() {
 			break
 		}
 
-		if !mine.hasAccess(proxySocket) { //判断是否有访问权限
-			proxySocket.Close()
-			continue
-		}
-
 		//NPS客户端Socket
 		clientSocket := nps_pool.GetAndAddPool(mine.Channel.ClientId)
 		if clientSocket == nil {
@@ -71,32 +59,4 @@ func (mine *ProxyAccept) accept() {
 		nps_bridge.MakeBridge(mine.Client, mine.Channel, proxySocket, clientSocket)
 	}
 	mine.isFinished = true
-}
-
-/**
- * 判断是否有访问权限
- */
-func (mine *ProxyAccept) hasAccess(proxySocket net.Conn) bool {
-	//if tcpProxy.channel.AclState == 0 { //访问权限处于关闭状态
-	//    return true
-	//}
-	//
-	////获取IP地址
-	////不能使用packet.address.hostName,会出现延迟
-	//ip := proxySocket.inetAddress.hostAddress
-	//if(this.channel.aclState == 1){//白名单模式
-	//    if(this.aclIpSet.contains(ip)){
-	//        return true
-	//    }
-	//}
-	//if(this.channel.aclState == 2){//黑名单模式
-	//    if(!this.aclIpSet.contains(ip)){
-	//        return true
-	//    }
-	//}
-	//println("ip:${ip}被拒绝访问")
-	//proxySocket.getOutputStream().write("您当前的ip地址处于黑名单状态,被禁止访问".toByteArray())
-	//proxySocket.close()
-	//return false
-	return true
 }
