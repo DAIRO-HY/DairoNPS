@@ -20,6 +20,12 @@ exec_file="./$exec_name"
 #--------------------------------------获取代码-----------------------------------------
 if [ -d $projectName ]; then
     cd $projectName
+
+    #删除所有新添加的文件
+    git clean -f
+
+    #取消所有更改
+    git reset --hard
     git pull
 else
     CLONE_URL="https://${github_token}@github.com/${repo}.git"
@@ -28,9 +34,6 @@ else
 fi
 
 #---------------------------------------编译-----------------------------------------
-if [ -f $exec_file ]; then
-    rm $exec_file
-fi
 CGO_ENABLED=1 go build -ldflags="-s -w" -o $exec_file
 
 if [ ! -e $exec_file ]; then

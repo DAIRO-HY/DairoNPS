@@ -34,8 +34,8 @@ type IndexOutForm struct {
 
 	NumGoroutine int    //当前协程数
 	Memory       string //内存分配
-	SystemMemory string //系统内存占用
-	HeapAlloc    string //堆内存分配
-	HeapSys      string //堆内存系统占用
-	NumGC        uint32 //垃圾回收次数
+	//SystemMemory string //系统内存占用
+	//HeapAlloc    string //堆内存分配
+	//HeapSys      string //堆内存系统占用
+	//NumGC        uint32 //垃圾回收次数
 }

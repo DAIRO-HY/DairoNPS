@@ -47,7 +47,7 @@ func getDataSize(inForm form.GetDataInForm) form.GetDataOutForm {
 	//记录某个时间点的最大数据流量
 	var maxDataSize int64 = 0
 
-	dataSizeList := DateDataSizeDao.SelectList(inForm.ClientId, inForm.ChannelId, inForm.ForwordId, inForm.StartTime, inForm.EndTime)
+	dataSizeList := DateDataSizeDao.SelectList(inForm.ClientId, inForm.ChannelId, inForm.ForwardId, inForm.StartTime, inForm.EndTime)
 	for _, item := range dataSizeList { //为每一个时间点去匹配数据
 		label := time.Unix(item.Date, 0).Format(labelFormat)
 		dataForm := label2DataForm[label]

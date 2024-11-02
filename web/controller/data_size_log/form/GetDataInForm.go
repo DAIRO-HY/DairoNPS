@@ -9,7 +9,7 @@ type GetDataInForm struct {
 	ChannelId int
 
 	//端口转发ID
-	ForwordId int
+	ForwardId int
 
 	//入网流量
 	StartTime int64
