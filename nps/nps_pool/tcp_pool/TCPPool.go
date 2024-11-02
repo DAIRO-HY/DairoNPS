@@ -1,4 +1,4 @@
-package nps_pool
+package tcp_pool
 
 import "net"
 

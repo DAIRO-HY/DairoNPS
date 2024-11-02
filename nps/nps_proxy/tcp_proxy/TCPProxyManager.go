@@ -1,9 +1,9 @@
-package nps_channel_proxy
+package tcp_proxy
 
 import (
 	"DairoNPS/dao/ChannelDao"
 	"DairoNPS/dao/dto"
-	"DairoNPS/nps/nps_bridge"
+	"DairoNPS/nps/nps_bridge/tcp_bridge"
 	"DairoNPS/util/ChannelStatisticsUtil"
 	"DairoNPS/util/LogUtil"
 	"fmt"
@@ -13,7 +13,7 @@ import (
 )
 
 // 隧道id对应的服务端口监听
-var proxyAcceptMap = make(map[int]*ProxyAccept)
+var proxyAcceptMap = make(map[int]*TCPProxyAccept)
 
 // proxyAcceptMap操作互斥锁
 var proxyAcceptLock sync.Mutex
@@ -36,7 +36,9 @@ func AcceptClient(clientDto *dto.ClientDto) {
 	//开启NPS客户端ID下所有的隧道
 	activeList := ChannelDao.SelectActiveByClientId(clientDto.Id)
 	for _, it := range activeList {
-		acceptChannel(clientDto, it)
+		if it.Mode == 1 { //只监听TCP隧道
+			acceptChannel(clientDto, it)
+		}
 	}
 }
 
@@ -57,7 +59,7 @@ func acceptChannel(client *dto.ClientDto, channel *dto.ChannelDto) {
 	}
 	ChannelDao.SetError(channel.Id, nil)
 	LogUtil.Info(fmt.Sprintf("端口:%d 监听开始\n", channel.ServerPort))
-	proxyAccept := &ProxyAccept{
+	proxyAccept := &TCPProxyAccept{
 		Client:  client,
 		Channel: channel,
 		listen:  listener,
@@ -80,7 +82,7 @@ func ShutdownByChannel(channelId int) {
 	proxyAcceptLock.Unlock()
 
 	//关闭隧道所有正在通信的连接
-	nps_bridge.ShutdownByChannel(channelId)
+	tcp_bridge.ShutdownByChannel(channelId)
 }
 
 // 关闭某个客户端下所有的隧道
@@ -93,11 +95,11 @@ func ShutdownByClient(clientId int) {
 	}
 
 	//关闭客户端所有正在通信的连接
-	nps_bridge.ShutdownByClient(clientId)
+	tcp_bridge.ShutdownByClient(clientId)
 }
 
 // 停止监听端口
-func shutdown(proxyTCPAccept *ProxyAccept) {
+func shutdown(proxyTCPAccept *TCPProxyAccept) {
 	proxyTCPAccept.listen.Close()
 	channelId := proxyTCPAccept.Channel.Id
 	if proxyAcceptMap[channelId] != nil {

@@ -3,8 +3,10 @@ package main
 import (
 	"DairoNPS/constant/NPSConstant"
 	"DairoNPS/forward"
-	"DairoNPS/nps/nps_client"
-	"DairoNPS/nps/nps_pool"
+	"DairoNPS/nps/nps_client/tcp_client"
+	"DairoNPS/nps/nps_client/udp_client"
+	"DairoNPS/nps/nps_pool/tcp_pool"
+	"DairoNPS/nps/nps_pool/udp_pool"
 	"DairoNPS/util/LogUtil"
 	"DairoNPS/web"
 	"fmt"
@@ -28,7 +30,8 @@ const VERSION = "1.0.3"
 func init() {
 
 	// 初始化共享接口
-	nps_pool.Csmi = &nps_client.ClientSessionManager{}
+	tcp_pool.Csmi = &tcp_client.ClientSessionManager{}
+	udp_pool.Csmi = &tcp_client.ClientSessionManager{}
 }
 
 var list = make([]int, 0)
@@ -45,7 +48,8 @@ func main() {
 	go forward.StartAcceptAll()
 
 	//启动客户端监听
-	nps_client.Accept()
+	tcp_client.Accept()
+	udp_client.Accept()
 
 }
 

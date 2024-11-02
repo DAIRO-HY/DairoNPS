@@ -1,4 +1,4 @@
-package nps_bridge
+package tcp_bridge
 
 import (
 	"DairoNPS/constant/NPSConstant"

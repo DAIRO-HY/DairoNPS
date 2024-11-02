@@ -4,10 +4,10 @@ import (
 	"DairoNPS/dao/SystemConfigDao"
 	"DairoNPS/extension/Number"
 	"DairoNPS/forward"
-	"DairoNPS/nps/nps_bridge"
-	"DairoNPS/nps/nps_channel_proxy"
-	"DairoNPS/nps/nps_client"
-	"DairoNPS/nps/nps_pool"
+	"DairoNPS/nps/nps_bridge/tcp_bridge"
+	"DairoNPS/nps/nps_client/tcp_client"
+	"DairoNPS/nps/nps_pool/tcp_pool"
+	"DairoNPS/nps/nps_proxy/tcp_proxy"
 	"DairoNPS/web"
 	"DairoNPS/web/controller/index/form"
 	"encoding/json"
@@ -69,14 +69,14 @@ func getData() form.IndexOutForm {
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
 	outForm := form.IndexOutForm{
-		OnlineClientCount:  nps_client.OnlineCount(),              //在线客户端数量
-		TcpBridgeCount:     nps_bridge.GetBridgeCount(),           //当前TCP会话数
-		TcpPoolCount:       nps_pool.GetPoolCount(),               //当前TCP连接池
+		OnlineClientCount:  tcp_client.OnlineCount(),              //在线客户端数量
+		TcpBridgeCount:     tcp_bridge.GetBridgeCount(),           //当前TCP会话数
+		TcpPoolCount:       tcp_pool.GetPoolCount(),               //当前TCP连接池
 		UdpSessionCount:    0,                                     //当前UDP会话数
 		UdpPoolCount:       0,                                     //当前UDP连接池
 		InDataTotal:        Number.ToDataSize(systemDto.InData),   //入网流量
 		OutDataTotal:       Number.ToDataSize(systemDto.OutData),  //出网流量
-		ProxyCount:         nps_channel_proxy.GetProxyCount(),     //当前正在代理数
+		ProxyCount:         tcp_proxy.GetProxyCount(),             //当前正在代理数
 		ForwardCount:       forward.GetAcceptCount(),              //端口转发代理端口数量
 		ForwardBridgeCount: forward.GetBridgeCount(),              //端口转发当前桥接数量
 		NumGoroutine:       runtime.NumGoroutine(),                //当前协程数

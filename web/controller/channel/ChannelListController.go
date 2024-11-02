@@ -6,8 +6,9 @@ import (
 	"DairoNPS/dao/DateDataSizeDao"
 	"DairoNPS/extension/Bool"
 	"DairoNPS/extension/Number"
-	"DairoNPS/nps/nps_channel_proxy"
-	"DairoNPS/nps/nps_client"
+	"DairoNPS/nps/nps_client/tcp_client"
+	"DairoNPS/nps/nps_proxy/tcp_proxy"
+	"DairoNPS/nps/nps_proxy/udp_proxy"
 	"DairoNPS/web"
 	"DairoNPS/web/controller/channel/form"
 	"net/http"
@@ -77,7 +78,8 @@ type DeleteForm struct {
 func Delete(inForm DeleteForm) {
 
 	//关闭代理监听
-	nps_channel_proxy.ShutdownByChannel(inForm.Id)
+	tcp_proxy.ShutdownByChannel(inForm.Id)
+	udp_proxy.ShutdownByChannel(inForm.Id)
 	DateDataSizeDao.DeleteByChannelId(inForm.Id)
 	ChannelDao.Delete(inForm.Id)
 }
@@ -93,13 +95,15 @@ func setState(inForm SetStateForm) {
 	if channel.EnableState == 0 {
 		ChannelDao.SetEnableState(inForm.Id, 1)
 		clientDto := ClientDao.SelectOne(channel.ClientId)
-		if nps_client.IsOnline(clientDto.Id) {
-			nps_channel_proxy.AcceptClient(clientDto) //重新开启监听该客户端
+		if tcp_client.IsOnline(clientDto.Id) {
+			tcp_proxy.AcceptClient(clientDto) //重新开启监听该客户端
+			udp_proxy.AcceptClient(clientDto) //重新开启监听该客户端
 		}
 	} else {
 		ChannelDao.SetEnableState(inForm.Id, 0)
 
 		//关闭代理监听
-		nps_channel_proxy.ShutdownByChannel(channel.Id)
+		tcp_proxy.ShutdownByChannel(channel.Id)
+		udp_proxy.ShutdownByChannel(channel.Id)
 	}
 }

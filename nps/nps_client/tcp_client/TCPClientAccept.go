@@ -1,11 +1,11 @@
-package nps_client
+package tcp_client
 
 import (
 	"DairoNPS/constant/NPSConstant"
 	"DairoNPS/dao/ClientDao"
 	"DairoNPS/dao/dto"
 	"DairoNPS/nps/nps_client/HeaderUtil"
-	"DairoNPS/nps/nps_pool"
+	"DairoNPS/nps/nps_pool/tcp_pool"
 	"DairoNPS/util/LogUtil"
 	"DairoNPS/util/TcpUtil"
 	"fmt"
@@ -64,8 +64,8 @@ func handleAccept(tcp net.Conn) {
 		validateSession(tcp)
 
 	//创建客户端Socket连接池
-	case HeaderUtil.SERVER_TCP_POOL_REQUEST:
-		nps_pool.Add(tcp)
+	case HeaderUtil.REQUEST_TCP_POOL:
+		tcp_pool.Add(tcp)
 	}
 }
 

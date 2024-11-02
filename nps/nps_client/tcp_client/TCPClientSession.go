@@ -1,4 +1,4 @@
-package nps_client
+package tcp_client
 
 import (
 	"DairoNPS/constant/NPSConstant"

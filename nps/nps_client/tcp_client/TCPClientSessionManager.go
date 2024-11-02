@@ -1,10 +1,12 @@
-package nps_client
+package tcp_client
 
 import (
 	"DairoNPS/dao/dto"
-	"DairoNPS/nps/nps_channel_proxy"
 	"DairoNPS/nps/nps_client/HeaderUtil"
-	"DairoNPS/nps/nps_pool"
+	"DairoNPS/nps/nps_pool/tcp_pool"
+	"DairoNPS/nps/nps_pool/udp_pool"
+	"DairoNPS/nps/nps_proxy/tcp_proxy"
+	"DairoNPS/nps/nps_proxy/udp_proxy"
 	"net"
 	"strconv"
 	"sync"
@@ -73,10 +75,12 @@ func holdOnClient(client *dto.ClientDto, tcp net.Conn) {
 	clientSessionLock.Unlock()
 
 	//初始化客户端连接池
-	nps_pool.InitEmptyPoolByClient(client.Id)
+	tcp_pool.InitEmptyPoolByClient(client.Id)
+	udp_pool.InitEmptyPoolByClient(client.Id)
 
 	//开启该客户端下所有隧道监听
-	nps_channel_proxy.AcceptClient(client)
+	tcp_proxy.AcceptClient(client)
+	udp_proxy.AcceptClient(client)
 	session.Start()
 }
 
@@ -86,7 +90,7 @@ func holdOnClient(client *dto.ClientDto, tcp net.Conn) {
  * @param count 申请数量
  */
 func (csm *ClientSessionManager) SendTCPPoolRequest(clientId int, count int) {
-	send(clientId, HeaderUtil.SERVER_TCP_POOL_REQUEST, strconv.Itoa(count))
+	send(clientId, HeaderUtil.REQUEST_TCP_POOL, strconv.Itoa(count))
 }
 
 /**
@@ -94,9 +98,9 @@ func (csm *ClientSessionManager) SendTCPPoolRequest(clientId int, count int) {
  * @param clientID 客户端ID
  * @param count 申请数量
  */
-//suspend fun sendUDPPoolRequest(clientID: Int, count: Int) {
-//    this.send(clientID, HeaderUtil.SERVER_UDP_POOL_REQUEST, count.toString())
-//}
+func (csm *ClientSessionManager) SendUDPPoolRequest(clientId int, count int) {
+	send(clientId, HeaderUtil.REQUEST_UDP_POOL, strconv.Itoa(count))
+}
 
 /**
  * 往客户端发送数据
@@ -128,7 +132,8 @@ func removeSession(closeSession *ClientSession) {
 		if session == closeSession { //当前没有加入新的回话
 			delete(clientSessionMap, clientId)
 		} else { //由于关闭延迟,有新的回话加入,但是在之前已经关掉了所有的代理监听,所以这里需要再次开启代理监听,概率很小，但不能排除
-			go nps_channel_proxy.AcceptClient(session.Client)
+			go tcp_proxy.AcceptClient(session.Client)
+			go udp_proxy.AcceptClient(session.Client)
 		}
 	}
 	clientSessionLock.Unlock()
@@ -138,10 +143,12 @@ func removeSession(closeSession *ClientSession) {
 func shutdownProxyAndPoolAndBridge(clientId int) {
 
 	//关闭代理监听
-	nps_channel_proxy.ShutdownByClient(clientId)
+	tcp_proxy.ShutdownByClient(clientId)
+	udp_proxy.ShutdownByClient(clientId)
 
-	//关闭所有TCP连接池
-	nps_pool.ShutdownByClient(clientId)
+	//关闭所有连接池
+	tcp_pool.ShutdownByClient(clientId)
+	udp_pool.ShutdownByClient(clientId)
 
 	//关闭所有UDP连接池
 	//try {

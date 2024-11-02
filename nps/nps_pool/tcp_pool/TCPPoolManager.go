@@ -1,4 +1,4 @@
-package nps_pool
+package tcp_pool
 
 import (
 	"DairoNPS/constant/NPSConstant"
@@ -101,7 +101,7 @@ func get(clientID int) net.Conn {
 		return nil
 	}
 	var resultTcp net.Conn = nil
-	for len(*poolList) > 0 {
+	if len(*poolList) > 0 {
 
 		//取最后一次添加到连接池的连接
 		pool := (*poolList)[len(*poolList)-1]
@@ -117,7 +117,6 @@ func get(clientID int) net.Conn {
 
 		resultTcp = pool.PoolTCP
 		LogUtil.Debug(fmt.Sprintf("客户端ID:%d 当前连接池已经创建时间：%d秒\n", clientID, (time.Now().UnixMilli()-pool.CreateTime)/1000))
-		break
 	}
 	poolLock.Unlock()
 	return resultTcp

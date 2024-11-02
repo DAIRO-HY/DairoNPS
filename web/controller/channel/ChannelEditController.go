@@ -8,8 +8,9 @@ import (
 	"DairoNPS/extension/Bool"
 	"DairoNPS/extension/Date"
 	"DairoNPS/extension/Number"
-	"DairoNPS/nps/nps_channel_proxy"
-	"DairoNPS/nps/nps_client"
+	"DairoNPS/nps/nps_client/tcp_client"
+	"DairoNPS/nps/nps_proxy/tcp_proxy"
+	"DairoNPS/nps/nps_proxy/udp_proxy"
 	"DairoNPS/web"
 	"DairoNPS/web/controller"
 	"DairoNPS/web/controller/channel/form"
@@ -89,10 +90,12 @@ func Edit(form form.ChannelEditForm) any {
 	}
 
 	//关闭代理监听
-	nps_channel_proxy.ShutdownByChannel(channel.Id)
+	tcp_proxy.ShutdownByChannel(channel.Id)
+	udp_proxy.ShutdownByChannel(channel.Id)
 	clientDto := ClientDao.SelectOne(channel.ClientId)
-	if nps_client.IsOnline(clientDto.Id) {
-		nps_channel_proxy.AcceptClient(clientDto) //重新开启监听该客户端
+	if tcp_client.IsOnline(clientDto.Id) {
+		tcp_proxy.AcceptClient(clientDto) //重新开启监听该客户端
+		udp_proxy.AcceptClient(clientDto) //重新开启监听该客户端
 	}
 	return nil
 }

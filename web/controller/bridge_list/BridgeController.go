@@ -4,7 +4,7 @@ import (
 	"DairoNPS/dao/ClientDao"
 	"DairoNPS/extension/Number"
 	"DairoNPS/forward"
-	"DairoNPS/nps/nps_bridge"
+	"DairoNPS/nps/nps_bridge/tcp_bridge"
 	"DairoNPS/web"
 	"DairoNPS/web/controller/bridge_list/form"
 	"net/http"
@@ -34,7 +34,7 @@ func loadData(search form.BridgeInForm) []form.BridgeOutForm {
 	nowTime := time.Now().UnixMilli()
 
 	//隧道桥接列表统计------------------------------------------------------------START
-	channelBridgeList := nps_bridge.GetBridgeList()
+	channelBridgeList := tcp_bridge.GetBridgeList()
 	for _, it := range channelBridgeList {
 		if search.ClientId != 0 && search.ClientId != it.ClientId {
 			continue
