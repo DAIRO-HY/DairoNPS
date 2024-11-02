@@ -5,8 +5,10 @@ import (
 	"DairoNPS/extension/Number"
 	"DairoNPS/forward"
 	"DairoNPS/nps/nps_bridge/tcp_bridge"
+	"DairoNPS/nps/nps_bridge/udp_bridge"
 	"DairoNPS/nps/nps_client/tcp_client"
 	"DairoNPS/nps/nps_pool/tcp_pool"
+	"DairoNPS/nps/nps_pool/udp_pool"
 	"DairoNPS/nps/nps_proxy/tcp_proxy"
 	"DairoNPS/web"
 	"DairoNPS/web/controller/index/form"
@@ -69,22 +71,22 @@ func getData() form.IndexOutForm {
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
 	outForm := form.IndexOutForm{
-		OnlineClientCount:  tcp_client.OnlineCount(),              //在线客户端数量
-		TcpBridgeCount:     tcp_bridge.GetBridgeCount(),           //当前TCP会话数
-		TcpPoolCount:       tcp_pool.GetPoolCount(),               //当前TCP连接池
-		UdpSessionCount:    0,                                     //当前UDP会话数
-		UdpPoolCount:       0,                                     //当前UDP连接池
-		InDataTotal:        Number.ToDataSize(systemDto.InData),   //入网流量
-		OutDataTotal:       Number.ToDataSize(systemDto.OutData),  //出网流量
-		ProxyCount:         tcp_proxy.GetProxyCount(),             //当前正在代理数
-		ForwardCount:       forward.GetAcceptCount(),              //端口转发代理端口数量
-		ForwardBridgeCount: forward.GetBridgeCount(),              //端口转发当前桥接数量
-		NumGoroutine:       runtime.NumGoroutine(),                //当前协程数
-		Memory:             Number.ToDataSize(memStats.Alloc),     //内存分配
-		SystemMemory:       Number.ToDataSize(memStats.Sys),       //系统内存占用
-		HeapAlloc:          Number.ToDataSize(memStats.HeapAlloc), //堆内存分配
-		HeapSys:            Number.ToDataSize(memStats.HeapSys),   //堆内存系统占用
-		NumGC:              memStats.NumGC,                        //垃圾回收次数
+		OnlineClientCount:  tcp_client.OnlineCount(),             //在线客户端数量
+		TcpBridgeCount:     tcp_bridge.GetBridgeCount(),          //当前TCP桥接数
+		TcpPoolCount:       tcp_pool.GetPoolCount(),              //当前TCP连接池
+		UdpBridgeCount:     udp_bridge.GetBridgeCount(),          //当前UDP桥接数
+		UdpPoolCount:       udp_pool.GetPoolCount(),              //当前UDP连接池
+		InDataTotal:        Number.ToDataSize(systemDto.InData),  //入网流量
+		OutDataTotal:       Number.ToDataSize(systemDto.OutData), //出网流量
+		ProxyCount:         tcp_proxy.GetProxyCount(),            //当前正在代理数
+		ForwardCount:       forward.GetAcceptCount(),             //端口转发代理端口数量
+		ForwardBridgeCount: forward.GetBridgeCount(),             //端口转发当前桥接数量
+		NumGoroutine:       runtime.NumGoroutine(),               //当前协程数
+		Memory:             Number.ToDataSize(memStats.Alloc),    //内存分配
+		//SystemMemory:       Number.ToDataSize(memStats.Sys),       //系统内存占用
+		//HeapAlloc:          Number.ToDataSize(memStats.HeapAlloc), //堆内存分配
+		//HeapSys:            Number.ToDataSize(memStats.HeapSys),   //堆内存系统占用
+		NumGC: memStats.NumGC, //垃圾回收次数
 	}
 	return outForm
 }

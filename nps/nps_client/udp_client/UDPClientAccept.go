@@ -7,6 +7,7 @@ import (
 	"DairoNPS/nps/nps_pool/udp_pool"
 	"DairoNPS/util/LogUtil"
 	"fmt"
+	"log"
 	"net"
 	"strconv"
 )
@@ -43,34 +44,31 @@ func Accept() {
 	udp, err := net.ListenUDP("udp", addr)
 	if err != nil {
 		LogUtil.Error(fmt.Sprintf("UDP端口:%s 监听失败:%q", NPSConstant.UDPPort, err))
+		log.Fatalf("UDP端口:%s 监听失败:%q\n", NPSConstant.UDPPort, err)
 		return
 	}
 	LogUtil.Info(fmt.Sprintf("UDP端口:%s 监听成功.", NPSConstant.UDPPort))
 	for {
 		data := make([]byte, 10*1024)
-		length, addr, err := udp.ReadFromUDP(data)
+
+		//从客户端读取数据
+		length, clientAddr, err := udp.ReadFromUDP(data)
 		if err != nil {
-			//LogUtil.Error(fmt.Sprintf("UDP端口:%s 监听失败:%q",NPSConstant.UDPPort,err))
-			continue
+			LogUtil.Error(fmt.Sprintf("UDP端口:%s 读取数据失败:%q", NPSConstant.UDPPort, err))
+			break
 		}
-
-		//获取IP地址
-		////不能使用packet.address.hostName,会出现延迟
-		//val ip = packet.address.hostAddress
-		//
-		////终端设备端口
-		//val port = packet.port
-
-		bridge := udp_bridge.ByClient(addr)
-		if bridge != nil {
+		bridge := udp_bridge.ByClient(clientAddr)
+		if bridge != nil { //桥接通信已经存在
 			bridge.SendToProxy(data, length)
-		} else {
+		} else { //这可能是一个连接池
 			clientIdStr := string(data[:length])
-			clientId, _ := strconv.ParseInt(clientIdStr, 10, 64)
-
+			clientId, toClientErr := strconv.ParseInt(clientIdStr, 10, 64)
+			if toClientErr != nil {
+				continue
+			}
 			udpInfo := &nps.UDPInfo{
-				Socket: udp,
-				Addr:   addr,
+				Udp:     udp,
+				CliAddr: clientAddr,
 			}
 
 			//加入连接池

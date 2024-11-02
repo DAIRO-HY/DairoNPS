@@ -37,13 +37,13 @@ func AcceptClient(clientDto *dto.ClientDto) {
 	activeList := ChannelDao.SelectActiveByClientId(clientDto.Id)
 	for _, it := range activeList {
 		if it.Mode == 1 { //只监听TCP隧道
-			acceptChannel(clientDto, it)
+			acceptChannel(clientDto.Id, it)
 		}
 	}
 }
 
 // 开始监听某个隧道
-func acceptChannel(client *dto.ClientDto, channel *dto.ChannelDto) {
+func acceptChannel(ClientId int, channel *dto.ChannelDto) {
 	proxyAcceptLock.Lock()
 	oldProxyTCPAccept := proxyAcceptMap[channel.Id]
 	if oldProxyTCPAccept != nil { //若该隧道已经在监听,则先停止
@@ -60,9 +60,9 @@ func acceptChannel(client *dto.ClientDto, channel *dto.ChannelDto) {
 	ChannelDao.SetError(channel.Id, nil)
 	LogUtil.Info(fmt.Sprintf("端口:%d 监听开始\n", channel.ServerPort))
 	proxyAccept := &TCPProxyAccept{
-		Client:  client,
-		Channel: channel,
-		listen:  listener,
+		ClientId: ClientId,
+		Channel:  channel,
+		listen:   listener,
 	}
 	proxyAcceptMap[channel.Id] = proxyAccept
 	proxyAcceptLock.Unlock()

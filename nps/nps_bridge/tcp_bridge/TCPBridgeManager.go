@@ -54,10 +54,10 @@ func GetBridgeList() []TCPBridge {
  * @param proxySocket 代理服务端Socket
  * @param clientSocket 内网穿透客户端Socket
  */
-func MakeBridge(client *dto.ClientDto, channel *dto.ChannelDto, proxySocket net.Conn, clientSocket net.Conn) {
+func MakeBridge(ClientId int, channel *dto.ChannelDto, proxySocket net.Conn, clientSocket net.Conn) {
 	bridge := &TCPBridge{
 		Channel:    channel,
-		ClientId:   client.Id,
+		ClientId:   ClientId,
 		ProxyTCP:   proxySocket,
 		ClientTCP:  clientSocket,
 		CreateTime: time.Now().UnixMilli(),

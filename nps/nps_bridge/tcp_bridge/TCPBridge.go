@@ -31,17 +31,17 @@ type TCPBridge struct {
 	// 与客户端的TCP链接
 	ClientTCP net.Conn
 
-	// 创建时间(毫秒)
-	CreateTime int64
-
-	// 记录最后通信时间(毫秒)
-	LastRWTime int64
-
 	//代理连接入方向是否被关闭
 	proxyInIsClosed bool
 
 	//客户端连接入方向是否被关闭
 	clientInIsClosed bool
+
+	// 创建时间(毫秒)
+	CreateTime int64
+
+	// 记录最后通信时间(毫秒)
+	LastRWTime int64
 
 	//隧道流量统计
 	channelDataSize *ChannelStatisticsUtil.ChannelDataSize
@@ -78,6 +78,7 @@ func (mine *TCPBridge) sendHeaderToClient() {
 	if err != nil {
 		LogUtil.Error(fmt.Sprintf("往客户端发送头部失败 err:%q", err))
 		mine.ClientTCP.Close()
+		return
 	}
 }
 

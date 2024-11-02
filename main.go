@@ -48,8 +48,8 @@ func main() {
 	go forward.StartAcceptAll()
 
 	//启动客户端监听
+	go udp_client.Accept()
 	tcp_client.Accept()
-	udp_client.Accept()
 
 }
 
@@ -87,6 +87,8 @@ func parseArgs() {
 			for _, level := range levels {
 				LogUtil.LogLevel[level] = true
 			}
+		case "-is-dev":
+			NPSConstant.IsDev = paramArr[1] == "true"
 		}
 	}
 	fmt.Printf("程序启动成功，管理员：%s 密码：%s\n", NPSConstant.LoginName, NPSConstant.LoginPwd)

@@ -5,6 +5,7 @@ import (
 	"DairoNPS/extension/Number"
 	"DairoNPS/forward"
 	"DairoNPS/nps/nps_bridge/tcp_bridge"
+	"DairoNPS/nps/nps_bridge/udp_bridge"
 	"DairoNPS/web"
 	"DairoNPS/web/controller/bridge_list/form"
 	"net/http"
@@ -33,9 +34,9 @@ func loadData(search form.BridgeInForm) []form.BridgeOutForm {
 	//当前时间戳
 	nowTime := time.Now().UnixMilli()
 
-	//隧道桥接列表统计------------------------------------------------------------START
-	channelBridgeList := tcp_bridge.GetBridgeList()
-	for _, it := range channelBridgeList {
+	//TCP隧道桥接列表统计------------------------------------------------------------START
+	tcpBridgeList := tcp_bridge.GetBridgeList()
+	for _, it := range tcpBridgeList {
 		if search.ClientId != 0 && search.ClientId != it.ClientId {
 			continue
 		}
@@ -43,7 +44,6 @@ func loadData(search form.BridgeInForm) []form.BridgeOutForm {
 			continue
 		}
 		remoteAddr := it.ProxyTCP.RemoteAddr().String()
-		ip := strings.Split(remoteAddr, ":")[0]
 		outFormList = append(outFormList, form.BridgeOutForm{
 
 			// 客户端名
@@ -62,10 +62,43 @@ func loadData(search form.BridgeInForm) []form.BridgeOutForm {
 			LastRWTime: Number.ToTimeFormat((nowTime - it.LastRWTime) / 1000),
 
 			// 用户端ip
-			Ip: ip,
+			Ip: remoteAddr,
 		})
 	}
-	//隧道桥接列表统计------------------------------------------------------------END
+	//TCP隧道桥接列表统计------------------------------------------------------------END
+
+	//UDP隧道桥接列表统计------------------------------------------------------------START
+	udpBridgeList := udp_bridge.GetBridgeList()
+	for _, it := range udpBridgeList {
+		if search.ClientId != 0 && search.ClientId != it.ClientId {
+			continue
+		}
+		if search.ChannelId != 0 && search.ChannelId != it.Channel.Id {
+			continue
+		}
+		remoteAddr := it.ProxyUDPInfo.Key()
+		outFormList = append(outFormList, form.BridgeOutForm{
+
+			// 客户端名
+			ClientName: clientId2Name[it.ClientId],
+
+			// 隧道名
+			ChannelName: it.Channel.Name,
+
+			// 隧道模式
+			Mode: "UDP",
+
+			// 创建时间
+			CreateTime: Number.ToTimeFormat((nowTime - it.CreateTime) / 1000),
+
+			// 在线时间
+			LastRWTime: Number.ToTimeFormat((nowTime - it.LastRWTime) / 1000),
+
+			// 用户端ip
+			Ip: remoteAddr,
+		})
+	}
+	//UDP隧道桥接列表统计------------------------------------------------------------END
 
 	//端口转发桥接列表统计------------------------------------------------------------START
 	forwardBridgeList := forward.GetBridgeList()

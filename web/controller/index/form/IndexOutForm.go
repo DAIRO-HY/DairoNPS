@@ -15,7 +15,7 @@ type IndexOutForm struct {
 	TcpPoolCount int
 
 	// 当前UDP会话数
-	UdpSessionCount int
+	UdpBridgeCount int
 
 	// 当前UDP连接池
 	UdpPoolCount int
@@ -37,5 +37,5 @@ type IndexOutForm struct {
 	//SystemMemory string //系统内存占用
 	//HeapAlloc    string //堆内存分配
 	//HeapSys      string //堆内存系统占用
-	//NumGC        uint32 //垃圾回收次数
+	NumGC uint32 //垃圾回收次数
 }

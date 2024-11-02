@@ -1,6 +1,7 @@
 package login_state
 
 import (
+	"DairoNPS/constant/NPSConstant"
 	"net/http"
 	"time"
 )
@@ -27,6 +28,9 @@ var loginState *LoginState
 
 // 是否登录验证
 func IsLogin(request *http.Request) bool {
+	if NPSConstant.IsDev { //开发模式不需要登录
+		return true
+	}
 	if loginState == nil {
 		return false
 	}

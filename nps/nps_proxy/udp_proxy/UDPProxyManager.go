@@ -37,13 +37,13 @@ func AcceptClient(clientDto *dto.ClientDto) {
 	activeList := ChannelDao.SelectActiveByClientId(clientDto.Id)
 	for _, it := range activeList {
 		if it.Mode == 2 { //只监听UDP隧道
-			acceptChannel(clientDto, it)
+			acceptChannel(clientDto.Id, it)
 		}
 	}
 }
 
 // 开始监听某个隧道
-func acceptChannel(client *dto.ClientDto, channel *dto.ChannelDto) {
+func acceptChannel(ClientId int, channel *dto.ChannelDto) {
 	proxyAcceptLock.Lock()
 	oldProxyUDPAccept := proxyAcceptMap[channel.Id]
 	if oldProxyUDPAccept != nil { //若该隧道已经在监听,则先停止
@@ -51,20 +51,23 @@ func acceptChannel(client *dto.ClientDto, channel *dto.ChannelDto) {
 	}
 
 	// 创建一个 UDP 地址
-	addr, err := net.ResolveUDPAddr("udp", ":"+strconv.Itoa(channel.ServerPort))
+	addr, _ := net.ResolveUDPAddr("udp", ":"+strconv.Itoa(channel.ServerPort))
+
+	//代理服务端Socket
+	proxySocket, err := net.ListenUDP("udp", addr)
 	if err != nil {
-		errMsg := fmt.Sprintf("端口:%d 监听失败。err:%q\n", channel.ServerPort, err)
+		errMsg := fmt.Sprintf("UDP端口:%d 监听失败。err:%q\n", channel.ServerPort, err)
 		ChannelDao.SetError(channel.Id, &errMsg)
 		LogUtil.Error(errMsg)
 		proxyAcceptLock.Unlock()
 		return
 	}
 	ChannelDao.SetError(channel.Id, nil)
-	LogUtil.Info(fmt.Sprintf("端口:%d 监听开始\n", channel.ServerPort))
+	LogUtil.Info(fmt.Sprintf("UDP端口:%d 监听开始\n", channel.ServerPort))
 	proxyAccept := &UDPProxyAccept{
-		Client:  client,
-		Channel: channel,
-		udpAddr: addr,
+		ClientId: ClientId,
+		Channel:  channel,
+		ProxyUDP: proxySocket,
 	}
 	proxyAcceptMap[channel.Id] = proxyAccept
 	proxyAcceptLock.Unlock()
@@ -102,7 +105,7 @@ func ShutdownByClient(clientId int) {
 
 // 停止监听端口
 func shutdown(proxyUDPAccept *UDPProxyAccept) {
-	//proxyUDPAccept.listen.Close()
+	proxyUDPAccept.ProxyUDP.Close()
 	channelId := proxyUDPAccept.Channel.Id
 	if proxyAcceptMap[channelId] != nil {
 		delete(proxyAcceptMap, channelId)

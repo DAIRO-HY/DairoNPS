@@ -4,6 +4,7 @@ import (
 	"DairoNPS/constant/NPSConstant"
 	"DairoNPS/nps"
 	"DairoNPS/nps/nps_client/ClientSessionManagerInterface"
+	"DairoNPS/util/LogUtil"
 	"sync"
 	"time"
 )
@@ -15,8 +16,8 @@ import (
 /**
  * 客户端ID对应的UDP连接池
  */
-var clientScoketPoolMap = make(map[int]*[]*nps.UDPInfo)
-var lock sync.Mutex
+var poolMap = make(map[int]*[]*nps.UDPInfo)
+var poolLock sync.Mutex
 
 /**
  * 客户端连接池最后一次请求时间
@@ -25,6 +26,17 @@ var lock sync.Mutex
 
 func init() {
 	recyle()
+}
+
+// 当前连接池数量
+func GetPoolCount() int {
+	count := 0
+	poolLock.Lock()
+	for _, pools := range poolMap {
+		count += len(*pools)
+	}
+	poolLock.Unlock()
+	return count
 }
 
 /**
@@ -45,26 +57,26 @@ func init() {
  * @param clientID 客户端ID
  */
 func InitEmptyPoolByClient(clientID int) {
-	lock.Lock()
-	if clientScoketPoolMap[clientID] != nil {
-		lock.Unlock()
+	poolLock.Lock()
+	if poolMap[clientID] != nil {
+		poolLock.Unlock()
 		return
 	}
 
 	//创建连接池列表
-	clientScoketPoolMap[clientID] = &([]*nps.UDPInfo{})
-	lock.Unlock()
+	poolMap[clientID] = &([]*nps.UDPInfo{})
+	poolLock.Unlock()
 }
 
 /**
  * 加入到连接池
  */
 func Add(udpInfo *nps.UDPInfo, clientId int) {
-	lock.Lock()
-	poolList := clientScoketPoolMap[clientId]
-
+	poolLock.Lock()
+	poolList := poolMap[clientId]
 	if len(*poolList) >= NPSConstant.MAX_POOL_COUNT { //已经达到最大连接数,拒绝新连接
-		lock.Unlock()
+		poolLock.Unlock()
+		LogUtil.Info("UDP连接池已达到上限")
 
 		//发送通知到客户端,该连接关闭
 		closeNotify(udpInfo)
@@ -72,7 +84,7 @@ func Add(udpInfo *nps.UDPInfo, clientId int) {
 	}
 
 	*poolList = append(*poolList, udpInfo)
-	lock.Unlock()
+	poolLock.Unlock()
 }
 
 /**
@@ -87,10 +99,10 @@ func closeNotify(clientUdp *nps.UDPInfo) {
  * 通过客户端ID获取一个连接
  */
 func get(clientID int) *nps.UDPInfo {
-	lock.Lock()
+	poolLock.Lock()
 
 	//客户端连接池
-	poolList := clientScoketPoolMap[clientID]
+	poolList := poolMap[clientID]
 	var resultUDPInfo *nps.UDPInfo
 
 	if len(*poolList) > 0 {
@@ -104,7 +116,7 @@ func get(clientID int) *nps.UDPInfo {
 		resultUDPInfo = pool
 		//LogUtil.Debug(fmt.Sprintf("客户端ID:%d 当前连接池已经创建时间：%d秒\n", clientID, (time.Now().UnixMilli()-pool.CreateTime)/1000))
 	}
-	lock.Unlock()
+	poolLock.Unlock()
 	return resultUDPInfo
 }
 
@@ -136,9 +148,9 @@ var Csmi ClientSessionManagerInterface.ClientSessionManagerInterface
  * 每取走一个连接,则请求创建2个新的连接,直到达到最大连接数
  */
 func poolRequest(clientId int, count int) {
-	lock.Lock()
-	size := len(*clientScoketPoolMap[clientId])
-	lock.Unlock()
+	poolLock.Lock()
+	size := len(*poolMap[clientId])
+	poolLock.Unlock()
 	if size < NPSConstant.MAX_POOL_COUNT {
 		Csmi.SendUDPPoolRequest(clientId, count)
 	}
@@ -148,16 +160,18 @@ func poolRequest(clientId int, count int) {
  * 移除某个客户端所有的连接池
  */
 func ShutdownByClient(clientID int) {
-	lock.Lock()
-	clientPool := clientScoketPoolMap[clientID]
+	poolLock.Lock()
+	clientPool := poolMap[clientID]
 	if clientPool == nil {
-		lock.Unlock()
+		poolLock.Unlock()
 		return
 	}
 	for _, udpInfo := range *clientPool {
-		udpInfo.Socket.Close()
+
+		//通知客户端关闭
+		closeNotify(udpInfo)
 	}
-	clientPool = &[]*nps.UDPInfo{}
+	*clientPool = []*nps.UDPInfo{}
 
 	////0代表移除所有连接池
 	//val activePorts = "0"
@@ -166,7 +180,7 @@ func ShutdownByClient(clientID int) {
 	//   HeaderUtil.SYNC_ACTIVE_POOL_UDP_PORT,
 	//   activePorts
 	//)
-	lock.Unlock()
+	poolLock.Unlock()
 }
 
 /**

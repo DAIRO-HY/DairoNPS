@@ -78,3 +78,6 @@ var LoginName = "admin"
 
 // 管理员登录密码 默认随机6位数
 var LoginPwd = strconv.Itoa(rand.IntN(900000) + 100000)
+
+// 是否开发模式
+var IsDev bool

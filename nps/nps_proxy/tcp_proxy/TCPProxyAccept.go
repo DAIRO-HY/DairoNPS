@@ -13,23 +13,8 @@ import (
  * TCP隧道代理
  */
 type TCPProxyAccept struct {
-	Client  *dto.ClientDto
-	Channel *dto.ChannelDto
-
-	/**
-	 * 最后一次统计到入网流量
-	 * 流量统计时用到
-	 */
-	lastInData int64
-
-	/**
-	 * 最后一次统计到出网流量
-	 * 流量统计时用到
-	 */
-	lastOutData int64
-
-	//标记监听已经结束
-	isFinished bool
+	ClientId int //客户端ID
+	Channel  *dto.ChannelDto
 
 	//代理端口监听服务
 	listen net.Listener
@@ -63,7 +48,6 @@ func (mine *TCPProxyAccept) accept() {
 			proxySocket.Close()
 			continue
 		}
-		tcp_bridge.MakeBridge(mine.Client, mine.Channel, proxySocket, clientSocket)
+		tcp_bridge.MakeBridge(mine.ClientId, mine.Channel, proxySocket, clientSocket)
 	}
-	mine.isFinished = true
 }
