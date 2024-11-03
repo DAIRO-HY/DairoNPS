@@ -21,7 +21,7 @@ var poolMap = make(map[int]*[]*TCPPool)
 var poolLock sync.Mutex
 
 func init() {
-	go TimeoutCheck()
+	go timeoutCheck()
 }
 
 // 当前连接池数量
@@ -80,7 +80,6 @@ func Add(clientSocket net.Conn) {
 	poolLock.Lock()
 	pool := &TCPPool{
 		CreateTime: time.Now().UnixMilli(),
-		ClientID:   clientId,
 		PoolTCP:    clientSocket,
 	}
 	*poolList = append(*poolList, pool)
@@ -176,7 +175,7 @@ func ShutdownByClient(clientID int) {
 }
 
 // 超时连接池整理
-func TimeoutCheck() {
+func timeoutCheck() {
 	for {
 		time.Sleep(NPSConstant.RECYLE_POOL_TIME_OUT * time.Millisecond)
 

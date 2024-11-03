@@ -14,6 +14,12 @@ var TcpPort = "1781"
 // 服务端监听UDP端口,客户端通过此端口进行连接
 var UDPPort = "1782"
 
+// 关闭UDP连接池标记
+const UDP_POOL_CLOSE_FLAG = ":[NPS-POOL-CLOSE]"
+
+// 关闭UDP桥接标记
+const UDP_BRIDIGE_CLOSE_FLAG = ":[NPS-BRIDGE-CLOSE]"
+
 // 数据统计时间间隔（秒）
 const STATISTICS_DATA_SIZE_TIMER = 60
 
@@ -27,10 +33,12 @@ const RECYLE_UDP_TIME = 1 * 60 * 1000
 // 每隔一段时间回收长时间不用的连接池（毫秒）
 const RECYLE_POOL_TIME_OUT = 3 * 60 * 1000
 
-/**
- * 桥接连接会话超时
- */
-const BRIDGE_SESSION_TIMEOUT = 5 * 60 * 1000
+//const RECYLE_POOL_TIME_OUT = 5 * 1000
+
+// UDP桥接连接会话超时(毫秒)
+const UDP_BRIDGE_TIMEOUT = 1 * 60 * 1000
+
+//const UDP_BRIDGE_TIMEOUT = 5 * 1000
 
 /**
  * 心跳间隔时间
@@ -67,11 +75,6 @@ const ADD_POOL_COUNT = 3
  * 系统配置
  */
 //var systemConfig = SystemConfigDao.SelectOne()
-
-/**
- * 关闭UDP连接池标记
- */
-const CLOSE_UDP_POOL_FLAG = "CLOSE"
 
 // 管理员用户名
 var LoginName = "admin"

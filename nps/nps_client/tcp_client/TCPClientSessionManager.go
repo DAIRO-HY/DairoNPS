@@ -89,7 +89,7 @@ func holdOnClient(client *dto.ClientDto, tcp net.Conn) {
  * @param clientId 客户端ID
  * @param count 申请数量
  */
-func (csm *ClientSessionManager) SendTCPPoolRequest(clientId int, count int) {
+func (mine *ClientSessionManager) SendTCPPoolRequest(clientId int, count int) {
 	send(clientId, HeaderUtil.REQUEST_TCP_POOL, strconv.Itoa(count))
 }
 
@@ -98,8 +98,17 @@ func (csm *ClientSessionManager) SendTCPPoolRequest(clientId int, count int) {
  * @param clientID 客户端ID
  * @param count 申请数量
  */
-func (csm *ClientSessionManager) SendUDPPoolRequest(clientId int, count int) {
+func (mine *ClientSessionManager) SendUDPPoolRequest(clientId int, count int) {
 	send(clientId, HeaderUtil.REQUEST_UDP_POOL, strconv.Itoa(count))
+}
+
+/**
+ * 向客户端当前激活的UDP端口
+ * @param clientID 客户端ID
+ * @param count 申请数量
+ */
+func (mine *ClientSessionManager) SendActiveUDPBridge(clientId int, ports string) {
+	send(clientId, HeaderUtil.SYNC_ACTIVE_BRIDGE_UDP_PORT, ports)
 }
 
 /**

@@ -16,16 +16,11 @@ import (
 /**
  * 客户端ID对应的UDP连接池
  */
-var poolMap = make(map[int]*[]*nps.UDPInfo)
+var poolMap = make(map[int]*[]*UDPPool)
 var poolLock sync.Mutex
 
-/**
- * 客户端连接池最后一次请求时间
- */
-//private val clientLastRequestTimeMap = ConcurrentHashMap<Int, Long>()
-
 func init() {
-	recyle()
+	go timeoutCheck()
 }
 
 // 当前连接池数量
@@ -40,19 +35,6 @@ func GetPoolCount() int {
 }
 
 /**
- * 当前连接池数量
- */
-//func getCount() int {
-//    var total = 0
-//    this.clientScoketPoolMapLock.withLock {
-//        this.clientScoketPoolMap.forEach { (_, v) ->
-//            total += v.count()
-//        }
-//    }
-//    return total
-//}
-
-/**
  * 为客户端创建一个空的连接池
  * @param clientID 客户端ID
  */
@@ -64,7 +46,7 @@ func InitEmptyPoolByClient(clientID int) {
 	}
 
 	//创建连接池列表
-	poolMap[clientID] = &([]*nps.UDPInfo{})
+	poolMap[clientID] = &([]*UDPPool{})
 	poolLock.Unlock()
 }
 
@@ -72,6 +54,10 @@ func InitEmptyPoolByClient(clientID int) {
  * 加入到连接池
  */
 func Add(udpInfo *nps.UDPInfo, clientId int) {
+	pool := &UDPPool{
+		UDPInfo:    udpInfo,
+		CreateTime: time.Now().UnixMilli(),
+	}
 	poolLock.Lock()
 	poolList := poolMap[clientId]
 	if len(*poolList) >= NPSConstant.MAX_POOL_COUNT { //已经达到最大连接数,拒绝新连接
@@ -79,31 +65,23 @@ func Add(udpInfo *nps.UDPInfo, clientId int) {
 		LogUtil.Info("UDP连接池已达到上限")
 
 		//发送通知到客户端,该连接关闭
-		closeNotify(udpInfo)
+		pool.CloseNotify()
 		return
 	}
 
-	*poolList = append(*poolList, udpInfo)
+	*poolList = append(*poolList, pool)
 	poolLock.Unlock()
-}
-
-/**
- * 通知客户端关闭该连接池
- */
-func closeNotify(clientUdp *nps.UDPInfo) {
-	closeData := []byte(NPSConstant.CLOSE_UDP_POOL_FLAG)
-	clientUdp.Send(closeData, len(closeData))
 }
 
 /**
  * 通过客户端ID获取一个连接
  */
-func get(clientID int) *nps.UDPInfo {
+func get(clientID int) *UDPPool {
 	poolLock.Lock()
 
 	//客户端连接池
 	poolList := poolMap[clientID]
-	var resultUDPInfo *nps.UDPInfo
+	var resultUDPInfo *UDPPool
 
 	if len(*poolList) > 0 {
 
@@ -123,12 +101,12 @@ func get(clientID int) *nps.UDPInfo {
 /**
  * 从连接池获取一个连接,并请求添加连接池
  */
-func GetAndAddPool(clientID int) *nps.UDPInfo {
+func GetAndAddPool(clientID int) *UDPPool {
 
-	var udpInfo *nps.UDPInfo
+	var pool *UDPPool
 	for i := 0; i < 5; i++ {
-		udpInfo = get(clientID)
-		if udpInfo != nil {
+		pool = get(clientID)
+		if pool != nil {
 			break
 		}
 
@@ -139,7 +117,7 @@ func GetAndAddPool(clientID int) *nps.UDPInfo {
 
 	//每消耗一个连接,申请创建两个连接,直到达到最大连接池数量
 	go poolRequest(clientID, 2)
-	return udpInfo
+	return pool
 }
 
 var Csmi ClientSessionManagerInterface.ClientSessionManagerInterface
@@ -166,56 +144,44 @@ func ShutdownByClient(clientID int) {
 		poolLock.Unlock()
 		return
 	}
-	for _, udpInfo := range *clientPool {
+	for _, pool := range *clientPool {
 
 		//通知客户端关闭
-		closeNotify(udpInfo)
+		pool.CloseNotify()
 	}
-	*clientPool = []*nps.UDPInfo{}
-
-	////0代表移除所有连接池
-	//val activePorts = "0"
-	//ClientSessionManager.send(
-	//   clientID,
-	//   HeaderUtil.SYNC_ACTIVE_POOL_UDP_PORT,
-	//   activePorts
-	//)
+	*clientPool = []*UDPPool{}
 	poolLock.Unlock()
 }
 
-/**
- * 回收长时间不用的连接
- */
-func recyle() {
-	//while (true) {
-	//    delay(CLSConfig.RECYLE_POOL_TIME)
-	//    try {
-	//        val currentTime = System.currentTimeMillis()
-	//        this.clientLastRequestTimeMap.forEach { (clientID, lastRequestTime) ->
-	//            if ((currentTime - lastRequestTime) > CLSConfig.RECYLE_POOL_TIME) {//超过指定时间没有通信的连接
-	//                val poolList = this.clientScoketPoolMap[clientID] as ClientPoolList
-	//                poolList.synchronized {
-	//                    while (poolList.size > CLSConfig.MIN_POOL_COUNT) {//移除多余的连接池
-	//                        poolList.removeAt(0)
-	//                    }
-	//                }
-	//
-	//                //当前激活的端口
-	//                var activePorts = poolList.joinToString(",") {
-	//                    it.port.toString()
-	//                }
-	//                if (activePorts.isEmpty()) {//服务商连接池为0
-	//                    activePorts = "0"
-	//                }
-	//                ClientSessionManager.send(
-	//                    clientID,
-	//                    HeaderUtil.SYNC_ACTIVE_POOL_UDP_PORT,
-	//                    activePorts
-	//                )
-	//            }
-	//        }
-	//    } catch (e: Exception) {
-	//        e.printStackTrace()
-	//    }
-	//}
+// 超时连接池整理
+func timeoutCheck() {
+	for {
+		time.Sleep(NPSConstant.RECYLE_POOL_TIME_OUT * time.Millisecond)
+
+		//当前时间戳秒
+		now := time.Now().UnixMilli()
+
+		//本次要关闭的连接池
+		var closeList []*UDPPool
+		poolLock.Lock()
+		for clientId, pools := range poolMap { //遍历所有客户端的连接池
+			poolList := *pools
+			poolSize := len(poolList)
+			for i := poolSize - 1; i > -1; i-- {
+				pool := (*pools)[i]
+				if now-pool.CreateTime > NPSConstant.RECYLE_POOL_TIME_OUT { //连接池超过指定时间
+					closeList = append(closeList, pool)
+					poolList = poolList[0:i]
+				}
+			}
+			if len(poolList) == 0 { //如果连接池被清空，则请求创建一个新的连接池
+				Csmi.SendUDPPoolRequest(clientId, 1)
+			}
+			*pools = poolList
+		}
+		poolLock.Unlock()
+		for _, pool := range closeList { //发送关闭通知
+			pool.CloseNotify()
+		}
+	}
 }

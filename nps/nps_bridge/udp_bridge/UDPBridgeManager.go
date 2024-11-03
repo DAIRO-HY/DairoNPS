@@ -1,6 +1,7 @@
 package udp_bridge
 
 import (
+	"DairoNPS/constant/NPSConstant"
 	"DairoNPS/dao/dto"
 	"DairoNPS/nps"
 	"DairoNPS/util/ChannelStatisticsUtil"
@@ -25,7 +26,7 @@ var clientUDPInfoToProxyUDPInfo = make(map[string]string)
 func init() {
 
 	//定时回收资源
-	recyle()
+	go timeoutCheck()
 }
 
 // 当前桥接数量
@@ -179,61 +180,33 @@ func RemoveBridge(bridge *UDPBridge) {
 /**
  * 长时间不用的连接回收
  */
-func recyle() {
-	//while(true)
-	//{
-	//	delay(CLSConfig.RECYLE_UDP_TIME)
-	//	val
-	//	now = System.currentTimeMillis()
-	//	try{
-	//
-	//		//要关闭的连接
-	//		val, closeList = ArrayList<UDPBridge>()
-	//
-	//		//当前存活的连接
-	//		val activeList = ArrayList<UDPBridge>()
-	//		this.proxyUDPInfoToBridgeLock.withLock{
-	//		this.proxyUDPInfoToBridge.forEach{
-	//		if ((now - it.value.lastSessionTime) > CLSConfig.RECYLE_UDP_TIME){ //筛选出指定隧道id的会话
-	//		closeList.add(it.value)
-	//	} else{
-	//		activeList.add(it.value)
-	//	}
-	//	}
-	//	}
-	//		closeList.forEach{ //关闭
-	//		this.closeByBridge(it)
-	//	}
-	//
-	//		//按照客户端ID分组
-	//		val activeClientToBridgeList = activeList.groupBy{
-	//		it.client.id
-	//	}
-	//
-	//		//遍历当前连接中的客户端
-	//		ClientSessionManager.getClientList().forEach{
-	//		val clientID = it.id!!
-	//		val bridgeList = activeClientToBridgeList[clientID]
-	//
-	//		//整理当前在线的端口
-	//		var activePorts = bridgeList?.joinToString(","){bridge->
-	//		bridge.clientInfo.port.toString()
-	//	}
-	//		if (activePorts.isNullOrEmpty()){ //连接全部关闭
-	//		activePorts = "0"
-	//	}
-	//		ClientSessionManager.send(
-	//		clientID,
-	//		HeaderUtil.SYNC_ACTIVE_BRIDGE_UDP_PORT,
-	//		activePorts
-	//	)
-	//	}
-	//	}
-	//	catch(e: Exception) {
-	//	e.printStackTrace()
-	//	println("-->连接回收报错")
-	//}
-	//}
+func timeoutCheck() {
+	for {
+		time.Sleep(NPSConstant.UDP_BRIDGE_TIMEOUT*time.Millisecond + 1000)
+
+		//当前时间戳秒
+		now := time.Now().UnixMilli()
+
+		//要关闭的连接
+		var closeList []*UDPBridge
+		bridgeLock.Lock()
+		for _, bridge := range proxyUDPInfoToBridge {
+			if now-bridge.LastRWTime > NPSConstant.UDP_BRIDGE_TIMEOUT {
+
+				//本次需要关闭的桥接
+				closeList = append(closeList, bridge)
+			}
+		}
+		for _, bridge := range closeList { //移除桥接
+			delete(proxyUDPInfoToBridge, bridge.ProxyUDPInfo.Key())
+			delete(clientUDPInfoToProxyUDPInfo, bridge.ClientUDPInfo.Key())
+		}
+		bridgeLock.Unlock()
+		for _, bridge := range closeList { //发送关闭标识
+			closeData := []byte(NPSConstant.UDP_BRIDIGE_CLOSE_FLAG)
+			bridge.ClientUDPInfo.Send(closeData, len(closeData))
+		}
+	}
 }
 
 /**

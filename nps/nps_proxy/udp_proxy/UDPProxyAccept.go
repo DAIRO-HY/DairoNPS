@@ -39,12 +39,12 @@ func (mine *UDPProxyAccept) accept() {
 			}
 
 			//NPS客户端Socket
-			clientUDPInfo := udp_pool.GetAndAddPool(mine.Channel.ClientId)
-			if clientUDPInfo == nil {
+			pool := udp_pool.GetAndAddPool(mine.Channel.ClientId)
+			if pool == nil {
 				LogUtil.Error(fmt.Sprintf("UDP端口:%d 没有可用的连接池。", mine.Channel.ServerPort))
 				continue
 			}
-			bridge = udp_bridge.CreateBridge(mine.ClientId, mine.Channel, proxyUDPInfo, clientUDPInfo)
+			bridge = udp_bridge.CreateBridge(mine.ClientId, mine.Channel, proxyUDPInfo, pool.UDPInfo)
 			if bridge == nil { //创建桥接失败
 				continue
 			}
