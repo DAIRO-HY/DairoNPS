@@ -74,9 +74,26 @@ DairoNPS默认配置文件使用了1780，1781，1782端口
 ./dairo-nps-linux-amd64 -login-name:admin -login-pwd:123456 -web-port:1780 -tcp-port:1781 -udp-port:1782 -log-type:2 -log-level:error -is-dev:false
 ```
 
+## 客户端
+- 客户端[下载](https://github.com/DAIRO-HY/DairoNPC/releases)。
+- 客户端支持操作系统: windows、Linux、Mac OS、Android。
 
-### 客户端安装请参考以下连接
-- 客户端[DairoNPC](https://github.com/DAIRO-HY/DairoNPC)。
+客户端启动:
+```bash
+./DairoNPC -h:192.168.1.100 -k:23421dJbhjBJK -t:1781 -u:1782
+```
+### 启动参数
+- -h 服务器IP地址或者域名。注意:不包含端口
+- -k web管理后台创建的客户端KEY
+- -t 与服务器连接的TCP端口。默认值:1781
+- -u 与服务器连接的UDP端口。默认值:1782
+
 
 ### 配置
 - 客户端连接后，在web中配置对应穿透服务即可
+
+
+# 联系我们
+若您在使用过程中遇到任何问题,请扫描下方的微信二维码联系我们。
+
+![微信二维码](./document/image/wx_qrcode.jpg)
