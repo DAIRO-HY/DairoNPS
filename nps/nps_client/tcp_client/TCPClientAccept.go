@@ -17,23 +17,23 @@ import (
 
 // Accept 监听客户端连接
 func Accept() {
-	listen, err := net.Listen("tcp", ":"+NPSConstant.TcpPort)
+	listen, err := net.Listen("tcp", ":"+NPSConstant.TCPPort)
 	if err != nil {
 		LogUtil.Error(fmt.Sprintf("监听客户端监听失败，请参考错误信息。err:%q", err))
 		log.Fatal(err)
 	}
 	defer listen.Close()
-	LogUtil.Info(fmt.Sprintf("端口:%s监听成功。\n", NPSConstant.TcpPort))
+	LogUtil.Info(fmt.Sprintf("端口:%s监听成功。\n", NPSConstant.TCPPort))
 	for {
-		LogUtil.Debug(fmt.Sprintf("监听客户端连接,端口:%s监听成功。", NPSConstant.TcpPort))
+		LogUtil.Debug(fmt.Sprintf("监听客户端连接,端口:%s监听成功。", NPSConstant.TCPPort))
 
 		//等待客户端连接
 		tcp, err := listen.Accept()
 		if err != nil {
-			LogUtil.Error(fmt.Sprintf("监听客户端结束,端口:%s", NPSConstant.TcpPort))
+			LogUtil.Error(fmt.Sprintf("监听客户端结束,端口:%s", NPSConstant.TCPPort))
 			log.Fatal(err)
 		}
-		LogUtil.Debug(fmt.Sprintf("接收到客户端连接请求,端口:%s监听成功。", NPSConstant.TcpPort))
+		LogUtil.Debug(fmt.Sprintf("接收到客户端连接请求,端口:%s监听成功。", NPSConstant.TCPPort))
 		go handleAccept(tcp)
 	}
 }

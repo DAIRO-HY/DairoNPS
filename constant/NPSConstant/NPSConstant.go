@@ -9,7 +9,7 @@ import (
 var WebPort = "1780"
 
 // 服务端监听TCP端口,客户端通过此端口进行连接
-var TcpPort = "1781"
+var TCPPort = "1781"
 
 // 服务端监听UDP端口,客户端通过此端口进行连接
 var UDPPort = "1782"

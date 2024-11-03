@@ -72,7 +72,9 @@ func parseArgs() {
 		case "-web-port":
 			NPSConstant.WebPort = paramArr[1]
 		case "-tcp-port":
-			NPSConstant.TcpPort = paramArr[1]
+			NPSConstant.TCPPort = paramArr[1]
+		case "-udp-port":
+			NPSConstant.UDPPort = paramArr[1]
 		case "-log-type": //日志输出方式
 			switch paramArr[1] {
 			case "0":

@@ -1,6 +1,6 @@
 
 # DairoNPS
-nps是一款轻量级、高性能、功能强大的**内网穿透**代理服务器。目前支持**tcp、udp流量转发**，可支持任何**tcp、udp**上层协议（访问内网网站、本地支付接口调试、ssh访问、远程桌面，内网dns解析等等……），此外还**支持内网http代理、内网socks5代理**、**p2p等**，并带有功能强大的web管理端。
+DairoNPS是一款轻量级、高性能、功能强大的**内网穿透**代理服务器。目前支持**tcp、udp流量转发**，可支持任何**tcp、udp**上层协议（访问内网网站、本地支付接口调试、ssh访问、远程桌面，内网dns解析等等……），此外还**支持内网http代理、内网socks5代理**、**p2p等**，并带有功能强大的web管理端。
 
 
 ## 背景
@@ -58,6 +58,22 @@ DairoNPS默认配置文件使用了1780，1781，1782端口
 - 访问服务端ip:web服务端口（默认为1780）。例：http://192.168.1.100:1780
 - 使用用户名和密码登陆（用户名默认admin，密码启动时在控制台会打印出密码）
 - 创建客户端
+
+### 启动参数
+- -login-name WEB后台登录用户名。默认值:admin
+- -login-pwd WEB后台登录密码。默认值:*每次启动随机生成
+- -web-port WEB后台端口。默认值:1780
+- -tcp-port 客户端连接TCP端口。默认值:1781
+- -udp-port 客户端连接UDP端口。默认值:1782
+- -log-type 日志输出。默认值:2(文件); 可选值:0(不输出日志) 1(控制台输出) 2(文件记录)
+- -log-level 日志级别。默认值:error; 可选值:info(提示日志) error(错误日志) debug(调试日志);若想同时输出,请用都好隔开。
+- -is-dev 是否开发模式。默认值:false;可选值:true(开发模式) false(生产环境)
+
+使用案例:
+```bash
+./dairo-nps-linux-amd64 -login-name:admin -login-pwd:123456 -web-port:1780 -tcp-port:1781 -udp-port:1782 -log-type:2 -log-level:error -is-dev:false
+```
+
 
 ### 客户端安装请参考以下连接
 - 客户端[DairoNPC](https://github.com/DAIRO-HY/DairoNPC)。
