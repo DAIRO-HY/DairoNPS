@@ -52,7 +52,7 @@ func ToDataSize(input any) string {
 		dataSize = inputFloat64
 		unit = "B"
 	}
-	dataSizeStr := fmt.Sprintf("%.2f\n", dataSize)
+	dataSizeStr := fmt.Sprintf("%.2f", dataSize)
 	return dataSizeStr + unit
 }
 
