@@ -60,7 +60,7 @@ func upgrade() {
 func create() {
 	sqlFiles := []string{"forward.sql", "client.sql", "channel.sql", "system_config.sql", "date_data_size.sql"}
 	for _, fn := range sqlFiles {
-		createSql, _ := resources.StaticFiles.ReadFile("sql.create/" + fn)
+		createSql, _ := resources.SqlFolder.ReadFile("sql.create/" + fn)
 		ExecIgnoreError(string(createSql))
 	}
 }

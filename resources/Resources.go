@@ -5,4 +5,4 @@ import (
 )
 
 //go:embed sql.create/*
-var StaticFiles embed.FS
+var SqlFolder embed.FS
