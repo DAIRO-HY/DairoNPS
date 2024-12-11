@@ -30,6 +30,9 @@ services:
       #客户端连接TCP端口
       NPS_TCP_PORT: 1781
 
+      #客户端连接UDP端口
+      NPS_UDP_PORT: 1782
+
       #日志类型
       NPS_LOG_TYPE: 2
 

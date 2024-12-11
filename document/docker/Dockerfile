@@ -23,6 +23,9 @@ ENV NPS_WEB_PORT=1780
 #客户端连接TCP端口
 ENV NPS_TCP_PORT=1781
 
+#客户端连接UDP端口
+ENV NPS_UDP_PORT=1782
+
 #日志类型
 ENV NPS_LOG_TYPE=2
 
@@ -30,4 +33,4 @@ ENV NPS_LOG_TYPE=2
 ENV NPS_LOG_LEVEL="error"
 
 #启动脚本
-ENTRYPOINT "/app/dairo-nps-linux-amd64" -login-name:$NPS_LOGIN_NAME -login-pwd:$NPS_LOGIN_PWD -web-port:$NPS_WEB_PORT -tcp-port:$NPS_TCP_PORT  -login-pwd:$NPS_LOGIN_PWD -log-type:$NPS_LOG_TYPE -log-level:$NPS_LOG_LEVEL
+ENTRYPOINT "/app/dairo-nps-linux-amd64" -login-name:$NPS_LOGIN_NAME -login-pwd:$NPS_LOGIN_PWD -web-port:$NPS_WEB_PORT -tcp-port:$NPS_TCP_PORT -udp-port:$NPS_UDP_PORT -log-type:$NPS_LOG_TYPE -log-level:$NPS_LOG_LEVEL
