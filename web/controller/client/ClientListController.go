@@ -6,19 +6,16 @@ import (
 	"DairoNPS/dao/DateDataSizeDao"
 	"DairoNPS/extension/Number"
 	"DairoNPS/nps/nps_client/tcp_client"
-	"DairoNPS/web"
 	"DairoNPS/web/controller/client/form"
-	"net/http"
 )
 
-// 路由设置
-func init() {
-	http.HandleFunc("/client_list/init", web.ApiHandler(List))
-	http.HandleFunc("/client_list/delete", web.ApiHandler(Delete))
-	http.HandleFunc("/client_list/set_state", web.ApiHandler(SetState))
+// get:/client_list
+// templates:client_list.html
+func InitList() {
 }
 
-// 客户端列表
+// List 客户端列表
+// post:/client_list/init
 func List() any {
 	var forms []form.ClientListForm
 	clientList := ClientDao.SelectAll()
@@ -39,33 +36,25 @@ func List() any {
 	return forms
 }
 
-// 删除的表单
-type DeleteForm struct {
-	Id int
-}
-
-// 通过id删除一个客户端
-func Delete(inForm DeleteForm) {
+// Delete 通过id删除一个客户端
+// post:/client_list/delete
+func Delete(id int) {
 
 	//关闭代理监听
-	tcp_client.Shutdown(inForm.Id)
-	DateDataSizeDao.DeleteByClientId(inForm.Id)
-	ClientDao.Delete(inForm.Id)
-	ChannelDao.DeleteByClient(inForm.Id)
+	tcp_client.Shutdown(id)
+	DateDataSizeDao.DeleteByClientId(id)
+	ClientDao.Delete(id)
+	ChannelDao.DeleteByClient(id)
 }
 
-// 修改可用状态
-type SetStateForm struct {
-	Id int
-}
-
-// 修改可用状态
-func SetState(inForm SetStateForm) {
-	clientDto := ClientDao.SelectOne(inForm.Id)
+// SetState 修改可用状态
+// post:/client_list/set_state
+func SetState(id int) {
+	clientDto := ClientDao.SelectOne(id)
 	if clientDto.EnableState == 0 {
-		ClientDao.SetEnableState(inForm.Id, 1)
+		ClientDao.SetEnableState(id, 1)
 	} else {
-		ClientDao.SetEnableState(inForm.Id, 0)
-		tcp_client.Shutdown(inForm.Id)
+		ClientDao.SetEnableState(id, 0)
+		tcp_client.Shutdown(id)
 	}
 }

@@ -1,18 +1,11 @@
-package client
+package data_size_log
 
 import (
 	"DairoNPS/dao/DateDataSizeDao"
 	"DairoNPS/dao/dto"
-	"DairoNPS/web"
 	"DairoNPS/web/controller/data_size_log/form"
-	"net/http"
 	"time"
 )
-
-// 初始化
-func init() {
-	http.HandleFunc("/data_size/get_data_size", web.ApiHandler(getDataSize))
-}
 
 /**
  * 页面初始化数据
@@ -21,7 +14,8 @@ func init() {
  * @param start 开始时间
  * @param end 结束时间
  */
-func getDataSize(inForm form.GetDataInForm) form.GetDataOutForm {
+// post:/data_size/get_data_size
+func GetDataSize(inForm form.GetDataInForm) form.GetDataOutForm {
 
 	//时间间隔
 	timeJg := inForm.EndTime - inForm.StartTime

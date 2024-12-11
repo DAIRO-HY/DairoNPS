@@ -5,20 +5,16 @@ import (
 	"DairoNPS/dao/ForwardDao"
 	"DairoNPS/extension/Number"
 	"DairoNPS/forward"
-	"DairoNPS/web"
 	"DairoNPS/web/controller/forward/form"
-	"net/http"
 )
 
-// 初始化
-func init() {
-	http.HandleFunc("/forward_list/get_list", web.ApiHandler(GetList))
-	http.HandleFunc("/forward_list/delete", web.ApiHandler(Delete))
-	http.HandleFunc("/forward_list/set_state", web.ApiHandler(SetState))
-
+// get:/forward_list
+// templates:forward_list.html
+func InitList() {
 }
 
 // 获取所有转发列表
+// post:/forward_list/get_list
 func GetList() []form.ForwardListOutForm {
 	list := ForwardDao.SelectAll()
 	outFormList := make([]form.ForwardListOutForm, len(list))
@@ -38,22 +34,24 @@ func GetList() []form.ForwardListOutForm {
 }
 
 // 通过id删除一个转发
-func Delete(inForm form.ForwardDeleteInputForm) {
+// post:/forward_list/delete
+func Delete(id int) {
 
 	//关闭隧道之后再打开
-	forward.CloseAccept(inForm.Id)
-	DateDataSizeDao.DeleteByForward(inForm.Id)
-	ForwardDao.Delete(inForm.Id)
+	forward.CloseAccept(id)
+	DateDataSizeDao.DeleteByForward(id)
+	ForwardDao.Delete(id)
 }
 
 // 修改可用状态
-func SetState(inForm form.ForwardSetStateInputForm) {
-	forwardDto := ForwardDao.SelectOne(inForm.Id)
+// post:/forward_list/set_state
+func SetState(id int) {
+	forwardDto := ForwardDao.SelectOne(id)
 	if forwardDto.EnableState == 0 {
-		ForwardDao.SetEnableState(inForm.Id, 1)
-		forward.Accept(ForwardDao.SelectOne(inForm.Id))
+		ForwardDao.SetEnableState(id, 1)
+		forward.Accept(ForwardDao.SelectOne(id))
 	} else {
-		ForwardDao.SetEnableState(inForm.Id, 0)
-		forward.CloseAccept(inForm.Id)
+		ForwardDao.SetEnableState(id, 0)
+		forward.CloseAccept(id)
 	}
 }

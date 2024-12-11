@@ -7,21 +7,19 @@ import (
 	"DairoNPS/extension/Date"
 	"DairoNPS/extension/Number"
 	"DairoNPS/nps/nps_client/tcp_client"
-	"DairoNPS/web"
 	"DairoNPS/web/controller"
 	"DairoNPS/web/controller/client/form"
-	"net/http"
 )
 
-// 初始化
-func init() {
-	http.HandleFunc("/client_list/client_edit/info", web.ApiHandler(Info))
-	http.HandleFunc("/client_list/client_edit/edit", web.ApiHandler(Edit))
+// get:/client_list/client_edit
+// templates:client_edit.html
+func InitEdit() {
 }
 
-func Info(inForm form.ClientEditForm) form.ClientEditForm {
-	if inForm.Id != 0 {
-		clientDto := ClientDao.SelectOne(inForm.Id)
+// post:/client_list/client_edit/info
+func Info(id int) form.ClientEditForm {
+	if id != 0 {
+		clientDto := ClientDao.SelectOne(id)
 		return form.ClientEditForm{
 			Id:            clientDto.Id,
 			Name:          clientDto.Name,
@@ -41,6 +39,7 @@ func Info(inForm form.ClientEditForm) form.ClientEditForm {
 }
 
 // 提交表单API
+// post:/client_list/client_edit/edit
 func Edit(form form.ClientEditForm) any {
 	err := validate(form)
 	if err != nil {

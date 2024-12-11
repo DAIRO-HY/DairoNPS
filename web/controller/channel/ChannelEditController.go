@@ -11,35 +11,27 @@ import (
 	"DairoNPS/nps/nps_client/tcp_client"
 	"DairoNPS/nps/nps_proxy/tcp_proxy"
 	"DairoNPS/nps/nps_proxy/udp_proxy"
-	"DairoNPS/web"
 	"DairoNPS/web/controller"
 	"DairoNPS/web/controller/channel/form"
 	"fmt"
-	"net/http"
 )
 
-// 路由设置
-func init() {
-	http.HandleFunc("/channel_list/channel_edit/info", web.ApiHandler(Info))
-	http.HandleFunc("/channel_list/channel_edit/edit", web.ApiHandler(Edit))
+// get:/channel_list/channel_edit
+// templates:channel_edit.html
+func InitEdit() {
 }
 
-// 输入参数
-type EditInForm struct {
-	ClientId int
-	Id       int
-}
-
-// 隧道编辑
-func Info(inForm EditInForm) any {
-	client := ClientDao.SelectOne(inForm.ClientId)
+// Info 隧道编辑
+// post:/channel_list/channel_edit/info
+func Info(ClientId int, Id int) any {
+	client := ClientDao.SelectOne(ClientId)
 	var outForm form.ChannelEditForm
-	if inForm.Id == 0 {
+	if Id == 0 {
 		outForm = form.ChannelEditForm{
 			Mode: 1,
 		}
 	} else { //修改时
-		channelDto := ChannelDao.SelectOne(inForm.Id)
+		channelDto := ChannelDao.SelectOne(Id)
 		outForm = form.ChannelEditForm{
 			Id:            channelDto.Id,
 			Name:          channelDto.Name,
@@ -54,12 +46,13 @@ func Info(inForm EditInForm) any {
 			SecurityState: channelDto.SecurityState,
 		}
 	}
-	outForm.ClientId = inForm.ClientId
+	outForm.ClientId = ClientId
 	outForm.ClientName = client.Name
 	return outForm
 }
 
-// 提交表单API
+// Edit 提交表单API
+// post:/channel_list/channel_edit/edit
 func Edit(form form.ChannelEditForm) any {
 	//try {
 	err := validate(form)

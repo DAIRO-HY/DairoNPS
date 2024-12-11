@@ -10,20 +10,17 @@ import (
 	"strings"
 )
 
-func init() {
-	http.HandleFunc("/ws/speed_chart", currentData)
-}
+// CurrentData WebSocket处理函数
+// post:/ws/speed_chart
+func CurrentData(w http.ResponseWriter, r *http.Request) {
+	// 创建WebSocket升级器
+	var upgrader = websocket.Upgrader{
+		// 允许跨域请求
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		},
+	}
 
-// 创建WebSocket升级器
-var upgrader = websocket.Upgrader{
-	// 允许跨域请求
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
-}
-
-// WebSocket处理函数
-func currentData(w http.ResponseWriter, r *http.Request) {
 	// 将HTTP连接升级为WebSocket连接
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {

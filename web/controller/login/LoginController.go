@@ -3,7 +3,6 @@ package login
 import (
 	"DairoNPS/constant/NPSConstant"
 	"DairoNPS/extension/String"
-	"DairoNPS/web"
 	"DairoNPS/web/controller"
 	"DairoNPS/web/controller/login/form"
 	"DairoNPS/web/login_state"
@@ -16,14 +15,14 @@ import (
 // 记录密码错误次数
 var loginErrorCount = 0
 
-// 初始化
-func init() {
-	http.HandleFunc("/login/do_login", web.ApiHandler(doLogin))
-	http.HandleFunc("/login/login_out", web.ApiHandler(logout))
+// get:/login
+// templates:login.html
+func Login() {
 }
 
-// 登录API
-func doLogin(writer http.ResponseWriter, request *http.Request, inForm form.LoginForm) any {
+// DoLogin 登录API
+// post:/login/do_login
+func DoLogin(writer http.ResponseWriter, inForm form.LoginForm) any {
 	if loginErrorCount > 10 {
 		return &controller.BusinessException{
 			Message: "用户名或密码错误次数超过限制，请重启程序再试。",
@@ -53,13 +52,14 @@ func doLogin(writer http.ResponseWriter, request *http.Request, inForm form.Logi
 		//HttpOnly: true,
 	}
 	http.SetCookie(writer, tokenCookie)
-	
+
 	login_state.Login(token)
 	return nil
 }
 
-// 退出登录
-func logout() {
+// Logout 退出登录
+// post:/login/login_out
+func Logout() {
 	login_state.LoginOut()
 }
 
@@ -76,4 +76,10 @@ func validate(inForm form.LoginForm) error {
 		}
 	}
 	return nil
+}
+
+// Logout 退出登录
+// post:/login/login_out/test
+func LogoutTest() string {
+	return "123"
 }

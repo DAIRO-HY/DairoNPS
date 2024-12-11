@@ -6,20 +6,19 @@ import (
 	"DairoNPS/forward"
 	"DairoNPS/nps/nps_bridge/tcp_bridge"
 	"DairoNPS/nps/nps_bridge/udp_bridge"
-	"DairoNPS/web"
 	"DairoNPS/web/controller/bridge_list/form"
-	"net/http"
 	"strings"
 	"time"
 )
 
-// 初始化
-func init() {
-	http.HandleFunc("/bridge_list/load_data", web.ApiHandler(loadData))
+// get:/bridge_list
+// templates:bridge_list.html
+func Init() {
 }
 
-// 获取数据
-func loadData(search form.BridgeInForm) []form.BridgeOutForm {
+// LoadData 获取数据
+// post:/bridge_list/load_data
+func LoadData(search form.BridgeInForm) []form.BridgeOutForm {
 
 	//生成客户端ID对应的客户端名，用来匹配------------------------------------------------------------START
 	clientList := ClientDao.SelectAll()

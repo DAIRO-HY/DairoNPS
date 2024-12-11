@@ -9,24 +9,17 @@ import (
 	"DairoNPS/nps/nps_client/tcp_client"
 	"DairoNPS/nps/nps_proxy/tcp_proxy"
 	"DairoNPS/nps/nps_proxy/udp_proxy"
-	"DairoNPS/web"
 	"DairoNPS/web/controller/channel/form"
-	"net/http"
 )
 
-// 路由设置
-func init() {
-	http.HandleFunc("/channel_list/list", web.ApiHandler(List))
-	http.HandleFunc("/channel_list/delete", web.ApiHandler(Delete))
-	http.HandleFunc("/channel_list/set_state", web.ApiHandler(setState))
+// get:/channel_list
+// templates:channel_list.html
+func InitList() {
 }
 
-type ListInForm struct {
-	ClientId int
-}
-
-// 隧道列表
-func List(inForm ListInForm) any {
+// List 隧道列表
+// post:/channel_list/list
+func List(clientId int) any {
 
 	////客户端下拉框数据
 	//clients := ClientDao.SelectAll()
@@ -44,8 +37,8 @@ func List(inForm ListInForm) any {
 	//	Mode:     search.Mode,
 	//}
 
-	client := ClientDao.SelectOne(inForm.ClientId)
-	channelDtoList := ChannelDao.SelectByClientId(inForm.ClientId)
+	client := ClientDao.SelectOne(clientId)
+	channelDtoList := ChannelDao.SelectByClientId(clientId)
 
 	//返回的form表单列表
 	outFormList := make([]form.ChannelListForm, len(channelDtoList))
@@ -69,38 +62,30 @@ func List(inForm ListInForm) any {
 	return outFormList
 }
 
-// 删除的表单
-type DeleteForm struct {
-	Id int
-}
-
-// 通过id删除一个隧道
-func Delete(inForm DeleteForm) {
+// Delete 通过id删除一个隧道
+// post:/channel_list/delete
+func Delete(id int) {
 
 	//关闭代理监听
-	tcp_proxy.ShutdownByChannel(inForm.Id)
-	udp_proxy.ShutdownByChannel(inForm.Id)
-	DateDataSizeDao.DeleteByChannelId(inForm.Id)
-	ChannelDao.Delete(inForm.Id)
+	tcp_proxy.ShutdownByChannel(id)
+	udp_proxy.ShutdownByChannel(id)
+	DateDataSizeDao.DeleteByChannelId(id)
+	ChannelDao.Delete(id)
 }
 
-// 删除的表单
-type SetStateForm struct {
-	Id int
-}
-
-// 修改可用状态
-func setState(inForm SetStateForm) {
-	channel := ChannelDao.SelectOne(inForm.Id)
+// SetState 修改可用状态
+// post:/channel_list/set_state
+func SetState(id int) {
+	channel := ChannelDao.SelectOne(id)
 	if channel.EnableState == 0 {
-		ChannelDao.SetEnableState(inForm.Id, 1)
+		ChannelDao.SetEnableState(id, 1)
 		clientDto := ClientDao.SelectOne(channel.ClientId)
 		if tcp_client.IsOnline(clientDto.Id) {
 			tcp_proxy.AcceptClient(clientDto) //重新开启监听该客户端
 			udp_proxy.AcceptClient(clientDto) //重新开启监听该客户端
 		}
 	} else {
-		ChannelDao.SetEnableState(inForm.Id, 0)
+		ChannelDao.SetEnableState(id, 0)
 
 		//关闭代理监听
 		tcp_proxy.ShutdownByChannel(channel.Id)

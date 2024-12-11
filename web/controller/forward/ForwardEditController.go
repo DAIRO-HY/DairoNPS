@@ -8,23 +8,21 @@ import (
 	"DairoNPS/extension/Date"
 	"DairoNPS/extension/Number"
 	forwardTcp "DairoNPS/forward"
-	"DairoNPS/web"
 	"DairoNPS/web/controller"
 	"DairoNPS/web/controller/forward/form"
 	"fmt"
-	"net/http"
 )
 
-// 初始化
-func init() {
-	http.HandleFunc("/forward_list/forward_edit/info", web.ApiHandler(Info))
-	http.HandleFunc("/forward_list/forward_edit/edit", web.ApiHandler(Edit))
-
+// get:/forward_list/forward_edit
+// templates:forward_edit.html
+func InitEdit() {
 }
 
-func Info(inForm form.ForwardInfoInputForm) form.ForwardEditForm {
-	if inForm.Id != 0 {
-		forwardDto := ForwardDao.SelectOne(inForm.Id)
+// 获取转发信息
+// post:/forward_list/forward_edit/info
+func Info(id int) form.ForwardEditForm {
+	if id != 0 {
+		forwardDto := ForwardDao.SelectOne(id)
 		return form.ForwardEditForm{
 			Id:          forwardDto.Id,
 			Name:        forwardDto.Name,
@@ -42,6 +40,7 @@ func Info(inForm form.ForwardInfoInputForm) form.ForwardEditForm {
 }
 
 // 提交表单API
+// post:/forward_list/forward_edit/edit
 func Edit(inForm form.ForwardEditForm) any {
 	err := validate(inForm)
 	if err != nil {

@@ -3,17 +3,12 @@ package common
 import (
 	"DairoNPS/dao/ChannelDao"
 	"DairoNPS/dao/ClientDao"
-	"DairoNPS/web"
 	"DairoNPS/web/controller/common/form"
 	"net/http"
 )
 
-// 初始化
-func init() {
-	http.HandleFunc("/common/dropdown", web.ApiHandler(dropdown))
-}
-
-func dropdown(request *http.Request) map[string][]form.DropdownOutForm {
+// post:/common/dropdown
+func Dropdown(request *http.Request) map[string][]form.DropdownOutForm {
 
 	//返回结果
 	result := make(map[string][]form.DropdownOutForm)

@@ -10,7 +10,6 @@ import (
 	"DairoNPS/nps/nps_pool/tcp_pool"
 	"DairoNPS/nps/nps_pool/udp_pool"
 	"DairoNPS/nps/nps_proxy/tcp_proxy"
-	"DairoNPS/web"
 	"DairoNPS/web/controller/index/form"
 	"encoding/json"
 	"fmt"
@@ -19,24 +18,29 @@ import (
 	"runtime"
 )
 
-// 初始化
-func init() {
-	http.HandleFunc("/index/data", web.ApiHandler(data))
-	http.HandleFunc("/index/gc", web.ApiHandler(gc))
+// Home 首页重定向
+// get:/
+// templates:index.html
+func Home() {
 }
 
-// 创建WebSocket升级器
-var upgrader = websocket.Upgrader{
-	// 允许跨域请求
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
+// get:/index
+// templates:index.html
+func Init() {
 }
 
-// WebSocket处理函数
-func data(w http.ResponseWriter, r *http.Request) {
+// Data WebSocket处理函数
+// post:/index/data
+func Data(writer http.ResponseWriter, request *http.Request) { // 创建WebSocket升级器
+	var upgrader = websocket.Upgrader{
+		// 允许跨域请求
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		},
+	}
+
 	// 将HTTP连接升级为WebSocket连接
-	conn, err := upgrader.Upgrade(w, r, nil)
+	conn, err := upgrader.Upgrade(writer, request, nil)
 	if err != nil {
 		fmt.Println("升级为WebSocket失败:", err)
 		return
@@ -61,6 +65,12 @@ func data(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 	}
+}
+
+// Gc 垃圾回收
+// post:/index/gc
+func Gc() {
+	runtime.GC()
 }
 
 // 页面初始化
@@ -89,9 +99,4 @@ func getData() form.IndexOutForm {
 		NumGC: memStats.NumGC, //垃圾回收次数
 	}
 	return outForm
-}
-
-// 垃圾回收
-func gc() {
-	runtime.GC()
 }
