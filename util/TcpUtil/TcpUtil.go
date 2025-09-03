@@ -34,13 +34,15 @@ func ReadNByte(tcp net.Conn, n int) ([]uint8, error) {
 	for {
 		buffer := make([]uint8, n-readLen)
 		le, err := tcp.Read(buffer)
+		if le > 0 {
+			copy(data[readLen:readLen+le], buffer[:le])
+			readLen += le
+			if readLen == n {
+				break
+			}
+		}
 		if err != nil {
 			return nil, err
-		}
-		copy(data[readLen:readLen+le], buffer[:le])
-		readLen += le
-		if readLen == n {
-			break
 		}
 	}
 	return data, nil
