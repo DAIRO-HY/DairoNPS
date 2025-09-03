@@ -88,25 +88,27 @@ func (mine *TCPBridge) sendHeaderToClient() {
 func (mine *TCPBridge) receiveByProxySendToClient() {
 	data := make([]uint8, NPSConstant.READ_CACHE_SIZE)
 	for {
-		length, err := mine.ProxyTCP.Read(data)
-		if err != nil {
+		n, readErr := mine.ProxyTCP.Read(data)
+		if n > 0 {
+
+			//记录最后通信时间
+			mine.LastRWTime = time.Now().UnixMilli()
+
+			//原子递增
+			atomic.AddInt64(&mine.channelDataSize.InData, int64(n))
+			if mine.Channel.SecurityState == 1 { //加密数据
+				SecurityUtil.Mapping(data, n)
+			}
+
+			//将读取到的数据立即发送客户端
+			writeErr := TcpUtil.WriteAll(mine.ClientTCP, data[:n])
+			if writeErr != nil {
+				break
+			}
+		}
+		if readErr != nil {
 			break
 		}
-
-		//原子递增
-		atomic.AddInt64(&mine.channelDataSize.InData, int64(length))
-		if mine.Channel.SecurityState == 1 { //加密数据
-			SecurityUtil.Mapping(data, length)
-		}
-
-		//将读取到的数据立即发送客户端
-		err = TcpUtil.WriteAll(mine.ClientTCP, data[:length])
-		if err != nil {
-			break
-		}
-
-		//记录最后通信时间
-		mine.LastRWTime = time.Now().UnixMilli()
 	}
 
 	//关闭客户端的输出流
@@ -124,25 +126,27 @@ func (mine *TCPBridge) receiveByProxySendToClient() {
 func (mine *TCPBridge) receiveByClientSendToProxy() {
 	data := make([]uint8, NPSConstant.READ_CACHE_SIZE)
 	for {
-		length, err := mine.ClientTCP.Read(data)
-		if err != nil {
+		n, readErr := mine.ClientTCP.Read(data)
+		if n > 0 {
+
+			//记录最后通信时间
+			mine.LastRWTime = time.Now().UnixMilli()
+
+			//出网统计 原子递增
+			atomic.AddInt64(&mine.channelDataSize.OutData, int64(n))
+			if mine.Channel.SecurityState == 1 { //加密数据
+				SecurityUtil.Mapping(data, n)
+			}
+
+			//将读取到的数据立即发送客户端
+			writeErr := TcpUtil.WriteAll(mine.ProxyTCP, data[:n])
+			if writeErr != nil {
+				break
+			}
+		}
+		if readErr != nil {
 			break
 		}
-
-		//出网统计 原子递增
-		atomic.AddInt64(&mine.channelDataSize.OutData, int64(length))
-		if mine.Channel.SecurityState == 1 { //加密数据
-			SecurityUtil.Mapping(data, length)
-		}
-
-		//将读取到的数据立即发送客户端
-		err = TcpUtil.WriteAll(mine.ProxyTCP, data[:length])
-		if err != nil {
-			break
-		}
-
-		//记录最后通信时间
-		mine.LastRWTime = time.Now().UnixMilli()
 	}
 
 	//关闭客户端的输出流

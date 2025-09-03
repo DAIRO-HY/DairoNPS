@@ -58,22 +58,24 @@ func (mine *ForwardBridge) Start() {
 func (mine *ForwardBridge) receiveByForwardSendToTarget() {
 	data := make([]uint8, NPSConstant.READ_CACHE_SIZE)
 	for {
-		length, err := mine.ProxyTCP.Read(data)
-		if err != nil {
+		n, readErr := mine.ProxyTCP.Read(data)
+		if n > 0 {
+
+			//记录最后通信时间
+			mine.LastRWTime = time.Now().UnixMilli()
+
+			//原子递增
+			atomic.AddInt64(&mine.dataSize.InData, int64(n))
+
+			//从代理端读取到的数据立即发送目标端
+			writeErr := TcpUtil.WriteAll(mine.TargetTCP, data[:n])
+			if writeErr != nil {
+				break
+			}
+		}
+		if readErr != nil {
 			break
 		}
-
-		//原子递增
-		atomic.AddInt64(&mine.dataSize.InData, int64(length))
-
-		//从代理端读取到的数据立即发送目标端
-		err = TcpUtil.WriteAll(mine.TargetTCP, data[:length])
-		if err != nil {
-			break
-		}
-
-		//记录最后通信时间
-		mine.LastRWTime = time.Now().UnixMilli()
 	}
 
 	//关闭代理端的读操作
@@ -93,22 +95,24 @@ func (mine *ForwardBridge) receiveByForwardSendToTarget() {
 func (mine *ForwardBridge) receiveByTargetSendToForward() {
 	data := make([]uint8, NPSConstant.READ_CACHE_SIZE)
 	for {
-		length, err := mine.TargetTCP.Read(data)
-		if err != nil {
+		n, readErr := mine.TargetTCP.Read(data)
+		if n > 0 {
+
+			//记录最后通信时间
+			mine.LastRWTime = time.Now().UnixMilli()
+
+			//原子递增
+			atomic.AddInt64(&mine.dataSize.OutData, int64(n))
+
+			//将读取到的数据立即发送客户端
+			writeErr := TcpUtil.WriteAll(mine.ProxyTCP, data[:n])
+			if writeErr != nil {
+				break
+			}
+		}
+		if readErr != nil {
 			break
 		}
-
-		//原子递增
-		atomic.AddInt64(&mine.dataSize.OutData, int64(length))
-
-		//将读取到的数据立即发送客户端
-		err = TcpUtil.WriteAll(mine.ProxyTCP, data[:length])
-		if err != nil {
-			break
-		}
-
-		//记录最后通信时间
-		mine.LastRWTime = time.Now().UnixMilli()
 	}
 
 	//关闭目标端的读操作
