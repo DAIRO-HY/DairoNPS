@@ -1,5 +1,9 @@
 package tcp_client
 
+				import (
+					"DairoNPS/DebugTimer"
+				)
+
 import (
 	"DairoNPS/constant/NPSConstant"
 	"DairoNPS/dao/dto"
@@ -35,6 +39,7 @@ var sendLock sync.Mutex
 
 // 开始会话
 func (mine *ClientSession) Start() {
+DebugTimer.Add246()
 	mine.sendServerInfoAndReceive()
 	//time.Sleep(1 * time.Second)
 	mine.Shutdown()
@@ -43,13 +48,16 @@ func (mine *ClientSession) Start() {
 
 // 发送服务器端的信息
 func (mine *ClientSession) sendServerInfoAndReceive() {
+DebugTimer.Add247()
 
 	//设置长连接
 	mine.tcp.SetReadDeadline(time.Time{})
 	if mine.sendClientId() != nil {
+DebugTimer.Add248()
 		return
 	}
 	if mine.sendClientSecurityKey() != nil {
+DebugTimer.Add249()
 		return
 	}
 	mine.receive()
@@ -57,12 +65,14 @@ func (mine *ClientSession) sendServerInfoAndReceive() {
 
 // 将客户端id返回给客户端
 func (mine *ClientSession) sendClientId() error {
+DebugTimer.Add250()
 	clientId := mine.Client.Id
 	return mine.SendHead(HeaderUtil.SERVER_TO_CLIENT_ID, strconv.Itoa(clientId))
 }
 
 // 将加密秘钥发送到客户端
 func (mine *ClientSession) sendClientSecurityKey() error {
+DebugTimer.Add251()
 	return mine.Send(SecurityUtil.ClientSecurityKey[:])
 }
 
@@ -70,9 +80,12 @@ func (mine *ClientSession) sendClientSecurityKey() error {
  * 接收从客户端发来的数据
  */
 func (mine *ClientSession) receive() {
+DebugTimer.Add252()
 	for {
+DebugTimer.Add253()
 		flagData, err := TcpUtil.ReadNByte(mine.tcp, 1)
 		if err != nil {
+DebugTimer.Add254()
 			LogUtil.Error(fmt.Sprintf("接收客户端数据标识出错。 err:%q", err))
 			break
 		}
@@ -80,6 +93,7 @@ func (mine *ClientSession) receive() {
 
 		err = mine.handle(flag)
 		if err != nil {
+DebugTimer.Add255()
 			LogUtil.Error(fmt.Sprintf("处理客户端数据失败。 err:%q", err))
 			break
 		}
@@ -90,6 +104,7 @@ func (mine *ClientSession) receive() {
  * 处理从客户端收到的消息
  */
 func (mine *ClientSession) handle(flag uint8) error {
+DebugTimer.Add256()
 	switch flag {
 	case HeaderUtil.MAIN_HEART_BEAT:
 		//log.Println("-->接收到客户端的心跳数据")
@@ -108,6 +123,7 @@ func (mine *ClientSession) handle(flag uint8) error {
  * @param message 头部消息
  */
 func (mine *ClientSession) SendHead(flag uint8, message string) error {
+DebugTimer.Add257()
 	data := []uint8(message)
 	//if (data.size > Byte.MAX_VALUE) {
 	//   throw RuntimeException("一次发送数据长度不能超过${Byte.MAX_VALUE}字节")
@@ -124,6 +140,7 @@ func (mine *ClientSession) SendHead(flag uint8, message string) error {
  * @param data 要发送的数据
  */
 func (mine *ClientSession) Send(data []uint8) error {
+DebugTimer.Add258()
 	sendLock.Lock()
 	err := TcpUtil.WriteAll(mine.tcp, data)
 	sendLock.Unlock()
@@ -134,15 +151,18 @@ func (mine *ClientSession) Send(data []uint8) error {
  * 关闭与内网穿透客户端的会话连接
  */
 func (mine *ClientSession) Shutdown() {
+DebugTimer.Add259()
 	mine.tcp.Close()
 }
 
 // 客户端是否在线监测
 func (mine *ClientSession) IsOnline() bool {
+DebugTimer.Add260()
 	now := time.Now().UnixMilli()
 
 	//在指定时间内没有收到客户端心跳,则视为离线
 	if now-mine.lastHeartBeatTime > NPSConstant.HEART_TIME*2 {
+DebugTimer.Add261()
 		return false
 	}
 	return true

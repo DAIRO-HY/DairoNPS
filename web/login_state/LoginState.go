@@ -1,5 +1,9 @@
 package login_state
 
+				import (
+					"DairoNPS/DebugTimer"
+				)
+
 import (
 	"DairoNPS/constant/NPSConstant"
 	"net/http"
@@ -28,17 +32,22 @@ var loginState *LoginState
 
 // 是否登录验证
 func IsLogin(request *http.Request) bool {
+DebugTimer.Add604()
 	if NPSConstant.IsDev { //开发模式不需要登录
+DebugTimer.Add605()
 		return true
 	}
 	if loginState == nil {
+DebugTimer.Add606()
 		return false
 	}
 	cookie, _ := request.Cookie(COOKIE_TOKEN)
 	if cookie == nil {
+DebugTimer.Add607()
 		return false
 	}
 	if loginState.token == cookie.Value {
+DebugTimer.Add608()
 
 		//更新最后在线时间
 		loginState.onlineDate = time.Now().UnixMilli()
@@ -49,6 +58,7 @@ func IsLogin(request *http.Request) bool {
 
 // 设置登录状态
 func Login(token string) {
+DebugTimer.Add609()
 	loginState = &LoginState{
 
 		//客户端IP
@@ -67,5 +77,6 @@ func Login(token string) {
 
 // 退出登录
 func LoginOut() {
+DebugTimer.Add610()
 	loginState = nil
 }

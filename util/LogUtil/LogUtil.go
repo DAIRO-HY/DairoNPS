@@ -1,5 +1,9 @@
 package LogUtil
 
+				import (
+					"DairoNPS/DebugTimer"
+				)
+
 import (
 	"fmt"
 	"os"
@@ -30,12 +34,15 @@ var LogLevel = map[string]bool{
 
 // 初始化执行
 func init() {
+DebugTimer.Add454()
 	_, err := os.Stat(LOG_PATH)
 	if os.IsNotExist(err) { //文件不存在
+DebugTimer.Add455()
 
 		// 创建多层目录
 		err := os.MkdirAll(LOG_PATH, 0700)
 		if err != nil {
+DebugTimer.Add456()
 			fmt.Println("创建文件夹./data/log失败:", err)
 			return
 		}
@@ -44,7 +51,9 @@ func init() {
 
 // 记录日志
 func Info(content string) {
+DebugTimer.Add457()
 	if !LogLevel["info"] {
+DebugTimer.Add458()
 		return
 	}
 	write("info  " + content)
@@ -52,7 +61,9 @@ func Info(content string) {
 
 // 记录错误日志
 func Error(content string) {
+DebugTimer.Add459()
 	if !LogLevel["error"] {
+DebugTimer.Add460()
 		return
 	}
 	write("error  " + content)
@@ -60,7 +71,9 @@ func Error(content string) {
 
 // 记录错误日志
 func Debug(content string) {
+DebugTimer.Add461()
 	if !LogLevel["debug"] {
+DebugTimer.Add462()
 		return
 	}
 	write("debug  " + content)
@@ -68,11 +81,14 @@ func Debug(content string) {
 
 // 记录日志
 func write(content string) {
+DebugTimer.Add463()
 	if LogOutType == LOG_OUT_TYPE_NO { //不输出日志
+DebugTimer.Add464()
 		return
 	}
 	line := time.Now().Format("2006-01-02 15:04:05") + "  " + content + "\n"
 	if LogOutType == LOG_OUT_TYPE_CONSOLE { //控制台输出
+DebugTimer.Add465()
 		fmt.Print(line)
 		return
 	}
@@ -80,11 +96,13 @@ func write(content string) {
 
 	file, err := os.OpenFile(LOG_PATH+"/"+logFileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
+DebugTimer.Add466()
 		fmt.Println(err)
 	}
 	defer file.Close()
 
 	if _, err := file.WriteString(line); err != nil {
+DebugTimer.Add467()
 		fmt.Println(err)
 	}
 }

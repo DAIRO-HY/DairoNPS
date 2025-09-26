@@ -1,5 +1,9 @@
 package udp_client
 
+				import (
+					"DairoNPS/DebugTimer"
+				)
+
 import (
 	"DairoNPS/constant/NPSConstant"
 	"DairoNPS/nps"
@@ -32,10 +36,12 @@ import (
  * 监听客户端UDP连接
  */
 func Accept() {
+DebugTimer.Add281()
 
 	// 创建一个 UDP 地址
 	addr, err := net.ResolveUDPAddr("udp", ":"+NPSConstant.UDPPort)
 	if err != nil {
+DebugTimer.Add282()
 		LogUtil.Error(fmt.Sprintf("UDP端口:%s 监听失败:%q", NPSConstant.UDPPort, err))
 		return
 	}
@@ -43,27 +49,32 @@ func Accept() {
 	// 监听指定地址
 	udp, err := net.ListenUDP("udp", addr)
 	if err != nil {
+DebugTimer.Add283()
 		LogUtil.Error(fmt.Sprintf("UDP端口:%s 监听失败:%q", NPSConstant.UDPPort, err))
 		log.Fatalf("UDP端口:%s 监听失败:%q\n", NPSConstant.UDPPort, err)
 		return
 	}
 	LogUtil.Info(fmt.Sprintf("UDP端口:%s 监听成功.", NPSConstant.UDPPort))
 	for {
+DebugTimer.Add284()
 		data := make([]byte, 10*1024)
 
 		//从客户端读取数据
 		length, clientAddr, err := udp.ReadFromUDP(data)
 		if err != nil {
+DebugTimer.Add285()
 			LogUtil.Error(fmt.Sprintf("UDP端口:%s 读取数据失败:%q", NPSConstant.UDPPort, err))
 			break
 		}
 		bridge := udp_bridge.ByClient(clientAddr)
 		if bridge != nil { //桥接通信已经存在
+DebugTimer.Add286()
 			bridge.SendToProxy(data, length)
 		} else { //这可能是一个连接池
 			clientIdStr := string(data[:length])
 			clientId, toClientErr := strconv.ParseInt(clientIdStr, 10, 64)
 			if toClientErr != nil {
+DebugTimer.Add287()
 				continue
 			}
 			udpInfo := &nps.UDPInfo{

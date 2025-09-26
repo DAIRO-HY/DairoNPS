@@ -1,5 +1,9 @@
 package tcp_proxy
 
+				import (
+					"DairoNPS/DebugTimer"
+				)
+
 import (
 	"DairoNPS/dao/dto"
 	"DairoNPS/nps/nps_bridge/tcp_bridge"
@@ -31,11 +35,14 @@ type TCPProxyAccept struct {
  * 等待客户端连接
  */
 func (mine *TCPProxyAccept) accept() {
+DebugTimer.Add339()
 	for {
+DebugTimer.Add340()
 
 		//代理服务端Socket
 		proxySocket, err := mine.listen.Accept()
 		if err != nil {
+DebugTimer.Add341()
 			LogUtil.Info(fmt.Sprintf("端口:%d 监听结束\n", mine.Channel.ServerPort))
 			break
 		}
@@ -44,6 +51,7 @@ func (mine *TCPProxyAccept) accept() {
 		//NPS客户端Socket
 		clientSocket := tcp_pool.GetAndAddPool(mine.Channel.ClientId)
 		if clientSocket == nil {
+DebugTimer.Add342()
 			LogUtil.Error(fmt.Sprintf("客户端: %d没有可用的连接池。", mine.Channel.ClientId))
 			proxySocket.Close()
 			continue

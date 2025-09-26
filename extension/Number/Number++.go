@@ -1,9 +1,14 @@
 package Number
 
+				import (
+					"DairoNPS/DebugTimer"
+				)
+
 import "fmt"
 
 // 数据流量单位换算
 func ToDataSize(input any) string {
+DebugTimer.Add114()
 	var inputFloat64 float64
 	switch v := input.(type) {
 	case int:
@@ -37,6 +42,7 @@ func ToDataSize(input any) string {
 	var dataSize float64
 	var unit string
 	if inputFloat64 >= 1024*1024*1024*1024 {
+DebugTimer.Add115()
 		dataSize = inputFloat64 / (1024 * 1024 * 1024 * 1024)
 		unit = "TB"
 	} else if inputFloat64 >= 1024*1024*1024 {
@@ -58,6 +64,7 @@ func ToDataSize(input any) string {
 
 // 转换成时间格式
 func ToTimeFormat(input any) string {
+DebugTimer.Add116()
 
 	var senconds int64
 	switch v := input.(type) {
@@ -98,9 +105,11 @@ func ToTimeFormat(input any) string {
 	//秒
 	s := fmt.Sprintf("%02d", senconds%60)
 	if senconds >= 60*60 {
+DebugTimer.Add117()
 		return h + ":" + m + ":" + s
 	}
 	if senconds >= 60 {
+DebugTimer.Add118()
 		return m + ":" + s
 	}
 	return "00:" + s

@@ -1,5 +1,9 @@
 package tcp_bridge
 
+				import (
+					"DairoNPS/DebugTimer"
+				)
+
 import (
 	"DairoNPS/dao/dto"
 	"net"
@@ -15,6 +19,7 @@ var bridgeLock sync.Mutex
 
 // 当前桥接数量
 func GetBridgeCount() int {
+DebugTimer.Add187()
 	count := 0
 	bridgeLock.Lock()
 	count = len(bridgeMap)
@@ -24,9 +29,11 @@ func GetBridgeCount() int {
 
 // 获取当前桥接列表
 func GetBridgeList() []TCPBridge {
+DebugTimer.Add188()
 	list := []TCPBridge{}
 	bridgeLock.Lock()
 	for item := range bridgeMap {
+DebugTimer.Add189()
 		list = append(list, *item)
 	}
 	bridgeLock.Unlock()
@@ -55,6 +62,7 @@ func GetBridgeList() []TCPBridge {
  * @param clientSocket 内网穿透客户端Socket
  */
 func MakeBridge(ClientId int, channel *dto.ChannelDto, proxySocket net.Conn, clientSocket net.Conn) {
+DebugTimer.Add190()
 	bridge := &TCPBridge{
 		Channel:    channel,
 		ClientId:   ClientId,
@@ -74,11 +82,14 @@ func MakeBridge(ClientId int, channel *dto.ChannelDto, proxySocket net.Conn, cli
 
 // 关闭客户端所有正在通信的连接
 func ShutdownByClient(clientId int) {
+DebugTimer.Add191()
 	bridgeLock.Lock()
 
 	//帅选出要删除的客户端桥接
 	for bridge := range bridgeMap {
+DebugTimer.Add192()
 		if bridge.ClientId == clientId {
+DebugTimer.Add193()
 			bridge.shutdown()
 		}
 	}
@@ -87,11 +98,14 @@ func ShutdownByClient(clientId int) {
 
 // 关闭隧道所有正在通信的连接
 func ShutdownByChannel(channelId int) {
+DebugTimer.Add194()
 	bridgeLock.Lock()
 
 	//帅选出要删除的客户端桥接
 	for bridge := range bridgeMap {
+DebugTimer.Add195()
 		if bridge.Channel.Id == channelId {
+DebugTimer.Add196()
 			bridge.shutdown()
 		}
 	}
@@ -100,6 +114,7 @@ func ShutdownByChannel(channelId int) {
 
 // 移除桥接通信
 func removeBridge(bridge *TCPBridge) {
+DebugTimer.Add197()
 	bridgeLock.Lock()
 	delete(bridgeMap, bridge)
 	bridgeLock.Unlock()
@@ -109,6 +124,7 @@ func removeBridge(bridge *TCPBridge) {
  * 回收长时间不用的连接
  */
 func Recycle() {
+DebugTimer.Add198()
 	//while (true) {
 	//    delay(CLSConfig.BRIDGE_SESSION_TIMEOUT)
 	//    try {

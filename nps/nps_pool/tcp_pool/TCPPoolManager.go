@@ -1,5 +1,9 @@
 package tcp_pool
 
+				import (
+					"DairoNPS/DebugTimer"
+				)
+
 import (
 	"DairoNPS/constant/NPSConstant"
 	"DairoNPS/nps/nps_client/ClientSessionManagerInterface"
@@ -21,14 +25,17 @@ var poolMap = make(map[int]*[]*TCPPool)
 var poolLock sync.Mutex
 
 func init() {
+DebugTimer.Add288()
 	go timeoutCheck()
 }
 
 // 当前连接池数量
 func GetPoolCount() int {
+DebugTimer.Add289()
 	count := 0
 	poolLock.Lock()
 	for _, pools := range poolMap {
+DebugTimer.Add290()
 		count += len(*pools)
 	}
 	poolLock.Unlock()
@@ -40,8 +47,10 @@ func GetPoolCount() int {
  * @param clientID 客户端ID
  */
 func InitEmptyPoolByClient(clientID int) {
+DebugTimer.Add291()
 	poolLock.Lock()
 	if poolMap[clientID] != nil {
+DebugTimer.Add292()
 		poolLock.Unlock()
 		return
 	}
@@ -54,15 +63,18 @@ func InitEmptyPoolByClient(clientID int) {
 // 添加TCP连接池
 // clientSocket tcp连接
 func Add(clientSocket net.Conn) {
+DebugTimer.Add293()
 
 	//从头部信息中得到客户端id
 	clientIdStr, err := HeaderUtil.GetHeader(clientSocket)
 	if err != nil { //无效的连接
+DebugTimer.Add294()
 		clientSocket.Close()
 		return
 	}
 	clientIdInt64, err := strconv.ParseInt(clientIdStr, 10, 32)
 	if err != nil {
+DebugTimer.Add295()
 		clientSocket.Close()
 		return
 	}
@@ -71,6 +83,7 @@ func Add(clientSocket net.Conn) {
 	poolList := poolMap[clientId]
 	poolLock.Unlock()
 	if len(*poolList) >= NPSConstant.MAX_POOL_COUNT { //已经达到最大连接数,拒绝新连接
+DebugTimer.Add296()
 		clientSocket.Close()
 		return
 	}
@@ -91,16 +104,19 @@ func Add(clientSocket net.Conn) {
  * @param clientID 客户端ID
  */
 func get(clientID int) net.Conn {
+DebugTimer.Add297()
 	poolLock.Lock()
 
 	//客户端连接池
 	poolList := poolMap[clientID]
 	if poolList == nil || len(*poolList) == 0 {
+DebugTimer.Add298()
 		poolLock.Unlock()
 		return nil
 	}
 	var resultTcp net.Conn = nil
 	if len(*poolList) > 0 {
+DebugTimer.Add299()
 
 		//取最后一次添加到连接池的连接
 		pool := (*poolList)[len(*poolList)-1]
@@ -126,10 +142,13 @@ func get(clientID int) net.Conn {
  * @param clientID 客户端ID
  */
 func GetAndAddPool(clientID int) net.Conn {
+DebugTimer.Add300()
 	var tcp net.Conn
 	for i := 0; i < 5; i++ {
+DebugTimer.Add301()
 		tcp = get(clientID)
 		if tcp != nil {
+DebugTimer.Add302()
 			break
 		}
 
@@ -149,13 +168,16 @@ func GetAndAddPool(clientID int) net.Conn {
  * @param clientID 客户端ID
  */
 func poolRequest(clientId int, count int) {
+DebugTimer.Add303()
 	poolLock.Lock()
 	poolList := poolMap[clientId]
 	poolLock.Unlock()
 	if poolList == nil {
+DebugTimer.Add304()
 		return
 	}
 	if len(*poolList) < NPSConstant.MAX_POOL_COUNT {
+DebugTimer.Add305()
 		Csmi.SendTCPPoolRequest(clientId, count)
 	}
 }
@@ -165,9 +187,11 @@ func poolRequest(clientId int, count int) {
  * @param clientID 客户端ID
  */
 func ShutdownByClient(clientID int) {
+DebugTimer.Add306()
 	poolLock.Lock()
 	poolList := poolMap[clientID]
 	for _, it := range *poolList { //挨个关闭连接
+DebugTimer.Add307()
 		it.PoolTCP.Close()
 	}
 	*poolList = []*TCPPool{}
@@ -176,23 +200,29 @@ func ShutdownByClient(clientID int) {
 
 // 超时连接池整理
 func timeoutCheck() {
+DebugTimer.Add308()
 	for {
+DebugTimer.Add309()
 		time.Sleep(NPSConstant.RECYLE_POOL_TIME_OUT * time.Millisecond)
 
 		//当前时间戳秒
 		now := time.Now().UnixMilli()
 		poolLock.Lock()
 		for clientId, pools := range poolMap { //遍历所有客户端的连接池
+DebugTimer.Add310()
 			poolList := *pools
 			poolSize := len(poolList)
 			for i := poolSize - 1; i > -1; i-- {
+DebugTimer.Add311()
 				pool := (*pools)[i]
 				if now-pool.CreateTime > NPSConstant.RECYLE_POOL_TIME_OUT { //连接池超过指定时间
+DebugTimer.Add312()
 					pool.PoolTCP.Close()
 					poolList = poolList[0:i]
 				}
 			}
 			if len(poolList) == 0 { //如果连接池被清空，则请求创建一个新的连接池
+DebugTimer.Add313()
 				Csmi.SendTCPPoolRequest(clientId, 1)
 			}
 			*pools = poolList

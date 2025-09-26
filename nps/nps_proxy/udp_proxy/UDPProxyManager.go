@@ -1,5 +1,9 @@
 package udp_proxy
 
+				import (
+					"DairoNPS/DebugTimer"
+				)
+
 import (
 	"DairoNPS/dao/ChannelDao"
 	"DairoNPS/dao/dto"
@@ -20,6 +24,7 @@ var proxyAcceptLock sync.Mutex
 
 // 隧道代理端口数量
 func GetProxyCount() int {
+DebugTimer.Add363()
 	count := 0
 	proxyAcceptLock.Lock()
 	count = len(proxyAcceptMap)
@@ -29,6 +34,7 @@ func GetProxyCount() int {
 
 // 开始客户端的所有监听
 func AcceptClient(clientDto *dto.ClientDto) {
+DebugTimer.Add364()
 
 	//加载统计数据
 	ChannelStatisticsUtil.Init()
@@ -36,7 +42,9 @@ func AcceptClient(clientDto *dto.ClientDto) {
 	//开启NPS客户端ID下所有的隧道
 	activeList := ChannelDao.SelectActiveByClientId(clientDto.Id)
 	for _, it := range activeList {
+DebugTimer.Add365()
 		if it.Mode == 2 { //只监听UDP隧道
+DebugTimer.Add366()
 			acceptChannel(clientDto.Id, it)
 		}
 	}
@@ -44,9 +52,11 @@ func AcceptClient(clientDto *dto.ClientDto) {
 
 // 开始监听某个隧道
 func acceptChannel(ClientId int, channel *dto.ChannelDto) {
+DebugTimer.Add367()
 	proxyAcceptLock.Lock()
 	oldProxyUDPAccept := proxyAcceptMap[channel.Id]
 	if oldProxyUDPAccept != nil { //若该隧道已经在监听,则先停止
+DebugTimer.Add368()
 		shutdown(oldProxyUDPAccept)
 	}
 
@@ -56,6 +66,7 @@ func acceptChannel(ClientId int, channel *dto.ChannelDto) {
 	//代理服务端Socket
 	proxySocket, err := net.ListenUDP("udp", addr)
 	if err != nil {
+DebugTimer.Add369()
 		errMsg := fmt.Sprintf("UDP端口:%d 监听失败。err:%q\n", channel.ServerPort, err)
 		ChannelDao.SetError(channel.Id, &errMsg)
 		LogUtil.Error(errMsg)
@@ -79,9 +90,11 @@ func acceptChannel(ClientId int, channel *dto.ChannelDto) {
 // 关闭监听
 // - channelId 隧道id
 func ShutdownByChannel(channelId int) {
+DebugTimer.Add370()
 	proxyAcceptLock.Lock()
 	proxyUDPAccept := proxyAcceptMap[channelId]
 	if proxyUDPAccept != nil {
+DebugTimer.Add371()
 		shutdown(proxyUDPAccept)
 	}
 	proxyAcceptLock.Unlock()
@@ -92,10 +105,12 @@ func ShutdownByChannel(channelId int) {
 
 // 关闭某个客户端下所有的隧道
 func ShutdownByClient(clientId int) {
+DebugTimer.Add372()
 
 	//关闭客户端所有隧道
 	channelIdList := ChannelDao.SelectIdByClientId(clientId)
 	for _, it := range channelIdList {
+DebugTimer.Add373()
 		ShutdownByChannel(it)
 	}
 
@@ -105,9 +120,11 @@ func ShutdownByClient(clientId int) {
 
 // 停止监听端口
 func shutdown(proxyUDPAccept *UDPProxyAccept) {
+DebugTimer.Add374()
 	proxyUDPAccept.ProxyUDP.Close()
 	channelId := proxyUDPAccept.Channel.Id
 	if proxyAcceptMap[channelId] != nil {
+DebugTimer.Add375()
 		delete(proxyAcceptMap, channelId)
 	}
 }

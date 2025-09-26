@@ -1,5 +1,9 @@
 package login
 
+				import (
+					"DairoNPS/DebugTimer"
+				)
+
 import (
 	"DairoNPS/constant/NPSConstant"
 	"DairoNPS/extension/String"
@@ -18,21 +22,26 @@ var loginErrorCount = 0
 // get:/login
 // templates:login.html
 func Login() {
+DebugTimer.Add584()
 }
 
 // DoLogin 登录API
 // post:/login/do_login
 func DoLogin(writer http.ResponseWriter, inForm form.LoginForm) any {
+DebugTimer.Add585()
 	if loginErrorCount > 10 {
+DebugTimer.Add586()
 		return &controller.BusinessException{
 			Message: "用户名或密码错误次数超过限制，请重启程序再试。",
 		}
 	}
 	err := validate(inForm)
 	if err != nil {
+DebugTimer.Add587()
 		return err
 	}
 	if inForm.Name != NPSConstant.LoginName || inForm.Pwd != NPSConstant.LoginPwd {
+DebugTimer.Add588()
 		loginErrorCount++
 		return &controller.BusinessException{
 			Message: "用户名或密码错误",
@@ -60,17 +69,21 @@ func DoLogin(writer http.ResponseWriter, inForm form.LoginForm) any {
 // Logout 退出登录
 // post:/login/login_out
 func Logout() {
+DebugTimer.Add589()
 	login_state.LoginOut()
 }
 
 // 表单验证
 func validate(inForm form.LoginForm) error {
+DebugTimer.Add590()
 	if len(inForm.Name) == 0 {
+DebugTimer.Add591()
 		return &controller.BusinessException{
 			Message: "用户名不能为空",
 		}
 	}
 	if len(inForm.Pwd) == 0 {
+DebugTimer.Add592()
 		return &controller.BusinessException{
 			Message: "密码不能为空",
 		}
@@ -81,5 +94,6 @@ func validate(inForm form.LoginForm) error {
 // Logout 退出登录
 // post:/login/login_out/test
 func LogoutTest() string {
+DebugTimer.Add593()
 	return "123"
 }

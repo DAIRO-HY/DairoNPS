@@ -1,5 +1,9 @@
 package udp_bridge
 
+				import (
+					"DairoNPS/DebugTimer"
+				)
+
 import (
 	"DairoNPS/constant/NPSConstant"
 	"DairoNPS/dao/dto"
@@ -24,6 +28,7 @@ var bridgeLock sync.Mutex
 var clientUDPInfoToProxyUDPInfo = make(map[string]string)
 
 func init() {
+DebugTimer.Add207()
 
 	//定时回收资源
 	go timeoutCheck()
@@ -31,6 +36,7 @@ func init() {
 
 // 当前桥接数量
 func GetBridgeCount() int {
+DebugTimer.Add208()
 	count := 0
 	bridgeLock.Lock()
 	count = len(proxyUDPInfoToBridge)
@@ -40,9 +46,11 @@ func GetBridgeCount() int {
 
 // 获取当前桥接列表
 func GetBridgeList() []UDPBridge {
+DebugTimer.Add209()
 	list := []UDPBridge{}
 	bridgeLock.Lock()
 	for _, item := range proxyUDPInfoToBridge {
+DebugTimer.Add210()
 		list = append(list, *item)
 	}
 	bridgeLock.Unlock()
@@ -63,6 +71,7 @@ func CreateBridge(
 	proxyUDPInfo *nps.UDPInfo,
 	clientUDPInfo *nps.UDPInfo,
 ) *UDPBridge {
+DebugTimer.Add211()
 	bridge := &UDPBridge{
 		ClientId:        clientId,
 		Channel:         channel,
@@ -78,6 +87,7 @@ func CreateBridge(
 	bridgeLock.Unlock()
 	err := bridge.SendHeaderToClient()
 	if err != nil {
+DebugTimer.Add212()
 		bridgeLock.Lock()
 		delete(proxyUDPInfoToBridge, proxyUDPInfo.Key())
 		delete(clientUDPInfoToProxyUDPInfo, clientUDPInfo.Key())
@@ -91,6 +101,7 @@ func CreateBridge(
  * 通过代理服务端信息获取会话
  */
 func ByProxy(addr *net.UDPAddr) *UDPBridge {
+DebugTimer.Add213()
 	key := addr.String()
 	bridgeLock.Lock()
 	bridge := proxyUDPInfoToBridge[key]
@@ -105,10 +116,12 @@ func ByProxy(addr *net.UDPAddr) *UDPBridge {
  * @return 代理服务端与内网穿透客户端会话
  */
 func ByClient(addr *net.UDPAddr) *UDPBridge {
+DebugTimer.Add214()
 	key := addr.String()
 	bridgeLock.Lock()
 	sourceUDPInfoKey, isExists := clientUDPInfoToProxyUDPInfo[key]
 	if !isExists { //不存在
+DebugTimer.Add215()
 		bridgeLock.Unlock()
 		return nil
 	}
@@ -121,6 +134,7 @@ func ByClient(addr *net.UDPAddr) *UDPBridge {
  * 关闭某个隧道所有的连接
  */
 func ShutdownByChannel(channelId int) {
+DebugTimer.Add216()
 	bridgeLock.Lock()
 
 	//要删除的代理key
@@ -129,15 +143,19 @@ func ShutdownByChannel(channelId int) {
 	//要删除的客户端key
 	clientUDPInfoKeys := []string{}
 	for key, bridge := range proxyUDPInfoToBridge {
+DebugTimer.Add217()
 		if bridge.Channel.Id == channelId {
+DebugTimer.Add218()
 			proxyUDPInfoKeys = append(proxyUDPInfoKeys, key)
 			clientUDPInfoKeys = append(clientUDPInfoKeys, bridge.ClientUDPInfo.Key())
 		}
 	}
 	for _, key := range proxyUDPInfoKeys {
+DebugTimer.Add219()
 		delete(proxyUDPInfoToBridge, key)
 	}
 	for _, key := range clientUDPInfoKeys {
+DebugTimer.Add220()
 		delete(clientUDPInfoToProxyUDPInfo, key)
 	}
 	bridgeLock.Unlock()
@@ -147,6 +165,7 @@ func ShutdownByChannel(channelId int) {
  * 关闭客户端所有的连接
  */
 func ShutdownByClient(clientId int) {
+DebugTimer.Add221()
 	bridgeLock.Lock()
 
 	//要删除的代理key
@@ -155,15 +174,19 @@ func ShutdownByClient(clientId int) {
 	//要删除的客户端key
 	clientUDPInfoKeys := []string{}
 	for key, bridge := range proxyUDPInfoToBridge {
+DebugTimer.Add222()
 		if bridge.ClientId == clientId {
+DebugTimer.Add223()
 			proxyUDPInfoKeys = append(proxyUDPInfoKeys, key)
 			clientUDPInfoKeys = append(clientUDPInfoKeys, bridge.ClientUDPInfo.Key())
 		}
 	}
 	for _, key := range proxyUDPInfoKeys {
+DebugTimer.Add224()
 		delete(proxyUDPInfoToBridge, key)
 	}
 	for _, key := range clientUDPInfoKeys {
+DebugTimer.Add225()
 		delete(clientUDPInfoToProxyUDPInfo, key)
 	}
 	bridgeLock.Unlock()
@@ -171,6 +194,7 @@ func ShutdownByClient(clientId int) {
 
 // 移除桥接通信
 func RemoveBridge(bridge *UDPBridge) {
+DebugTimer.Add226()
 	bridgeLock.Lock()
 	delete(proxyUDPInfoToBridge, bridge.ProxyUDPInfo.Key())
 	delete(clientUDPInfoToProxyUDPInfo, bridge.ClientUDPInfo.Key())
@@ -181,7 +205,9 @@ func RemoveBridge(bridge *UDPBridge) {
  * 长时间不用的连接回收
  */
 func timeoutCheck() {
+DebugTimer.Add227()
 	for {
+DebugTimer.Add228()
 		time.Sleep(NPSConstant.UDP_BRIDGE_TIMEOUT*time.Millisecond + 1000)
 
 		//当前时间戳秒
@@ -191,18 +217,22 @@ func timeoutCheck() {
 		var closeList []*UDPBridge
 		bridgeLock.Lock()
 		for _, bridge := range proxyUDPInfoToBridge {
+DebugTimer.Add229()
 			if now-bridge.LastRWTime > NPSConstant.UDP_BRIDGE_TIMEOUT {
+DebugTimer.Add230()
 
 				//本次需要关闭的桥接
 				closeList = append(closeList, bridge)
 			}
 		}
 		for _, bridge := range closeList { //移除桥接
+DebugTimer.Add231()
 			delete(proxyUDPInfoToBridge, bridge.ProxyUDPInfo.Key())
 			delete(clientUDPInfoToProxyUDPInfo, bridge.ClientUDPInfo.Key())
 		}
 		bridgeLock.Unlock()
 		for _, bridge := range closeList { //发送关闭标识
+DebugTimer.Add232()
 			closeData := []byte(NPSConstant.UDP_BRIDIGE_CLOSE_FLAG)
 			bridge.ClientUDPInfo.Send(closeData, len(closeData))
 		}

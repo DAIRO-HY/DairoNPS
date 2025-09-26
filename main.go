@@ -1,6 +1,14 @@
 package main
 
 import (
+	"DairoNPS/DebugTimer"
+)
+
+import (
+	_ "DairoNPS/DebugTimer"
+)
+
+import (
 	"DairoNPS/constant/NPSConstant"
 	"DairoNPS/forward"
 	"DairoNPS/nps/nps_client/tcp_client"
@@ -15,9 +23,10 @@ import (
 )
 
 // 版本号
-const VERSION = "1.2.1"
+const VERSION = "1.2.1-debug"
 
 func init() {
+	DebugTimer.Add159()
 
 	// 初始化共享接口
 	tcp_pool.Csmi = &tcp_client.ClientSessionManager{}
@@ -27,6 +36,7 @@ func init() {
 var list = make([]int, 0)
 
 func main() {
+	DebugTimer.Add160()
 
 	// 解析参数
 	parseArgs()
@@ -45,18 +55,22 @@ func main() {
 
 // 解析参数
 func parseArgs() {
+	DebugTimer.Add161()
 	fmt.Println("------------------------------------------------------------------------")
 	for _, it := range os.Args {
+		DebugTimer.Add162()
 		fmt.Println(it)
 	}
 	fmt.Println("------------------------------------------------------------------------")
 	for _, it := range os.Args {
+		DebugTimer.Add163()
 		paramArr := strings.Split(it, ":")
 		switch paramArr[0] {
 		case "-login-name":
 			NPSConstant.LoginName = paramArr[1]
 		case "-login-pwd":
 			if len(paramArr[1]) > 0 {
+				DebugTimer.Add164()
 				NPSConstant.LoginPwd = paramArr[1]
 			}
 		case "-web-port":
@@ -77,6 +91,7 @@ func parseArgs() {
 		case "-log-level": //日志输出级别
 			levels := strings.Split(paramArr[1], ",")
 			for _, level := range levels {
+				DebugTimer.Add165()
 				LogUtil.LogLevel[level] = true
 			}
 		case "-is-dev":
