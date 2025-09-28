@@ -1,9 +1,5 @@
 package tcp_client
 
-				import (
-					"DairoNPS/DebugTimer"
-				)
-
 import (
 	"DairoNPS/dao/dto"
 	"DairoNPS/nps/nps_client/HeaderUtil"
@@ -61,13 +57,11 @@ var clientSessionLock sync.Mutex
 
 // 保持客户端连接
 func holdOnClient(client *dto.ClientDto, tcp net.Conn) {
-DebugTimer.Add262()
 	//先移除之前的连接
 	clientSessionLock.Lock()
 	oldSession := clientSessionMap[client.Id]
 	clientSessionLock.Unlock()
 	if oldSession != nil { //如果存在
-DebugTimer.Add263()
 		oldSession.Shutdown()
 	}
 
@@ -96,7 +90,6 @@ DebugTimer.Add263()
  * @param count 申请数量
  */
 func (mine *ClientSessionManager) SendTCPPoolRequest(clientId int, count int) {
-DebugTimer.Add264()
 	send(clientId, HeaderUtil.REQUEST_TCP_POOL, strconv.Itoa(count))
 }
 
@@ -106,7 +99,6 @@ DebugTimer.Add264()
  * @param count 申请数量
  */
 func (mine *ClientSessionManager) SendUDPPoolRequest(clientId int, count int) {
-DebugTimer.Add265()
 	send(clientId, HeaderUtil.REQUEST_UDP_POOL, strconv.Itoa(count))
 }
 
@@ -116,7 +108,6 @@ DebugTimer.Add265()
  * @param count 申请数量
  */
 func (mine *ClientSessionManager) SendActiveUDPBridge(clientId int, ports string) {
-DebugTimer.Add266()
 	send(clientId, HeaderUtil.SYNC_ACTIVE_BRIDGE_UDP_PORT, ports)
 }
 
@@ -127,17 +118,14 @@ DebugTimer.Add266()
  * @param message 头部消息
  */
 func send(clientId int, flag uint8, message string) {
-DebugTimer.Add267()
 	clientSessionLock.Lock()
 	session := clientSessionMap[clientId]
 	clientSessionLock.Unlock()
 	if session == nil {
-DebugTimer.Add268()
 		return
 	}
 	err := session.SendHead(flag, message)
 	if err != nil {
-DebugTimer.Add269()
 		session.Shutdown()
 	}
 }
@@ -145,15 +133,12 @@ DebugTimer.Add269()
 // 关闭客户端
 // - closeSession 当前关闭的对象
 func removeSession(closeSession *ClientSession) {
-DebugTimer.Add270()
 	shutdownProxyAndPoolAndBridge(closeSession.Client.Id)
 	clientId := closeSession.Client.Id
 	clientSessionLock.Lock()
 	session := clientSessionMap[clientId]
 	if session != nil { //客户端ID回话如果存在
-DebugTimer.Add271()
 		if session == closeSession { //当前没有加入新的回话
-DebugTimer.Add272()
 			delete(clientSessionMap, clientId)
 		} else { //由于关闭延迟,有新的回话加入,但是在之前已经关掉了所有的代理监听,所以这里需要再次开启代理监听,概率很小，但不能排除
 			go tcp_proxy.AcceptClient(session.Client)
@@ -165,7 +150,6 @@ DebugTimer.Add272()
 
 // 关闭与内网穿透客户端的会话连接
 func shutdownProxyAndPoolAndBridge(clientId int) {
-DebugTimer.Add273()
 
 	//关闭代理监听
 	tcp_proxy.ShutdownByClient(clientId)
@@ -192,26 +176,22 @@ DebugTimer.Add273()
 
 // 关闭一个客户端
 func Shutdown(clientId int) {
-DebugTimer.Add274()
 
 	//先移除之前的连接
 	clientSessionLock.Lock()
 	oldSession := clientSessionMap[clientId]
 	clientSessionLock.Unlock()
 	if oldSession != nil { //如果存在
-DebugTimer.Add275()
 		oldSession.Shutdown()
 	}
 }
 
 // 客户端是否在线监测
 func IsOnline(clientId int) bool {
-DebugTimer.Add276()
 	clientSessionLock.Lock()
 	session := clientSessionMap[clientId]
 	clientSessionLock.Unlock()
 	if session == nil {
-DebugTimer.Add277()
 		return false
 	}
 	return session.IsOnline()
@@ -219,13 +199,10 @@ DebugTimer.Add277()
 
 // 获取当前在线客户端数量
 func OnlineCount() int {
-DebugTimer.Add278()
 	onlineClientCount := 0
 	clientSessionLock.Lock()
 	for _, session := range clientSessionMap {
-DebugTimer.Add279()
 		if session.IsOnline() {
-DebugTimer.Add280()
 			onlineClientCount++
 		}
 	}

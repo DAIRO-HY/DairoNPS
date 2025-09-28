@@ -1,9 +1,5 @@
 package SecurityUtil
 
-				import (
-					"DairoNPS/DebugTimer"
-				)
-
 import (
 	"fmt"
 	"math/rand"
@@ -16,9 +12,7 @@ var ServerSecurityKey = [256]uint8{}
 var ClientSecurityKey = [256]uint8{}
 
 func init() {
-DebugTimer.Add468()
 	for i := range ServerSecurityKey {
-DebugTimer.Add469()
 		ServerSecurityKey[i] = uint8(i)
 	}
 
@@ -33,7 +27,6 @@ DebugTimer.Add469()
 
 	//服务端数组的值是客户端数组的序号,对应的服务端数组的序号则是客户端数组的值
 	for i, it := range ServerSecurityKey {
-DebugTimer.Add470()
 		ClientSecurityKey[it] = uint8(i)
 	}
 	//for i, it := range ClientSecurityKey {
@@ -47,9 +40,7 @@ DebugTimer.Add470()
  * @param len 要加密的数据长度
  */
 func Mapping(data []uint8, len int) {
-DebugTimer.Add471()
 	for i := 0; i < len; i++ {
-DebugTimer.Add472()
 		value := data[i]
 		data[i] = ServerSecurityKey[value]
 	}

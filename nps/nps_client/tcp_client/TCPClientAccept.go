@@ -1,9 +1,5 @@
 package tcp_client
 
-				import (
-					"DairoNPS/DebugTimer"
-				)
-
 import (
 	"DairoNPS/constant/NPSConstant"
 	"DairoNPS/dao/ClientDao"
@@ -21,23 +17,19 @@ import (
 
 // Accept 监听客户端连接
 func Accept() {
-DebugTimer.Add236()
 	listen, err := net.Listen("tcp", ":"+NPSConstant.TCPPort)
 	if err != nil {
-DebugTimer.Add237()
 		LogUtil.Error(fmt.Sprintf("监听客户端监听失败，请参考错误信息。err:%q", err))
 		log.Fatal(err)
 	}
 	defer listen.Close()
 	LogUtil.Info(fmt.Sprintf("端口:%s监听成功。\n", NPSConstant.TCPPort))
 	for {
-DebugTimer.Add238()
 		LogUtil.Debug(fmt.Sprintf("监听客户端连接,端口:%s监听成功。", NPSConstant.TCPPort))
 
 		//等待客户端连接
 		tcp, err := listen.Accept()
 		if err != nil {
-DebugTimer.Add239()
 			LogUtil.Error(fmt.Sprintf("监听客户端结束,端口:%s", NPSConstant.TCPPort))
 			log.Fatal(err)
 		}
@@ -51,7 +43,6 @@ DebugTimer.Add239()
  * @param socketClient 与客户端的连接
  */
 func handleAccept(tcp net.Conn) {
-DebugTimer.Add240()
 
 	//读取连接的第一个数据,设置超时,避免恶意连接
 	tcp.SetReadDeadline(time.Now().Add(3 * time.Second))
@@ -59,7 +50,6 @@ DebugTimer.Add240()
 	//读取第一个标记字节,通过该自己判断该连接类型
 	flagData, err := TcpUtil.ReadNByte(tcp, 1)
 	if err != nil {
-DebugTimer.Add241()
 		LogUtil.Error(fmt.Sprintf("从客户端读取标识失败,可能来自一个非法客户端,IP:%s,err:%q", tcp.RemoteAddr().String(), err))
 
 		//没必要继续执行，直接关闭客户端连接
@@ -81,12 +71,10 @@ DebugTimer.Add241()
 
 // 验证客户端回话
 func validateSession(tcp net.Conn) {
-DebugTimer.Add242()
 
 	//得到头部数据
 	header, err := HeaderUtil.GetHeader(tcp)
 	if err != nil {
-DebugTimer.Add243()
 		LogUtil.Error(fmt.Sprintf("从客户端读取头部数据失败,IP:%s,err:%q", tcp.RemoteAddr().String(), err))
 		tcp.Close()
 		return
@@ -97,13 +85,11 @@ DebugTimer.Add243()
 	key := headers[0]
 	client := ClientDao.SelectByKey(key)
 	if client == nil {
-DebugTimer.Add244()
 		LogUtil.Error(fmt.Sprintf("客户端：%s不存在,IP:%s", key, tcp.RemoteAddr().String()))
 		tcp.Close()
 		return
 	}
 	if client.EnableState == 0 {
-DebugTimer.Add245()
 		LogUtil.Error(fmt.Sprintf("客户端：%s已被停止服务,IP:%s", key, tcp.RemoteAddr().String()))
 		tcp.Close()
 		return

@@ -1,9 +1,5 @@
 package DateDataSizeDao
 
-				import (
-					"DairoNPS/DebugTimer"
-				)
-
 import (
 	"DairoNPS/dao/dto"
 	"DairoNPS/util/DBUtil"
@@ -11,7 +7,6 @@ import (
 )
 
 func init() {
-DebugTimer.Add86()
 
 	//指定删除时间戳
 	deleteBeforceTime := time.Now().AddDate(-2, 0, 0).Unix()
@@ -25,7 +20,6 @@ DebugTimer.Add86()
  * @param outData 出网流量
  */
 func Add(channelId int, forwardId int, inData int64, outData int64) {
-DebugTimer.Add87()
 
 	//当前时间戳（秒）
 	date := time.Now().Unix()
@@ -49,10 +43,8 @@ func SelectList(
 	startTime int64,
 	endTime int64,
 ) []*dto.DateDataSizeDto {
-DebugTimer.Add88()
 	var sql string
 	if clientId == 0 && channelId == 0 && forwardId == 0 { //所有的统计
-DebugTimer.Add89()
 		sql = "select date,inData,outData from date_data_size where date between ? and ?"
 		return DBUtil.SelectList[dto.DateDataSizeDto](sql, startTime, endTime)
 	} else if clientId != 0 { //统计某个客户端
@@ -71,21 +63,18 @@ DebugTimer.Add89()
 
 // 通过隧道ID删除
 func DeleteByChannelId(channelId int) {
-DebugTimer.Add90()
 	sql := "delete from date_data_size where channelId = ?"
 	DBUtil.ExecIgnoreError(sql, channelId)
 }
 
 // 通过转发ID删除
 func DeleteByForward(forwardId int) {
-DebugTimer.Add91()
 	sql := "delete from date_data_size where forwardId = ?"
 	DBUtil.ExecIgnoreError(sql, forwardId)
 }
 
 // 通过客户端ID删除
 func DeleteByClientId(clientId int) {
-DebugTimer.Add92()
 	sql := "delete from date_data_size where channelId in (select id from channel where clientId = ?)"
 	DBUtil.ExecIgnoreError(sql, clientId)
 }

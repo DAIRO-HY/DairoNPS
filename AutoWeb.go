@@ -3,10 +3,6 @@
  */
 package main
 
-				import (
-					"DairoNPS/DebugTimer"
-				)
-
 import (
 	webcontrollerbridgelist "DairoNPS/web/controller/bridge_list"
 	webcontrollerbridgelistform "DairoNPS/web/controller/bridge_list/form"
@@ -45,12 +41,10 @@ var templatesFiles embed.FS
 
 // 开启web服务
 func startWebServer(port int) {
-DebugTimer.Add1()
 
 	// 将嵌入的资源限制到 "/resources/static" 子目录
 	staticFS, staticErr := fs.Sub(staticFiles, "resources/static")
 	if staticErr != nil {
-DebugTimer.Add2()
 		panic(staticErr)
 	}
 
@@ -59,7 +53,6 @@ DebugTimer.Add2()
 
 	http.HandleFunc("/bridge_list", func(writer http.ResponseWriter, request *http.Request) {
 		if !webinerceptor.LoginValidate(writer, request) {
-DebugTimer.Add3()
 			return
 		}
 		var body any = nil
@@ -69,7 +62,6 @@ DebugTimer.Add3()
 	})
 	http.HandleFunc("/bridge_list/load_data", func(writer http.ResponseWriter, request *http.Request) {
 		if !webinerceptor.LoginValidate(writer, request) {
-DebugTimer.Add4()
 			return
 		}
 		paramMap := makeParamMap(request)
@@ -80,7 +72,6 @@ DebugTimer.Add4()
 	})
 	http.HandleFunc("/channel_list/channel_edit", func(writer http.ResponseWriter, request *http.Request) {
 		if !webinerceptor.LoginValidate(writer, request) {
-DebugTimer.Add5()
 			return
 		}
 		var body any = nil
@@ -90,7 +81,6 @@ DebugTimer.Add5()
 	})
 	http.HandleFunc("/channel_list/channel_edit/info", func(writer http.ResponseWriter, request *http.Request) {
 		if !webinerceptor.LoginValidate(writer, request) {
-DebugTimer.Add6()
 			return
 		}
 		paramMap := makeParamMap(request)
@@ -102,7 +92,6 @@ DebugTimer.Add6()
 	})
 	http.HandleFunc("/channel_list/channel_edit/edit", func(writer http.ResponseWriter, request *http.Request) {
 		if !webinerceptor.LoginValidate(writer, request) {
-DebugTimer.Add7()
 			return
 		}
 		paramMap := makeParamMap(request)
@@ -113,7 +102,6 @@ DebugTimer.Add7()
 	})
 	http.HandleFunc("/channel_list", func(writer http.ResponseWriter, request *http.Request) {
 		if !webinerceptor.LoginValidate(writer, request) {
-DebugTimer.Add8()
 			return
 		}
 		var body any = nil
@@ -123,7 +111,6 @@ DebugTimer.Add8()
 	})
 	http.HandleFunc("/channel_list/list", func(writer http.ResponseWriter, request *http.Request) {
 		if !webinerceptor.LoginValidate(writer, request) {
-DebugTimer.Add9()
 			return
 		}
 		paramMap := makeParamMap(request)
@@ -134,7 +121,6 @@ DebugTimer.Add9()
 	})
 	http.HandleFunc("/channel_list/delete", func(writer http.ResponseWriter, request *http.Request) {
 		if !webinerceptor.LoginValidate(writer, request) {
-DebugTimer.Add10()
 			return
 		}
 		paramMap := makeParamMap(request)
@@ -145,7 +131,6 @@ DebugTimer.Add10()
 	})
 	http.HandleFunc("/channel_list/set_state", func(writer http.ResponseWriter, request *http.Request) {
 		if !webinerceptor.LoginValidate(writer, request) {
-DebugTimer.Add11()
 			return
 		}
 		paramMap := makeParamMap(request)
@@ -156,7 +141,6 @@ DebugTimer.Add11()
 	})
 	http.HandleFunc("/client_list/client_edit", func(writer http.ResponseWriter, request *http.Request) {
 		if !webinerceptor.LoginValidate(writer, request) {
-DebugTimer.Add12()
 			return
 		}
 		var body any = nil
@@ -166,7 +150,6 @@ DebugTimer.Add12()
 	})
 	http.HandleFunc("/client_list/client_edit/info", func(writer http.ResponseWriter, request *http.Request) {
 		if !webinerceptor.LoginValidate(writer, request) {
-DebugTimer.Add13()
 			return
 		}
 		paramMap := makeParamMap(request)
@@ -177,7 +160,6 @@ DebugTimer.Add13()
 	})
 	http.HandleFunc("/client_list/client_edit/edit", func(writer http.ResponseWriter, request *http.Request) {
 		if !webinerceptor.LoginValidate(writer, request) {
-DebugTimer.Add14()
 			return
 		}
 		paramMap := makeParamMap(request)
@@ -188,7 +170,6 @@ DebugTimer.Add14()
 	})
 	http.HandleFunc("/client_list", func(writer http.ResponseWriter, request *http.Request) {
 		if !webinerceptor.LoginValidate(writer, request) {
-DebugTimer.Add15()
 			return
 		}
 		var body any = nil
@@ -198,7 +179,6 @@ DebugTimer.Add15()
 	})
 	http.HandleFunc("/client_list/init", func(writer http.ResponseWriter, request *http.Request) {
 		if !webinerceptor.LoginValidate(writer, request) {
-DebugTimer.Add16()
 			return
 		}
 		var body any = nil
@@ -207,7 +187,6 @@ DebugTimer.Add16()
 	})
 	http.HandleFunc("/client_list/delete", func(writer http.ResponseWriter, request *http.Request) {
 		if !webinerceptor.LoginValidate(writer, request) {
-DebugTimer.Add17()
 			return
 		}
 		paramMap := makeParamMap(request)
@@ -218,7 +197,6 @@ DebugTimer.Add17()
 	})
 	http.HandleFunc("/client_list/set_state", func(writer http.ResponseWriter, request *http.Request) {
 		if !webinerceptor.LoginValidate(writer, request) {
-DebugTimer.Add18()
 			return
 		}
 		paramMap := makeParamMap(request)
@@ -229,7 +207,6 @@ DebugTimer.Add18()
 	})
 	http.HandleFunc("/common/dropdown", func(writer http.ResponseWriter, request *http.Request) {
 		if !webinerceptor.LoginValidate(writer, request) {
-DebugTimer.Add19()
 			return
 		}
 		var body any = nil
@@ -238,7 +215,6 @@ DebugTimer.Add19()
 	})
 	http.HandleFunc("/data_size/get_data_size", func(writer http.ResponseWriter, request *http.Request) {
 		if !webinerceptor.LoginValidate(writer, request) {
-DebugTimer.Add20()
 			return
 		}
 		paramMap := makeParamMap(request)
@@ -249,7 +225,6 @@ DebugTimer.Add20()
 	})
 	http.HandleFunc("/forward_list/forward_edit", func(writer http.ResponseWriter, request *http.Request) {
 		if !webinerceptor.LoginValidate(writer, request) {
-DebugTimer.Add21()
 			return
 		}
 		var body any = nil
@@ -259,7 +234,6 @@ DebugTimer.Add21()
 	})
 	http.HandleFunc("/forward_list/forward_edit/info", func(writer http.ResponseWriter, request *http.Request) {
 		if !webinerceptor.LoginValidate(writer, request) {
-DebugTimer.Add22()
 			return
 		}
 		paramMap := makeParamMap(request)
@@ -270,7 +244,6 @@ DebugTimer.Add22()
 	})
 	http.HandleFunc("/forward_list/forward_edit/edit", func(writer http.ResponseWriter, request *http.Request) {
 		if !webinerceptor.LoginValidate(writer, request) {
-DebugTimer.Add23()
 			return
 		}
 		paramMap := makeParamMap(request)
@@ -281,7 +254,6 @@ DebugTimer.Add23()
 	})
 	http.HandleFunc("/forward_list", func(writer http.ResponseWriter, request *http.Request) {
 		if !webinerceptor.LoginValidate(writer, request) {
-DebugTimer.Add24()
 			return
 		}
 		var body any = nil
@@ -291,7 +263,6 @@ DebugTimer.Add24()
 	})
 	http.HandleFunc("/forward_list/get_list", func(writer http.ResponseWriter, request *http.Request) {
 		if !webinerceptor.LoginValidate(writer, request) {
-DebugTimer.Add25()
 			return
 		}
 		var body any = nil
@@ -300,7 +271,6 @@ DebugTimer.Add25()
 	})
 	http.HandleFunc("/forward_list/delete", func(writer http.ResponseWriter, request *http.Request) {
 		if !webinerceptor.LoginValidate(writer, request) {
-DebugTimer.Add26()
 			return
 		}
 		paramMap := makeParamMap(request)
@@ -311,7 +281,6 @@ DebugTimer.Add26()
 	})
 	http.HandleFunc("/forward_list/set_state", func(writer http.ResponseWriter, request *http.Request) {
 		if !webinerceptor.LoginValidate(writer, request) {
-DebugTimer.Add27()
 			return
 		}
 		paramMap := makeParamMap(request)
@@ -322,7 +291,6 @@ DebugTimer.Add27()
 	})
 	http.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
 		if !webinerceptor.LoginValidate(writer, request) {
-DebugTimer.Add28()
 			return
 		}
 		var body any = nil
@@ -332,7 +300,6 @@ DebugTimer.Add28()
 	})
 	http.HandleFunc("/index", func(writer http.ResponseWriter, request *http.Request) {
 		if !webinerceptor.LoginValidate(writer, request) {
-DebugTimer.Add29()
 			return
 		}
 		var body any = nil
@@ -342,7 +309,6 @@ DebugTimer.Add29()
 	})
 	http.HandleFunc("/index/data", func(writer http.ResponseWriter, request *http.Request) {
 		if !webinerceptor.LoginValidate(writer, request) {
-DebugTimer.Add30()
 			return
 		}
 		var body any = nil
@@ -351,7 +317,6 @@ DebugTimer.Add30()
 	})
 	http.HandleFunc("/index/gc", func(writer http.ResponseWriter, request *http.Request) {
 		if !webinerceptor.LoginValidate(writer, request) {
-DebugTimer.Add31()
 			return
 		}
 		var body any = nil
@@ -383,7 +348,6 @@ DebugTimer.Add31()
 	})
 	http.HandleFunc("/ws/speed_chart", func(writer http.ResponseWriter, request *http.Request) {
 		if !webinerceptor.LoginValidate(writer, request) {
-DebugTimer.Add32()
 			return
 		}
 		var body any = nil
@@ -394,14 +358,12 @@ DebugTimer.Add32()
 	// 启动服务器
 	err := http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
 	if err != nil {
-DebugTimer.Add33()
 		log.Fatal(err)
 	}
 }
 
 // 生成参数Map
 func makeParamMap(request *http.Request) map[string][]string {
-DebugTimer.Add34()
 	query := request.URL.Query()
 
 	//解析post表单
@@ -411,11 +373,9 @@ DebugTimer.Add34()
 	//将参数转换成Map
 	paramMap := make(map[string][]string)
 	for key, v := range query {
-DebugTimer.Add35()
 		paramMap[key] = v
 	}
 	for key, v := range postParams {
-DebugTimer.Add36()
 		paramMap[key] = v
 	}
 	return paramMap
@@ -423,7 +383,6 @@ DebugTimer.Add36()
 
 // 获取表单实例
 func getForm[T any](paramMap map[string][]string) T {
-DebugTimer.Add37()
 
 	// 创建结构体实例
 	targetForm := new(T)
@@ -432,20 +391,17 @@ DebugTimer.Add37()
 
 	// 遍历结构体字段
 	for j := 0; j < argType.NumField(); j++ {
-DebugTimer.Add38()
 		field := argType.Field(j)
 		fieldName := field.Name
 
 		//得到参数值
 		value := paramMap[fieldName]
 		if value == nil {
-DebugTimer.Add39()
 			//将首字母小写再去获取参数
 			lowerKey := strings.ToLower(fieldName[:1]) + fieldName[1:]
 			value = paramMap[lowerKey]
 		}
 		if value == nil {
-DebugTimer.Add40()
 			continue
 		}
 
@@ -468,10 +424,8 @@ DebugTimer.Add40()
 
 // 获取string类型的参数
 func getString(paramMap map[string][]string, key string) string {
-DebugTimer.Add41()
 	value := paramMap[key]
 	if value == nil {
-DebugTimer.Add42()
 		return ""
 	}
 	rValue := value[0]
@@ -480,10 +434,8 @@ DebugTimer.Add42()
 
 // 获取int类型的参数
 func getInt(paramMap map[string][]string, key string) int {
-DebugTimer.Add43()
 	value := paramMap[key]
 	if value == nil {
-DebugTimer.Add44()
 		return 0
 	}
 	rValue, _ := strconv.Atoi(value[0])
@@ -492,10 +444,8 @@ DebugTimer.Add44()
 
 // 获取int类型的参数
 func getInt64(paramMap map[string][]string, key string) int64 {
-DebugTimer.Add45()
 	value := paramMap[key]
 	if value == nil {
-DebugTimer.Add46()
 		return 0
 	}
 	rValue, _ := strconv.ParseInt(value[0], 10, 64)
@@ -504,10 +454,8 @@ DebugTimer.Add46()
 
 // 获取float32类型的参数
 func getFloat32(paramMap map[string][]string, key string) float32 {
-DebugTimer.Add47()
 	value := paramMap[key]
 	if value == nil {
-DebugTimer.Add48()
 		return 0
 	}
 	rValue, _ := strconv.ParseFloat(value[0], 32)
@@ -516,10 +464,8 @@ DebugTimer.Add48()
 
 // 获取float64类型的参数
 func getFloat64(paramMap map[string][]string, key string) float64 {
-DebugTimer.Add49()
 	value := paramMap[key]
 	if value == nil {
-DebugTimer.Add50()
 		return 0
 	}
 	rValue, _ := strconv.ParseFloat(value[0], 64)
@@ -528,13 +474,10 @@ DebugTimer.Add50()
 
 // 返回结果
 func writeToResponse(writer http.ResponseWriter, body any) {
-DebugTimer.Add51()
 	if body == nil {
-DebugTimer.Add52()
 		return
 	}
 	if body == "" {
-DebugTimer.Add53()
 		return
 	}
 
@@ -567,12 +510,10 @@ DebugTimer.Add53()
 
 // 写入html模板
 func writeToTemplate(writer http.ResponseWriter, templates []string, data any) {
-DebugTimer.Add54()
 
 	// 解析嵌入的模板
 	t, err := template.ParseFS(templatesFiles, templates...)
 	if err != nil {
-DebugTimer.Add55()
 		http.Error(writer, fmt.Sprintf("Error loading template:%q", err), http.StatusInternalServerError)
 		return
 	}

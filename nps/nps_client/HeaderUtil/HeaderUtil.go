@@ -1,9 +1,5 @@
 package HeaderUtil
 
-				import (
-					"DairoNPS/DebugTimer"
-				)
-
 import (
 	"DairoNPS/util/TcpUtil"
 	"net"
@@ -55,12 +51,10 @@ const SECURITY_CLIENT_KEY = 7
  * 获取客户端Socket头部信息
  */
 func GetHeader(clientSocket net.Conn) (string, error) {
-DebugTimer.Add233()
 
 	//读取一个字节,该字节代表key长度
 	lenData, err := TcpUtil.ReadNByte(clientSocket, 1)
 	if err != nil {
-DebugTimer.Add234()
 		return "", err
 	}
 
@@ -68,7 +62,6 @@ DebugTimer.Add234()
 	headerLen := lenData[0]
 	headerData, err := TcpUtil.ReadNByte(clientSocket, int(headerLen))
 	if err != nil {
-DebugTimer.Add235()
 		return "", err
 	}
 	return string(headerData), nil

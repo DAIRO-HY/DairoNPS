@@ -1,9 +1,5 @@
 package udp_bridge
 
-				import (
-					"DairoNPS/DebugTimer"
-				)
-
 import (
 	"DairoNPS/dao/dto"
 	"DairoNPS/nps"
@@ -28,7 +24,6 @@ type UDPBridge struct {
  * 发送目标端口信息
  */
 func (mine *UDPBridge) SendHeaderToClient() error {
-DebugTimer.Add199()
 
 	//将加密类型及目标端口 格式:加密状态|端口  1|80   1|127.0.0.1:80
 	//1:加密  0:不加密
@@ -36,7 +31,6 @@ DebugTimer.Add199()
 	headData := []byte(head)
 	err := mine.ClientUDPInfo.Send(headData, len(headData))
 	if err != nil {
-DebugTimer.Add200()
 		return err
 	}
 	return nil
@@ -48,17 +42,14 @@ DebugTimer.Add200()
  * @param len 要发送的数据长度
  */
 func (mine *UDPBridge) SendToClient(data []byte, length int) error {
-DebugTimer.Add201()
 
 	//原子递增
 	atomic.AddInt64(&mine.channelDataSize.InData, int64(length))
 	if mine.Channel.SecurityState == 1 { //加密数据
-DebugTimer.Add202()
 		SecurityUtil.Mapping(data, length)
 	}
 	err := mine.ClientUDPInfo.Send(data, length)
 	if err != nil {
-DebugTimer.Add203()
 		return err
 	}
 
@@ -73,14 +64,11 @@ DebugTimer.Add203()
  * @param len 要发送的数据长度
  */
 func (mine *UDPBridge) SendToProxy(data []byte, length int) error {
-DebugTimer.Add204()
 	if mine.Channel.SecurityState == 1 { //加密数据
-DebugTimer.Add205()
 		SecurityUtil.Mapping(data, length)
 	}
 	err := mine.ProxyUDPInfo.Send(data, length)
 	if err != nil {
-DebugTimer.Add206()
 		return err
 	}
 

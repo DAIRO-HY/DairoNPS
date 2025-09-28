@@ -1,9 +1,5 @@
 package data_size_log
 
-				import (
-					"DairoNPS/DebugTimer"
-				)
-
 import (
 	"DairoNPS/dao/DateDataSizeDao"
 	"DairoNPS/dao/dto"
@@ -20,7 +16,6 @@ import (
  */
 // post:/data_size/get_data_size
 func GetDataSize(inForm form.GetDataInForm) form.GetDataOutForm {
-DebugTimer.Add543()
 
 	//时间间隔
 	timeJg := inForm.EndTime - inForm.StartTime
@@ -28,7 +23,6 @@ DebugTimer.Add543()
 	//统计时间最小单位长度
 	var labelFormat string
 	if timeJg <= 60 { //小于1分钟，则时间最小单位到秒（yyyyMMddHHmmss）
-DebugTimer.Add544()
 		labelFormat = "2006-01-02 15:04:05"
 	} else if timeJg <= 60*60 { //小于1小时，则时间最小单位到分（yyyyMMddHHmm）
 		labelFormat = "2006-01-02 15:04"
@@ -49,11 +43,9 @@ DebugTimer.Add544()
 
 	dataSizeList := DateDataSizeDao.SelectList(inForm.ClientId, inForm.ChannelId, inForm.ForwardId, inForm.StartTime, inForm.EndTime)
 	for _, item := range dataSizeList { //为每一个时间点去匹配数据
-DebugTimer.Add545()
 		label := time.Unix(item.Date, 0).Format(labelFormat)
 		dataForm := label2DataForm[label]
 		if dataForm == nil {
-DebugTimer.Add546()
 			dataForm = &dto.DateDataSizeDto{
 				InData:  item.InData,
 				OutData: item.OutData,
@@ -66,11 +58,9 @@ DebugTimer.Add546()
 
 		//寻炸最大值
 		if dataForm.InData > maxDataSize {
-DebugTimer.Add547()
 			maxDataSize = dataForm.InData
 		}
 		if dataForm.OutData > maxDataSize {
-DebugTimer.Add548()
 			maxDataSize = dataForm.OutData
 		}
 	}
@@ -89,7 +79,6 @@ DebugTimer.Add548()
 
 	var unitSize float64
 	if maxDataSize > 1024*1024*1024 {
-DebugTimer.Add549()
 		unitSize = 1024 * 1024 * 1024
 		unit = "GB"
 	} else if maxDataSize > 1024*1024 {
@@ -108,12 +97,10 @@ DebugTimer.Add549()
 
 	//为每个时间点生成数据
 	for loopTime.Before(endTime) {
-DebugTimer.Add550()
 		label := loopTime.Format(labelFormat)
 		labels = append(labels, label)
 		dataSize := label2DataForm[label]
 		if dataSize == nil {
-DebugTimer.Add551()
 			inDatas = append(inDatas, 0)
 			outDatas = append(outDatas, 0)
 		} else {
@@ -121,7 +108,6 @@ DebugTimer.Add551()
 			outDatas = append(outDatas, float64(dataSize.OutData)/unitSize)
 		}
 		if labelFormat == "2006-01-02 15:04:05" { //精确到秒
-DebugTimer.Add552()
 			loopTime = loopTime.Add(1 * time.Second)
 		} else if labelFormat == "2006-01-02 15:04" { //精确到分
 			loopTime = loopTime.Add(1 * time.Minute)

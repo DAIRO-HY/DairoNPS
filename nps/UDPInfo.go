@@ -1,9 +1,5 @@
 package nps
 
-				import (
-					"DairoNPS/DebugTimer"
-				)
-
 import (
 	"fmt"
 	"net"
@@ -24,7 +20,6 @@ type UDPInfo struct {
  * 连接唯一标识
  */
 func (mine *UDPInfo) Key() string {
-DebugTimer.Add166()
 	return mine.CliAddr.String()
 }
 
@@ -32,10 +27,8 @@ DebugTimer.Add166()
  * 向客户端回复数据
  */
 func (mine *UDPInfo) Send(data []byte, length int) error {
-DebugTimer.Add167()
 	_, err := mine.Udp.WriteToUDP(data[:length], mine.CliAddr)
 	if err != nil {
-DebugTimer.Add168()
 		fmt.Println(err)
 		return err
 	}

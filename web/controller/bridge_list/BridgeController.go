@@ -1,9 +1,5 @@
 package bridge_list
 
-				import (
-					"DairoNPS/DebugTimer"
-				)
-
 import (
 	"DairoNPS/dao/ClientDao"
 	"DairoNPS/extension/Number"
@@ -18,19 +14,16 @@ import (
 // get:/bridge_list
 // templates:bridge_list.html
 func Init() {
-DebugTimer.Add483()
 }
 
 // LoadData 获取数据
 // post:/bridge_list/load_data
 func LoadData(search form.BridgeInForm) []form.BridgeOutForm {
-DebugTimer.Add484()
 
 	//生成客户端ID对应的客户端名，用来匹配------------------------------------------------------------START
 	clientList := ClientDao.SelectAll()
 	clientId2Name := make(map[int]string)
 	for _, item := range clientList {
-DebugTimer.Add485()
 		clientId2Name[item.Id] = item.Name
 	}
 	//生成客户端ID对应的客户端名，用来匹配------------------------------------------------------------END
@@ -43,13 +36,10 @@ DebugTimer.Add485()
 	//TCP隧道桥接列表统计------------------------------------------------------------START
 	tcpBridgeList := tcp_bridge.GetBridgeList()
 	for _, it := range tcpBridgeList {
-DebugTimer.Add486()
 		if search.ClientId != 0 && search.ClientId != it.ClientId {
-DebugTimer.Add487()
 			continue
 		}
 		if search.ChannelId != 0 && search.ChannelId != it.Channel.Id {
-DebugTimer.Add488()
 			continue
 		}
 		remoteAddr := it.ProxyTCP.RemoteAddr().String()
@@ -79,13 +69,10 @@ DebugTimer.Add488()
 	//UDP隧道桥接列表统计------------------------------------------------------------START
 	udpBridgeList := udp_bridge.GetBridgeList()
 	for _, it := range udpBridgeList {
-DebugTimer.Add489()
 		if search.ClientId != 0 && search.ClientId != it.ClientId {
-DebugTimer.Add490()
 			continue
 		}
 		if search.ChannelId != 0 && search.ChannelId != it.Channel.Id {
-DebugTimer.Add491()
 			continue
 		}
 		remoteAddr := it.ProxyUDPInfo.Key()
@@ -115,7 +102,6 @@ DebugTimer.Add491()
 	//端口转发桥接列表统计------------------------------------------------------------START
 	forwardBridgeList := forward.GetBridgeList()
 	for _, it := range forwardBridgeList {
-DebugTimer.Add492()
 		remoteAddr := it.ProxyTCP.RemoteAddr().String()
 		ip := strings.Split(remoteAddr, ":")[0]
 		outFormList = append(outFormList, form.BridgeOutForm{

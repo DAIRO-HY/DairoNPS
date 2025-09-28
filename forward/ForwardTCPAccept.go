@@ -1,9 +1,5 @@
 package forward
 
-				import (
-					"DairoNPS/DebugTimer"
-				)
-
 import (
 	"DairoNPS/dao/dto"
 	"DairoNPS/util/LogUtil"
@@ -28,27 +24,22 @@ type ForwardTCPAccept struct {
  * 等待客户端连接
  */
 func (mine *ForwardTCPAccept) accept() {
-DebugTimer.Add120()
 	for {
-DebugTimer.Add121()
 
 		//代理服务端Socket
 		proxyTCP, err := mine.listen.Accept()
 		if err != nil {
-DebugTimer.Add122()
 			LogUtil.Info(fmt.Sprintf("转发端口:%d 监听结束\n", mine.forwardDto.Port))
 			break
 		}
 		targetIpAndPort := mine.forwardDto.TargetPort
 		if !strings.Contains(targetIpAndPort, ":") {
-DebugTimer.Add123()
 			targetIpAndPort = "127.0.0.1:" + targetIpAndPort
 		}
 
 		//目标服务器Socket连接
 		targetTCP, err := net.Dial("tcp", targetIpAndPort)
 		if err != nil {
-DebugTimer.Add124()
 			proxyTCP.Close()
 			LogUtil.Debug(fmt.Sprintf("转发端口:%d 连接失败\n", mine.forwardDto.Port))
 			continue
@@ -66,7 +57,6 @@ DebugTimer.Add124()
  * 停止监听端口
  */
 func (mine *ForwardTCPAccept) shutdown() {
-DebugTimer.Add125()
 	mine.listen.Close()
 
 	//关闭当前的桥接通信
