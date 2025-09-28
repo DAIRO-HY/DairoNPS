@@ -15,7 +15,7 @@ import (
 )
 
 // 版本号
-const VERSION = "1.2.1"
+const VERSION = "1.3.0"
 
 func init() {
 
