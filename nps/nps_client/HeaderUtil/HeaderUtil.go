@@ -1,7 +1,7 @@
 package HeaderUtil
 
 import (
-	"DairoNPS/util/TcpUtil"
+	"io"
 	"net"
 )
 
@@ -53,15 +53,15 @@ const SECURITY_CLIENT_KEY = 7
 func GetHeader(clientSocket net.Conn) (string, error) {
 
 	//读取一个字节,该字节代表key长度
-	lenData, err := TcpUtil.ReadNByte(clientSocket, 1)
-	if err != nil {
+	headerLenData := make([]byte, 1)
+	if _, err := io.ReadFull(clientSocket, headerLenData); err != nil {
 		return "", err
 	}
 
 	//得到头部部分数据长度
-	headerLen := lenData[0]
-	headerData, err := TcpUtil.ReadNByte(clientSocket, int(headerLen))
-	if err != nil {
+	headerLen := headerLenData[0]
+	headerData := make([]byte, headerLen)
+	if _, err := io.ReadFull(clientSocket, headerData); err != nil {
 		return "", err
 	}
 	return string(headerData), nil

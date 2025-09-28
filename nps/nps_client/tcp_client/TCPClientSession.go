@@ -6,9 +6,10 @@ import (
 	"DairoNPS/nps/nps_client/HeaderUtil"
 	"DairoNPS/util/LogUtil"
 	"DairoNPS/util/SecurityUtil"
-	"DairoNPS/util/TcpUtil"
+	"DairoNPS/util/WriterUtil"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"strconv"
 	"sync"
@@ -71,15 +72,14 @@ func (mine *ClientSession) sendClientSecurityKey() error {
  */
 func (mine *ClientSession) receive() {
 	for {
-		flagData, err := TcpUtil.ReadNByte(mine.tcp, 1)
-		if err != nil {
+		flagData := make([]byte, 1)
+		if _, err := io.ReadFull(mine.tcp, flagData); err != nil {
 			LogUtil.Error(fmt.Sprintf("接收客户端数据标识出错。 err:%q", err))
 			break
 		}
 		flag := flagData[0]
 
-		err = mine.handle(flag)
-		if err != nil {
+		if err := mine.handle(flag); err != nil {
 			LogUtil.Error(fmt.Sprintf("处理客户端数据失败。 err:%q", err))
 			break
 		}
@@ -125,7 +125,7 @@ func (mine *ClientSession) SendHead(flag uint8, message string) error {
  */
 func (mine *ClientSession) Send(data []uint8) error {
 	sendLock.Lock()
-	err := TcpUtil.WriteAll(mine.tcp, data)
+	err := WriterUtil.WriteFull(mine.tcp, data)
 	sendLock.Unlock()
 	return err
 }

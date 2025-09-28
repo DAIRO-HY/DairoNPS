@@ -6,7 +6,7 @@ import (
 	"DairoNPS/util/ChannelStatisticsUtil"
 	"DairoNPS/util/LogUtil"
 	"DairoNPS/util/SecurityUtil"
-	"DairoNPS/util/TcpUtil"
+	"DairoNPS/util/WriterUtil"
 	"fmt"
 	"net"
 	"strconv"
@@ -74,7 +74,7 @@ func (mine *TCPBridge) sendHeaderToClient() {
 
 	//写入数据
 	data = append(data, headerData...)
-	err := TcpUtil.WriteAll(mine.ClientTCP, data)
+	err := WriterUtil.WriteFull(mine.ClientTCP, data)
 	if err != nil {
 		LogUtil.Error(fmt.Sprintf("往客户端发送头部失败 err:%q", err))
 		mine.ClientTCP.Close()
@@ -101,7 +101,7 @@ func (mine *TCPBridge) receiveByProxySendToClient() {
 			}
 
 			//将读取到的数据立即发送客户端
-			writeErr := TcpUtil.WriteAll(mine.ClientTCP, data[:n])
+			writeErr := WriterUtil.WriteFull(mine.ClientTCP, data[:n])
 			if writeErr != nil {
 				break
 			}
@@ -139,7 +139,7 @@ func (mine *TCPBridge) receiveByClientSendToProxy() {
 			}
 
 			//将读取到的数据立即发送客户端
-			writeErr := TcpUtil.WriteAll(mine.ProxyTCP, data[:n])
+			writeErr := WriterUtil.WriteFull(mine.ProxyTCP, data[:n])
 			if writeErr != nil {
 				break
 			}

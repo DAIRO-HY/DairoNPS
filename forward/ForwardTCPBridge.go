@@ -4,7 +4,7 @@ import (
 	"DairoNPS/constant/NPSConstant"
 	"DairoNPS/dao/dto"
 	"DairoNPS/util/ForwardStatisticsUtil"
-	"DairoNPS/util/TcpUtil"
+	"DairoNPS/util/WriterUtil"
 	"net"
 	"sync/atomic"
 	"time"
@@ -68,7 +68,7 @@ func (mine *ForwardBridge) receiveByForwardSendToTarget() {
 			atomic.AddInt64(&mine.dataSize.InData, int64(n))
 
 			//从代理端读取到的数据立即发送目标端
-			writeErr := TcpUtil.WriteAll(mine.TargetTCP, data[:n])
+			writeErr := WriterUtil.WriteFull(mine.TargetTCP, data[:n])
 			if writeErr != nil {
 				break
 			}
@@ -105,7 +105,7 @@ func (mine *ForwardBridge) receiveByTargetSendToForward() {
 			atomic.AddInt64(&mine.dataSize.OutData, int64(n))
 
 			//将读取到的数据立即发送客户端
-			writeErr := TcpUtil.WriteAll(mine.ProxyTCP, data[:n])
+			writeErr := WriterUtil.WriteFull(mine.ProxyTCP, data[:n])
 			if writeErr != nil {
 				break
 			}

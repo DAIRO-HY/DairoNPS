@@ -7,8 +7,8 @@ import (
 	"DairoNPS/nps/nps_client/HeaderUtil"
 	"DairoNPS/nps/nps_pool/tcp_pool"
 	"DairoNPS/util/LogUtil"
-	"DairoNPS/util/TcpUtil"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"strings"
@@ -48,8 +48,8 @@ func handleAccept(tcp net.Conn) {
 	tcp.SetReadDeadline(time.Now().Add(3 * time.Second))
 
 	//读取第一个标记字节,通过该自己判断该连接类型
-	flagData, err := TcpUtil.ReadNByte(tcp, 1)
-	if err != nil {
+	flagData := make([]byte, 1)
+	if _, err := io.ReadFull(tcp, flagData); err != nil {
 		LogUtil.Error(fmt.Sprintf("从客户端读取标识失败,可能来自一个非法客户端,IP:%s,err:%q", tcp.RemoteAddr().String(), err))
 
 		//没必要继续执行，直接关闭客户端连接
